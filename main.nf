@@ -86,7 +86,8 @@ workflow {
 
 	// * taxonomic classification * //
 	if (params.taxonomy_tool == 'all') {
-		KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
+		kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
+		KRAKEN2_PARSE(kraken.classified_reads_assignment, 0.65)
 		MASH_SCREEN(unmapped, params.mash_screen_db)
 	} else if (params.taxonomy_tool == 'kraken2') {
 		if (!params.ncbi_db_prepare) {
