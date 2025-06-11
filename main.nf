@@ -6,9 +6,9 @@ include { TRIMMOMATIC } from './modules/nf-core/trimmomatic/main'
 include { BBMAP_BBDUK } from './modules/nf-core/bbmap/bbduk/main'                                                                                                                                                
 include { FASTP } from './modules/nf-core/fastp/main'                                                                                                                                       
 include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'                                                                                                                                                
-include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'         
+// include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'         
 include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'                                                                                                                                                                                                            
-include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'                                                                                                                       
+// include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'                                                                                                                       
 include { MINIMAP2_ALIGN } from './modules/nf-core/minimap2/align/main'                                                                                                                     
 include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'                                                                                                                       
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'                                                                                                                   
@@ -36,7 +36,7 @@ workflow {
 	samples.view()
 
 	// * fastqc * //
-    FASTQC(samples)
+    fastqc = FASTQC(samples)
 
 	// * adapter trimming * //
 	if (params.trim_tool == "bbduk") {
@@ -57,31 +57,33 @@ workflow {
 			unmapped.view()
 		} else {
 			index = BBMAP_INDEX(params.host_fasta).index
-			index.view()
 			unmapped = BBMAP_ALIGN(trimmed, index).unmapped
 		}
-	} else if (params.host_removal_tool == 'bowtie2') {
-		if (!params.index_host) {
-			unmapped = BOWTIE2_ALIGN(trimmed, 
-						params.host_bowtie2_index,
-						params.host_fasta,
-						true, true).fastq
-		} else {
-			index = BOWTIE2_BUILD(params.host_fasta).index
-			unmapped = BOWTIE2_ALIGN(trimmed.reads, 
-						index,
-						params.host_fasta,
-						true, true).fastq
-		}		
+	// } else if (params.host_removal_tool == 'bowtie2') {
+	// 	if (!params.index_host) {
+	// 		unmapped = BOWTIE2_ALIGN(trimmed, 
+	// 					params.host_bowtie2_index,
+	// 					params.host_fasta,
+	// 					true, false).fastq
+	// 	} else {
+	// 		index = BOWTIE2_BUILD(params.host_fasta).index
+	// 		unmapped = BOWTIE2_ALIGN(trimmed, 
+	// 					index,
+	// 					params.host_fasta,
+	// 					true, false).fastq
+	// 	}		
 	} else if (params.host_removal_tool == 'minimap2') {
-		MINIMAP2_ALIGN(trimmed.reads,
+		unmapped = MINIMAP2_ALIGN(trimmed,
 						params.host_fasta,
-						true, "bai", false, false)
+						false, "bai", false, false, true).unmapped
+		unmapped.view()
 	} else {
-		error("Unsupported aligner. Options are 'bbmap', 'bowtie2' and 'minimap2'.")
+		error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
 	}
 
 	// * ncbi db preparation * //
+	// ...
+
 	// * taxonomic classification * //
 	if (params.taxonomy_tool == 'all') {
 		KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
@@ -105,4 +107,7 @@ workflow {
 	} else {
 		error("Unsupported taxonomy tool. Options are 'kraken2', 'mash', and 'all'.")
 	}
+	// * multiqc * //
+	// MULTIQC(fastqc.html)
+
 }

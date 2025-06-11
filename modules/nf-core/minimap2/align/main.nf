@@ -10,17 +10,19 @@ process MINIMAP2_ALIGN {
 
     input:
     tuple val(meta), path(reads)
-    val reference
-    // tuple val(meta2), path(reference)
+    path reference
     val bam_format
     val bam_index_extension
     val cigar_paf_format
     val cigar_bam
+    val unmapped_fq
 
     output:
     tuple val(meta), path("*.paf")                       , optional: true, emit: paf
     tuple val(meta), path("*.bam")                       , optional: true, emit: bam
     tuple val(meta), path("*.bam.${bam_index_extension}"), optional: true, emit: index
+    tuple val(meta), path("*.fastq.gz")                  , optional: true, emit: unmapped
+    tuple val(meta), path("*.log")                       , optional: true, emit: log
     path "versions.yml"                                  , emit: versions
 
     when:
@@ -33,7 +35,9 @@ process MINIMAP2_ALIGN {
     def args4 = task.ext.args4 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def bam_index = bam_index_extension ? "${prefix}.bam##idx##${prefix}.bam.${bam_index_extension} --write-index" : "${prefix}.bam"
-    def bam_output = bam_format ? "-a | samtools sort -@ ${task.cpus-1} -o ${bam_index} ${args2}" : "-o ${prefix}.paf"
+    def bam_output = bam_format ? "-a | samtools sort -@ ${task.cpus-1} -o ${bam_index} ${args2}" : ''
+    def unmapped_fq = unmapped_fq ? "-a | samtools fastq -f 4 -@ ${task.cpus-1} - -1 ${prefix}_unmapped_R1.fastq.gz -2 ${prefix}_unmapped_R2.fastq.gz" : ''
+    def logfiles = "${prefix}.log"
     def cigar_paf = cigar_paf_format && !bam_format ? "-c" : ''
     def set_cigar_bam = cigar_bam && bam_format ? "-L" : ''
     def bam_input = "${reads.extension}".matches('sam|bam|cram')
@@ -50,8 +54,10 @@ process MINIMAP2_ALIGN {
         $query \\
         $cigar_paf \\
         $set_cigar_bam \\
-        $bam_output
-
+        $bam_output \\
+        2> $logfiles \\
+        $unmapped_fq
+    
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
