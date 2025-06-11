@@ -10,7 +10,9 @@ include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'
 include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'                                                                                                                                                                                                            
 include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'                                                                                                                       
 include { MINIMAP2_ALIGN } from './modules/nf-core/minimap2/align/main'                                                                                                                     
+include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'                                                                                                                       
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'                                                                                                                   
+include { KRAKEN2_PARSE } from './modules/local/kraken2_parse/main'                                                                                                                   
 include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'                                                                                                                           
 include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'                                                                                                                           
 include { samplesheetToList } from 'plugin/nf-schema'
@@ -84,10 +86,17 @@ workflow {
 	if (params.taxonomy_tool == 'all') {
 		KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
 		MASH_SCREEN(unmapped, params.mash_screen_db)
-	} else if (params.taxonomy_tool == 'kraken2'){
-		KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
-	} else if (params.taxonomy_tool == 'mash'){
-		if (!params.ncbi_db_prepare){
+	} else if (params.taxonomy_tool == 'kraken2') {
+		if (!params.ncbi_db_prepare) {
+			kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
+			KRAKEN2_PARSE(kraken.classified_reads_assignment, 0.65)
+		} else {
+			// *** untested *** //
+			db = KRAKEN2_BUILD(params.ncbi_db, true).db
+			KRAKEN2_KRAKEN2(unmapped, db, true, true)
+		}
+	} else if (params.taxonomy_tool == 'mash') {
+		if (!params.ncbi_db_prepare) {
 			MASH_SCREEN(unmapped, params.mash_screen_db)
 		} else {
 			db = MASH_SKETCH(params.ncbi_db).mash
