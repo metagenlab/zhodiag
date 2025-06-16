@@ -1,5 +1,6 @@
 #!/usr/bin/env nextflow
 
+include { samplesheetToList } from 'plugin/nf-schema'
 include { MULTIQC } from './modules/nf-core/multiqc/main'
 include { FASTQC } from './modules/nf-core/fastqc/main'                                                                                                                                     
 include { TRIMMOMATIC } from './modules/nf-core/trimmomatic/main'                                                                                                                           
@@ -9,13 +10,14 @@ include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
 // include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'         
 include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'                                                                                                                                                                                                            
 // include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'                                                                                                                       
-include { MINIMAP2_ALIGN } from './modules/nf-core/minimap2/align/main'                                                                                                                     
+include { MINIMAP2_ALIGN as MINIMAP_HOST } from './modules/nf-core/minimap2/align/main'                                                                                                                     
 include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'                                                                                                                       
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'                                                                                                                   
 include { KRAKEN2_PARSE } from './modules/local/kraken2_parse/main'                                                                                                                   
 include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'                                                                                                                           
 include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'                                                                                                                           
-include { samplesheetToList } from 'plugin/nf-schema'
+include { NCBIGENOMEDOWNLOAD } from './modules/nf-core/ncbigenomedownload/main'
+include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES } from './modules/nf-core/minimap2/align/main'                                                                                                                     
 
 
 // params.input = "data/samples.csv"
@@ -35,6 +37,7 @@ workflow {
         })
 	samples.view()
 
+	
 	// * fastqc * //
     fastqc = FASTQC(samples)
 
@@ -73,7 +76,7 @@ workflow {
 	// 					true, false).fastq
 	// 	}		
 	} else if (params.host_removal_tool == 'minimap2') {
-		unmapped = MINIMAP2_ALIGN(trimmed,
+		unmapped = MINIMAP_HOST(trimmed,
 						params.host_fasta,
 						false, "bai", false, false, true).unmapped
 		unmapped.view()
@@ -108,7 +111,30 @@ workflow {
 	} else {
 		error("Unsupported taxonomy tool. Options are 'kraken2', 'mash', and 'all'.")
 	}
-	// * multiqc * //
-	// MULTIQC(fastqc.html)
+	// // * multiqc * //
+	// ch_multiqc_files = Channel.empty()
+	// BBMAP_BBDUK.out.log.view()
+	// ch_multiqc_files = ch_multiqc_files
+	// 						.mix(BBMAP_BBDUK.out.log)
+	// 						// .mix(BBMAP_BBDUK.out.log)
+	// 						// .mix(MINIMAP2_ALIGN.log)
+	// MULTIQC (ch_multiqc_files.collect())
+	// multiqc_report = MULTIQC.out.report.toList()
 
+
+	if (params.minimap2_candidates) {
+		//* Download genomes of interest * //
+		// NCBIGENOMEDOWNLOAD(candidates)
+		ncbi = NCBIGENOMEDOWNLOAD(params.candidates, params.genomes_filename)
+
+		//* Mapping against candidates * //
+		MINIMAP_CANDIDATES(unmapped,
+						ncbi.cat_fna,
+						true,
+						"bai",
+						false,
+						false,
+						false)
+	}
 }
+

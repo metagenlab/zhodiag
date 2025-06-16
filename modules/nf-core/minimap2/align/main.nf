@@ -34,10 +34,11 @@ process MINIMAP2_ALIGN {
     def args3 = task.ext.args3 ?: ''
     def args4 = task.ext.args4 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def bam_index = bam_index_extension ? "${prefix}.bam##idx##${prefix}.bam.${bam_index_extension} --write-index" : "${prefix}.bam"
+    def genome = reference.getBaseName().replaceFirst(/(\.fna|\.fa|\.fasta)?(\.gz)?$/, '')
+    def bam_index = bam_index_extension ? "${prefix}_${genome}.bam##idx##${prefix}_${genome}.bam.${bam_index_extension} --write-index" : "${prefix}_${genome}.bam"
     def bam_output = bam_format ? "-a | samtools sort -@ ${task.cpus-1} -o ${bam_index} ${args2}" : ''
-    def unmapped_fq = unmapped_fq ? "-a | samtools fastq -f 4 -@ ${task.cpus-1} - -1 ${prefix}_unmapped_R1.fastq.gz -2 ${prefix}_unmapped_R2.fastq.gz" : ''
-    def logfiles = "${prefix}.log"
+    def unmapped_fq = unmapped_fq ? "-a | samtools fastq -f 4 -@ ${task.cpus-1} - -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ''
+    def logfiles = "${prefix}_${genome}.log"
     def cigar_paf = cigar_paf_format && !bam_format ? "-c" : ''
     def set_cigar_bam = cigar_bam && bam_format ? "-L" : ''
     def bam_input = "${reads.extension}".matches('sam|bam|cram')

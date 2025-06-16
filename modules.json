@@ -1,77 +1,103 @@
 {
-  "name": "",
-  "homePage": "",
-  "repos": {
-    "https://github.com/nf-core/modules.git": {
-      "modules": {
-        "nf-core": {
-          "bbmap/align": {
-            "branch": "master",
-            "git_sha": "f06465ff69516528b0178b2a2a5f6b1d4287faa9",
-            "installed_by": ["modules"]
-          },
-          "bbmap/bbduk": {
-            "branch": "master",
-            "git_sha": "3e5be4a4bf0f64b2a8f72d45ff391ff0ef546161",
-            "installed_by": ["modules"]
-          },
-          "bbmap/index": {
-            "branch": "master",
-            "git_sha": "f06465ff69516528b0178b2a2a5f6b1d4287faa9",
-            "installed_by": ["modules"]
-          },
-          "bowtie2/align": {
-            "branch": "master",
-            "git_sha": "8864afe586537bf562eac7b83349c26207f3cb4d",
-            "installed_by": ["modules"]
-          },
-          "bowtie2/build": {
-            "branch": "master",
-            "git_sha": "0334a6825c00e81a68974146a91fcd17feba7202",
-            "installed_by": ["modules"]
-          },
-          "fastp": {
-            "branch": "master",
-            "git_sha": "8864afe586537bf562eac7b83349c26207f3cb4d",
-            "installed_by": ["modules"]
-          },
-          "fastqc": {
-            "branch": "master",
-            "git_sha": "b1966f36ec9de31927b2603d8f499960b2a4c294",
-            "installed_by": ["modules"]
-          },
-          "kraken2/kraken2": {
-            "branch": "master",
-            "git_sha": "20b042e352fc47ab6dab717a622253e96429e887",
-            "installed_by": ["modules"]
-          },
-          "mash/screen": {
-            "branch": "master",
-            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
-            "installed_by": ["modules"]
-          },
-          "mash/sketch": {
-            "branch": "master",
-            "git_sha": "8864afe586537bf562eac7b83349c26207f3cb4d",
-            "installed_by": ["modules"]
-          },
-          "minimap2/align": {
-            "branch": "master",
-            "git_sha": "a532706a19b3d83f14b1d48a6a815ed33eb48b0c",
-            "installed_by": ["modules"]
-          },
-          "multiqc": {
-            "branch": "master",
-            "git_sha": "7b50cb7be890e4b28cffb82e438cc6a8d7805d3f",
-            "installed_by": ["modules"]
-          },
-          "trimmomatic": {
-            "branch": "master",
-            "git_sha": "8864afe586537bf562eac7b83349c26207f3cb4d",
-            "installed_by": ["modules"]
-          }
+    "name": "",
+    "homePage": "",
+    "repos": {
+        "https://github.com/nf-core/modules.git": {
+            "modules": {
+                "nf-core": {
+                    "bbmap/align": {
+                        "branch": "master",
+                        "git_sha": "f06465ff69516528b0178b2a2a5f6b1d4287faa9",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "bbmap/bbduk": {
+                        "branch": "master",
+                        "git_sha": "3e5be4a4bf0f64b2a8f72d45ff391ff0ef546161",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "bbmap/index": {
+                        "branch": "master",
+                        "git_sha": "f06465ff69516528b0178b2a2a5f6b1d4287faa9",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "fastp": {
+                        "branch": "master",
+                        "git_sha": "8864afe586537bf562eac7b83349c26207f3cb4d",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "fastqc": {
+                        "branch": "master",
+                        "git_sha": "b1966f36ec9de31927b2603d8f499960b2a4c294",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "kraken2/build": {
+                        "branch": "master",
+                        "git_sha": "20b042e352fc47ab6dab717a622253e96429e887",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "kraken2/kraken2": {
+                        "branch": "master",
+                        "git_sha": "20b042e352fc47ab6dab717a622253e96429e887",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "mash/screen": {
+                        "branch": "master",
+                        "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "mash/sketch": {
+                        "branch": "master",
+                        "git_sha": "8864afe586537bf562eac7b83349c26207f3cb4d",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "minimap2/align": {
+                        "branch": "master",
+                        "git_sha": "a532706a19b3d83f14b1d48a6a815ed33eb48b0c",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "multiqc": {
+                        "branch": "master",
+                        "git_sha": "7b50cb7be890e4b28cffb82e438cc6a8d7805d3f",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "ncbigenomedownload": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "trimmomatic": {
+                        "branch": "master",
+                        "git_sha": "8864afe586537bf562eac7b83349c26207f3cb4d",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }
