@@ -1,33 +1,31 @@
-#!/usr/bin/env nextflow
-
 process MULTIQC {
-    label 'process_single'
+    label 'process_medium'
 
-    conda "${moduleDir}/environment.yml"
+    conda (params.enable_conda ? 'bioconda::multiqc=1.12' : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/multiqc:1.28--pyhdfd78af_0' :
-        'biocontainers/multiqc:1.28--pyhdfd78af_0' }"
+        'quay.io/biocontainers/multiqc:1.29--pyhdfd78af_0' :
+        'quay.io/biocontainers/multiqc:1.29--pyhdfd78af_0' }"
 
     input:
-    path '*' 
-    val output_name
-
-
+    path("multiqc_input")
+    
     output:
-    path "${output_name}.html", emit: report
-    path "${output_name}_data", emit: data
+    path "*multiqc_report.html", emit: report
+    path "*_data"              , emit: data
+    path "*_plots"             , optional:true, emit: plots
+    path "versions.yml"        , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
+    def args = task.ext.args ?: ''
     """
-    multiqc . --force -n ${output_name}.html
+    multiqc -f $args .
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         multiqc: \$( multiqc --version | sed -e "s/multiqc, version //g" )
     END_VERSIONS
     """
-
 }
