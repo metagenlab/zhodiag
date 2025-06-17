@@ -2,6 +2,7 @@
 
 include { samplesheetToList } from 'plugin/nf-schema'
 include { MULTIQC } from './modules/nf-core/multiqc/main'
+include {COLLECT_REPORTS} from './modules/local/multiqc/main'
 include { FASTQC } from './modules/nf-core/fastqc/main'                                                                                                                                     
 include { TRIMMOMATIC } from './modules/nf-core/trimmomatic/main'                                                                                                                           
 include { BBMAP_BBDUK } from './modules/nf-core/bbmap/bbduk/main'                                                                                                                                                
@@ -43,11 +44,14 @@ workflow {
 
 	// * adapter trimming * //
 	if (params.trim_tool == "bbduk") {
-		trimmed = BBMAP_BBDUK(samples, params.adapters).reads
+		trimmed = BBMAP_BBDUK(samples, params.adapters)
+		trim_logs = trimmed.stats
 	} else if (params.trim_tool == "fastp") {
-	    trimmed = FASTP(samples, params.adapters, false, false, false).reads
+	    trimmed = FASTP(samples, params.adapters, false, false, false)
+		trim_logs = trimmed.json
 	} else if (params.trim_tool == "trimmomatic") {
-		trimmed = TRIMMOMATIC(samples).trimmed_reads
+		trimmed = TRIMMOMATIC(samples, params.adapters)
+		trim_logs = trimmed.out_log
 	} else {
 		error("Unsupported trim tool. Options are 'bbduk', 'fastp' or 'trimmomatic'.")
 	}
@@ -56,11 +60,14 @@ workflow {
 	// * host removal * //
 	if (params.host_removal_tool == 'bbmap') {
 		if (!params.index_host) {
-			unmapped = BBMAP_ALIGN(trimmed, params.host_bbmap_index).unmapped
-			unmapped.view()
+			host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
+			unmapped = host_map.unmapped
+			mapping_logs = host_map.stats
 		} else {
 			index = BBMAP_INDEX(params.host_fasta).index
-			unmapped = BBMAP_ALIGN(trimmed, index).unmapped
+			host_map = BBMAP_ALIGN(trimmed.reads, index)
+			unmapped = host_map.unmapped
+			mapping_logs = host_map.stats
 		}
 	// } else if (params.host_removal_tool == 'bowtie2') {
 	// 	if (!params.index_host) {
@@ -76,10 +83,11 @@ workflow {
 	// 					true, false).fastq
 	// 	}		
 	} else if (params.host_removal_tool == 'minimap2') {
-		unmapped = MINIMAP_HOST(trimmed,
+		host_map = MINIMAP_HOST(trimmed.reads,
 						params.host_fasta,
-						false, "bai", false, false, true).unmapped
-		unmapped.view()
+						false, "bai", false, false, true)
+		unmapped = host_map.unmapped
+		mapping_logs = host_map.log
 	} else {
 		error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
 	}
@@ -90,12 +98,14 @@ workflow {
 	// * taxonomic classification * //
 	if (params.taxonomy_tool == 'all') {
 		kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
-		KRAKEN2_PARSE(kraken.classified_reads_assignment, 0.65)
+		// KRAKEN2_PARSE(kraken.classified_reads_assignment, 0.65)
+		kraken_logs = kraken.report
 		MASH_SCREEN(unmapped, params.mash_screen_db)
 	} else if (params.taxonomy_tool == 'kraken2') {
 		if (!params.ncbi_db_prepare) {
 			kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
-			KRAKEN2_PARSE(kraken.classified_reads_assignment, 0.65)
+			kraken_logs = kraken.report
+			// KRAKEN2_PARSE(kraken.classified_reads_assignment, 0.65)
 		} else {
 			// *** untested *** //
 			db = KRAKEN2_BUILD(params.ncbi_db, true).db
@@ -111,16 +121,6 @@ workflow {
 	} else {
 		error("Unsupported taxonomy tool. Options are 'kraken2', 'mash', and 'all'.")
 	}
-	// // * multiqc * //
-	// ch_multiqc_files = Channel.empty()
-	// BBMAP_BBDUK.out.log.view()
-	// ch_multiqc_files = ch_multiqc_files
-	// 						.mix(BBMAP_BBDUK.out.log)
-	// 						// .mix(BBMAP_BBDUK.out.log)
-	// 						// .mix(MINIMAP2_ALIGN.log)
-	// MULTIQC (ch_multiqc_files.collect())
-	// multiqc_report = MULTIQC.out.report.toList()
-
 
 	if (params.minimap2_candidates) {
 		//* Download genomes of interest * //
@@ -136,5 +136,32 @@ workflow {
 						false,
 						false)
 	}
+
+    // -- COLLECT REPORTS FOR MULTIQC --
+    if (params.taxonomy_tool == 'mash') {
+			collect_reports_input = fastqc.html
+		.map { it[1] }
+		.merge(
+			fastqc.zip.map { it[1] },
+			trim_logs.map { it[1] },
+			mapping_logs.map { it[1] },
+		)
+		.collect()
+	} else {
+			collect_reports_input = fastqc.html
+		.map { it[1] }
+		.merge(
+			fastqc.zip.map { it[1] },
+			trim_logs.map { it[1] },
+			mapping_logs.map { it[1] },
+			kraken_logs.map { it[1] }
+		)
+		.collect()
+	}
+
+    multiqc_input = COLLECT_REPORTS(collect_reports_input)
+
+    MULTIQC(multiqc_input)
+    
 }
 
