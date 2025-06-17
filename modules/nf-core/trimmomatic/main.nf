@@ -9,9 +9,10 @@ process TRIMMOMATIC {
 
     input:
     tuple val(meta), path(reads)
+    path(adapters)
 
     output:
-    tuple val(meta), path("*.paired.trim*.fastq.gz")   , emit: trimmed_reads
+    tuple val(meta), path("*.paired.trim*.fastq.gz")   , emit: reads
     tuple val(meta), path("*.unpaired.trim_*.fastq.gz"), emit: unpaired_reads, optional:true
     tuple val(meta), path("*_trim.log")                , emit: trim_log
     tuple val(meta), path("*_out.log")                 , emit: out_log
@@ -25,10 +26,12 @@ process TRIMMOMATIC {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def trimmed = meta.single_end ? "SE" : "PE"
+    def pars = adapters ? "ILLUMINACLIP:${adapters}:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36" : ''
     def output = meta.single_end ?
         "${prefix}.SE.paired.trim.fastq.gz" // HACK to avoid unpaired and paired in the trimmed_reads output
         : "${prefix}.paired.trim_1.fastq.gz ${prefix}.unpaired.trim_1.fastq.gz ${prefix}.paired.trim_2.fastq.gz ${prefix}.unpaired.trim_2.fastq.gz"
     def qual_trim = task.ext.args2 ?: ''
+
     """
     trimmomatic \\
         $trimmed \\
@@ -37,6 +40,7 @@ process TRIMMOMATIC {
         -summary ${prefix}.summary \\
         $reads \\
         $output \\
+        $pars \\
         $qual_trim \\
         $args 2>| >(tee ${prefix}_out.log >&2)
 
