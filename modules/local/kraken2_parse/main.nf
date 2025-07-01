@@ -4,20 +4,21 @@ process KRAKEN2_PARSE {
     input:
     tuple val(meta) , path(query)
     val threshold
+    val kraken2_db_name
 
     output:
-    tuple val(meta), path("*_kraken2_filt_*.txt"), emit: screen
-    tuple val(meta), path("*_kraken2_filt_*_nonHuman.txt"), emit: filter
-    tuple val(meta), path("*_kraken2_kmerPercByTaxID_postFiltering*.txt"), emit: report
+    tuple val(meta), path("*_filt_*.txt"), emit: screen
+    tuple val(meta), path("*_filt_*_nonHuman.txt"), emit: filter
+    tuple val(meta), path("*_kmerPercByTaxID_postFiltering*.txt"), emit: report
 
     script:
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}_${kraken2_db_name}"
     def script_dir = file("bin")
     def kraken_summary_script = script_dir.resolve("kraken2_summary.py").toString()
     def threshold = threshold
-    def outfile1 = "${prefix}_kraken2_filt_${threshold}.txt"
-    def outfile2 = "${prefix}_kraken2_filt_${threshold}_nonHuman.txt"
-    def outfile3 = "${prefix}_kraken2_kmerPercByTaxID_postFiltering_${threshold}.txt"
+    def outfile1 = "${prefix}_filt_${threshold}.txt"
+    def outfile2 = "${prefix}_filt_${threshold}_nonHuman.txt"
+    def outfile3 = "${prefix}_kmerPercByTaxID_postFiltering_${threshold}.txt"
     """
     krakenKmerPrcSum.sh $query $threshold > $outfile1
     extract_nonhuman.sh $outfile1 $query > $outfile2

@@ -11,6 +11,7 @@ process KRAKEN2_KRAKEN2 {
     path  db
     val save_output_fastqs
     val save_reads_assignment
+    val kraken2_db_name
 
     output:
     tuple val(meta), path('*.classified{.,_}*')     , optional:true, emit: classified_reads_fastq
@@ -24,7 +25,7 @@ process KRAKEN2_KRAKEN2 {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}_${kraken2_db_name}"
     def paired       = meta.single_end ? "" : "--paired"
     def classified   = meta.single_end ? "${prefix}.classified.fastq"   : "${prefix}.classified#.fastq"
     def unclassified = meta.single_end ? "${prefix}.unclassified.fastq" : "${prefix}.unclassified#.fastq"
@@ -37,7 +38,7 @@ process KRAKEN2_KRAKEN2 {
     kraken2 \\
         --db $db \\
         --threads $task.cpus \\
-        --report ${prefix}.kraken2.report.txt \\
+        --report ${prefix}.report.txt \\
         --gzip-compressed \\
         $unclassified_option \\
         $classified_option \\

@@ -16,7 +16,6 @@ include {SORT_INDEX_BAM} from './modules/local/bam_sort_index/main'
 include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'                                                                                                                       
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'                                                                                                                   
 include { KRAKEN2_PARSE } from './modules/local/kraken2_parse/main'                                                                                                                   
-include { KRAKEN2_REPORT } from './modules/local/kraken2_report/main'                                                                                                                   
 include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'                                                                                                                           
 include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'                                                                                                                           
 include { NCBIGENOMEDOWNLOAD } from './modules/nf-core/ncbigenomedownload/main'
@@ -99,31 +98,36 @@ workflow {
 
 	// * taxonomic classification * //
 	if (params.taxonomy_tool == 'all') {
-		kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
-		kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold)
-		// kraken_report_postParse = KRAKEN2_REPORT(kraken_parse.filter, params.kraken2_db)
+		kraken2_db_name = params.kraken2_db.tokenize('/').last()
+		kraken2_db_name_ch = Channel.value(kraken2_db_name)
+		kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true, kraken2_db_name_ch)
+		kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
 		kraken_logs = kraken.report
-		MASH_SCREEN(unmapped, params.mash_screen_db)
+		mash_db_name = params.mash_screen_db.tokenize('/').last()
+		mash_db_name_ch = Channel.value(mash_db_name)
+		MASH_SCREEN(unmapped, params.mash_screen_db, mash_db_name_ch)
 	} else if (params.taxonomy_tool == 'kraken2') {
+		kraken2_db_name = params.kraken2_db.tokenize('/').last()
+		kraken2_db_name_ch = Channel.value(kraken2_db_name)
 		if (!params.ncbi_db_prepare) {
-			kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
+			kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true, kraken2_db_name_ch)
 			kraken_logs = kraken.report
-			kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold)
-			// kraken_report_postParse = KRAKEN2_REPORT(kraken_parse.filter, params.kraken2_db)
+			kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
 		} else {
 			// *** untested *** //
 			db = KRAKEN2_BUILD(params.ncbi_db, true).db
-			kraken = KRAKEN2_KRAKEN2(unmapped, db, true, true)
-			kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold)
-			// kraken_report_postParse = KRAKEN2_REPORT(kraken_parse.filter, db)
+			kraken = KRAKEN2_KRAKEN2(unmapped, db, true, true, kraken2_db_name_ch)
+			kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
 			kraken_logs = kraken.report
 		}
 	} else if (params.taxonomy_tool == 'mash') {
+		mash_db_name = params.mash_screen_db.tokenize('/').last()
+		mash_db_name_ch = Channel.value(mash_db_name)
 		if (!params.ncbi_db_prepare) {
-			MASH_SCREEN(unmapped, params.mash_screen_db)
+			MASH_SCREEN(unmapped, params.mash_screen_db, mash_db_name_ch)
 		} else {
 			db = MASH_SKETCH(params.ncbi_db).mash
-			MASH_SCREEN(unmapped, db)
+			MASH_SCREEN(unmapped, db, mash_db_name_ch)
 		}
 	} else {
 		error("Unsupported taxonomy tool. Options are 'kraken2', 'mash', and 'all'.")

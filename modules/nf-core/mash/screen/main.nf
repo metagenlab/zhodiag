@@ -10,6 +10,7 @@ process MASH_SCREEN {
     input:
     tuple val(meta) , path(query)
     path(sequences_sketch)
+    val mash_db_name
     
 
     output:
@@ -21,7 +22,7 @@ process MASH_SCREEN {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}_${mash_db_name}"
     """
     mash \\
         screen \\
