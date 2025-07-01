@@ -2,6 +2,7 @@
 
 # Usage: ./process_kmers.sh input_file.tsv [threshold]
 # Default threshold is 0.65
+# Author: Marc Garcia Garcera
 
 if [ -z "$1" ]; then
     echo "Usage: $0 input_file.tsv [threshold]"
@@ -67,6 +68,6 @@ function sort_descending(arr, keys,   i, j, tmp, n) {
     else
         decision = "check";
 
-    print $1 "\t" output "\t" decision;
+    print $2 "\t" output "\t" decision;
 }
 ' "$input_file"
