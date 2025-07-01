@@ -66,7 +66,7 @@ function sort_descending(arr, keys,   i, j, tmp, n) {
     if (top_score > threshold)
         decision = top_ref;
     else
-        decision = "check";
+        decision = "ambiguous";
 
     print $2 "\t" output "\t" decision;
 }
