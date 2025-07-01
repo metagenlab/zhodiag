@@ -12,9 +12,11 @@ include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
 include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'                                                                                                                                                                                                            
 // include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'                                                                                                                       
 include { MINIMAP2_ALIGN as MINIMAP_HOST } from './modules/nf-core/minimap2/align/main'                                                                                                                     
+include {SORT_INDEX_BAM} from './modules/local/bam_sort_index/main'
 include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'                                                                                                                       
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'                                                                                                                   
 include { KRAKEN2_PARSE } from './modules/local/kraken2_parse/main'                                                                                                                   
+include { KRAKEN2_REPORT } from './modules/local/kraken2_report/main'                                                                                                                   
 include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'                                                                                                                           
 include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'                                                                                                                           
 include { NCBIGENOMEDOWNLOAD } from './modules/nf-core/ncbigenomedownload/main'
@@ -85,31 +87,36 @@ workflow {
 	} else if (params.host_removal_tool == 'minimap2') {
 		host_map = MINIMAP_HOST(trimmed.reads,
 						params.host_fasta,
-						false, "bai", false, false, true)
+						true, false, false, true)
 		unmapped = host_map.unmapped
 		mapping_logs = host_map.log
 	} else {
 		error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
 	}
-
+	
 	// * ncbi db preparation * //
 	// ...
 
 	// * taxonomic classification * //
 	if (params.taxonomy_tool == 'all') {
 		kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
-		// KRAKEN2_PARSE(kraken.classified_reads_assignment, 0.65)
+		kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold)
+		// kraken_report_postParse = KRAKEN2_REPORT(kraken_parse.filter, params.kraken2_db)
 		kraken_logs = kraken.report
 		MASH_SCREEN(unmapped, params.mash_screen_db)
 	} else if (params.taxonomy_tool == 'kraken2') {
 		if (!params.ncbi_db_prepare) {
 			kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true)
 			kraken_logs = kraken.report
-			// KRAKEN2_PARSE(kraken.classified_reads_assignment, 0.65)
+			kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold)
+			// kraken_report_postParse = KRAKEN2_REPORT(kraken_parse.filter, params.kraken2_db)
 		} else {
 			// *** untested *** //
 			db = KRAKEN2_BUILD(params.ncbi_db, true).db
-			KRAKEN2_KRAKEN2(unmapped, db, true, true)
+			kraken = KRAKEN2_KRAKEN2(unmapped, db, true, true)
+			kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold)
+			// kraken_report_postParse = KRAKEN2_REPORT(kraken_parse.filter, db)
+			kraken_logs = kraken.report
 		}
 	} else if (params.taxonomy_tool == 'mash') {
 		if (!params.ncbi_db_prepare) {
@@ -128,13 +135,13 @@ workflow {
 		ncbi = NCBIGENOMEDOWNLOAD(params.candidates, params.genomes_filename)
 
 		//* Mapping against candidates * //
-		MINIMAP_CANDIDATES(unmapped,
+		map_candidates = MINIMAP_CANDIDATES(unmapped,
 						ncbi.cat_fna,
 						true,
-						"bai",
 						false,
 						false,
 						false)
+		SORT_INDEX_BAM(map_candidates.bam)
 	}
 
     // -- COLLECT REPORTS FOR MULTIQC --
