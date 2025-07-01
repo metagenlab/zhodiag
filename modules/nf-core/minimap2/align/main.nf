@@ -1,7 +1,6 @@
 process MINIMAP2_ALIGN {
     tag "$meta.id"
     label 'process_high'
-
     // Note: the versions here need to match the versions used in the mulled container below and minimap2/index
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -12,7 +11,6 @@ process MINIMAP2_ALIGN {
     tuple val(meta), path(reads)
     path reference
     val bam_format
-    val bam_index_extension
     val cigar_paf_format
     val cigar_bam
     val unmapped_fq
@@ -20,7 +18,7 @@ process MINIMAP2_ALIGN {
     output:
     tuple val(meta), path("*.paf")                       , optional: true, emit: paf
     tuple val(meta), path("*.bam")                       , optional: true, emit: bam
-    tuple val(meta), path("*.bam.${bam_index_extension}"), optional: true, emit: index
+    tuple val(meta), path("*.flagstat.txt")              , optional: true, emit: flagstat
     tuple val(meta), path("*.fastq.gz")                  , optional: true, emit: unmapped
     tuple val(meta), path("*.log")                       , optional: true, emit: log
     path "versions.yml"                                  , emit: versions
@@ -35,9 +33,8 @@ process MINIMAP2_ALIGN {
     def args4 = task.ext.args4 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def genome = reference.getBaseName().replaceFirst(/(\.fna|\.fa|\.fasta)?(\.gz)?$/, '')
-    def bam_index = bam_index_extension ? "${prefix}_${genome}.bam##idx##${prefix}_${genome}.bam.${bam_index_extension} --write-index" : "${prefix}_${genome}.bam"
-    def bam_output = bam_format ? "-a | samtools sort -@ ${task.cpus-1} -o ${bam_index} ${args2}" : ''
-    def unmapped_fq = unmapped_fq ? "-a | samtools fastq -f 4 -@ ${task.cpus-1} - -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ''
+    def bam_output_path = "${prefix}_${genome}.bam"
+    def bam_output = bam_format ? "-a | samtools view -@ ${task.cpus-1} -b -o ${prefix}_${genome}.bam" : ''
     def logfiles = "${prefix}_${genome}.log"
     def cigar_paf = cigar_paf_format && !bam_format ? "-c" : ''
     def set_cigar_bam = cigar_bam && bam_format ? "-L" : ''
@@ -45,10 +42,11 @@ process MINIMAP2_ALIGN {
     def samtools_reset_fastq = bam_input ? "samtools reset --threads ${task.cpus-1} $args3 $reads | samtools fastq --threads ${task.cpus-1} $args4 |" : ''
     def query = bam_input ? "-" : reads
     def target = reference ?: (bam_input ? error("BAM input requires reference") : reads)
-
+    def flagstat_file      = bam_format ? "${prefix}_${genome}.flagstat.txt" : ''
+    
     """
     $samtools_reset_fastq \\
-    minimap2 \\
+    minimap2 -x sr \\
         $args \\
         -t $task.cpus \\
         $target \\
@@ -56,10 +54,11 @@ process MINIMAP2_ALIGN {
         $cigar_paf \\
         $set_cigar_bam \\
         $bam_output \\
-        2> $logfiles \\
-        $unmapped_fq
+        2> $logfiles
     
-
+    ${bam_format ? "samtools flagstat ${bam_output_path} > ${flagstat_file}" : ""}
+    ${bam_format && unmapped_fq ? "samtools fastq -f 4 -@ ${task.cpus-1} ${bam_output_path} -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         minimap2: \$(minimap2 --version 2>&1)
