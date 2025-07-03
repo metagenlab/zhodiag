@@ -10,15 +10,15 @@ process KRAKEN2_TAXONOMY {
     path db_file
 
     output:
-    tuple val(meta), path("*_taxonomy.tsv")
+    tuple val(meta), path("*_taxonomy.tsv") , emit: taxonomy
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}_${kraken2_db_name}"
     def script_dir = file("bin")
     def kraken_taxonomy_script = script_dir.resolve("kraken2_linear_taxonomy.py").toString()
-    def threshold = threshold
-    def outfile = "${prefix}_nReadByTaxID_postReassign_${threshold}_taxonomy.tsv"
-
+    def infileName = infile.getName().replaceFirst(/(\.[^.]+)?$/, '')  // remove extension
+    def outfile = "${infileName}_taxonomy.tsv"
+    
     """
     python3 $kraken_taxonomy_script -i $infile -o $outfile --db $db_file
     """

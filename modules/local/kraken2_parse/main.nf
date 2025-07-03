@@ -8,8 +8,8 @@ process KRAKEN2_PARSE {
 
     output:
     tuple val(meta), path("*_reassign_*.txt"), emit: screen
-    tuple val(meta), path("*_nReadByTaxID_postReassign*.tsv"), emit: stat_post
     tuple val(meta), path("*_nReadByTaxID_preReassign*.tsv"), emit: stat_pre
+    tuple val(meta), path("*_nReadByTaxID_postReassign*.tsv"), emit: stat_post
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}_${kraken2_db_name}"
