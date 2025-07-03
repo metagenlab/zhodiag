@@ -16,6 +16,12 @@ include {SORT_INDEX_BAM} from './modules/local/bam_sort_index/main'
 include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'                                                                                                                       
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'                                                                                                                   
 include { KRAKEN2_PARSE } from './modules/local/kraken2_parse/main'                                                                                                                   
+include { KRAKEN2_TAXONOMY as KRAKEN2_TAXONOMY_PRE} from './modules/local/kraken2_taxonomy/main'                                                                                                                   
+include { KRAKEN2_TAXONOMY as KRAKEN2_TAXONOMY_POST} from './modules/local/kraken2_taxonomy/main'                                                                                                                   
+include { COUNTS_MERGE as  COUNTS_MERGE_PRE} from './modules/local/counts_merge/main'                                                                                                                   
+include { COUNTS_MERGE as  COUNTS_MERGE_POST} from './modules/local/counts_merge/main'                                                                                                                   
+include { PLOTS_HEATMAP as PLOTS_HEATMAP_PRE} from './modules/local/plots_heatmap/main'                                                                                                                   
+include { PLOTS_HEATMAP as PLOTS_HEATMAP_POST} from './modules/local/plots_heatmap/main'                                                                                                                   
 include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'                                                                                                                           
 include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'                                                                                                                           
 include { NCBIGENOMEDOWNLOAD } from './modules/nf-core/ncbigenomedownload/main'
@@ -100,11 +106,26 @@ workflow {
 	if (params.taxonomy_tool == 'all') {
 		kraken2_db_name = params.kraken2_db.tokenize('/').last()
 		kraken2_db_name_ch = Channel.value(kraken2_db_name)
+
 		kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true, kraken2_db_name_ch)
-		kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
 		kraken_logs = kraken.report
+		
+		kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
+		
+		kraken_taxo_pre = KRAKEN2_TAXONOMY_PRE(kraken_parse.stat_pre, params.kraken2_parse_threshold, kraken2_db_name_ch, file(params.taxonomy_db))
+		kraken_taxo_post = KRAKEN2_TAXONOMY_POST(kraken_parse.stat_post, params.kraken2_parse_threshold, kraken2_db_name_ch, file(params.taxonomy_db))
+
+		taxonomy_files_pre_ch = kraken_taxo_pre.taxonomy.map { it -> it[1] }
+		counts_pre = COUNTS_MERGE_PRE(taxonomy_files_pre_ch.collect())
+		taxonomy_files_post_ch = kraken_taxo_post.taxonomy.map { it -> it[1] }
+		counts_post = COUNTS_MERGE_POST(taxonomy_files_pre_ch.collect())
+
+		PLOTS_HEATMAP_PRE(counts_pre.counts)
+		PLOTS_HEATMAP_POST(counts_post.counts)
+
 		mash_db_name = params.mash_screen_db.tokenize('/').last()
 		mash_db_name_ch = Channel.value(mash_db_name)
+		
 		MASH_SCREEN(unmapped, params.mash_screen_db, mash_db_name_ch)
 	} else if (params.taxonomy_tool == 'kraken2') {
 		kraken2_db_name = params.kraken2_db.tokenize('/').last()
@@ -113,11 +134,13 @@ workflow {
 			kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, true, true, kraken2_db_name_ch)
 			kraken_logs = kraken.report
 			kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
+			kraken_taxo = KRAKEN2_TAXONOMY(kraken_parse.stat_post, params.kraken2_parse_threshold, kraken2_db_name_ch, file(params.taxonomy_db))
 		} else {
 			// *** untested *** //
 			db = KRAKEN2_BUILD(params.ncbi_db, true).db
 			kraken = KRAKEN2_KRAKEN2(unmapped, db, true, true, kraken2_db_name_ch)
 			kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
+			kraken_taxo = KRAKEN2_TAXONOMY(kraken_parse.stat_post, params.kraken2_parse_threshold, kraken2_db_name_ch, file(params.taxonomy_db))
 			kraken_logs = kraken.report
 		}
 	} else if (params.taxonomy_tool == 'mash') {
@@ -132,6 +155,11 @@ workflow {
 	} else {
 		error("Unsupported taxonomy tool. Options are 'kraken2', 'mash', and 'all'.")
 	}
+
+	// // Channel with all taxonomy files
+	// taxonomy_files_ch = Channel.fromPath('./kraken2/*_taxonomy.tsv')
+	// COUNTS_MERGE(taxonomy_files_ch)
+
 
 	if (params.minimap2_candidates) {
 		//* Download genomes of interest * //

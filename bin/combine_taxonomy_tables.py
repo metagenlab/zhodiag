@@ -57,5 +57,5 @@ parts = first_file.split('_')
 # Get last two parts joined with underscore (for example: "postReassign_0.65.tsv")
 suffix_part = "_" + parts[-3] + "_" + parts[-2].replace(".tsv", "")
 
-output_filename = f"combined_taxonomy_counts{suffix_part}.tsv"
+output_filename = f"combined_counts{suffix_part}.tsv"
 df_merged.to_csv(output_filename, sep='\t', index=False)

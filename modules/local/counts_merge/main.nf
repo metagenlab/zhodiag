@@ -7,7 +7,7 @@ process COUNTS_MERGE {
     path taxonomy_files
 
     output:
-    path 'combined_taxonomy_counts*.tsv'
+    path 'combined_counts*.tsv'      , emit: counts
 
     script:
     def script_dir = file("bin")
