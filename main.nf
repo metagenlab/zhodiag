@@ -32,17 +32,17 @@ include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES } from './modules/nf-core/minimap
 
 workflow {
     // Create a new channel of metadata from the sample sheet passed to the pipeline through the --input parameter
-    samples = Channel.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
+	samples = Channel.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
 
-    // Update the metadata with the single_end parameter and put reads files in a list
-    samples = samples.map( {
-        row ->
-            if (!row[2]) {
-                return new Tuple (row[0] + [ single_end:true ], [ row[1] ])
-            } else {
-                return new Tuple (row[0] + [ single_end:false ], [ row[1], row[2] ])
-            }
-        })
+	samples = samples.map { row ->
+		def single_end = !row.fastq_R2  // true if no R2 fastq
+		def reads = single_end ? [row.fastq_R1] : [row.fastq_R1, row.fastq_R2]
+		
+		def meta = row + [ single_end: single_end, group: (row.group ? row.group.toInteger() : 0) ]
+
+		return tuple(meta, reads)
+	}
+
 	samples.view()
 
 	
@@ -118,7 +118,7 @@ workflow {
 		taxonomy_files_pre_ch = kraken_taxo_pre.taxonomy.map { it -> it[1] }
 		counts_pre = COUNTS_MERGE_PRE(taxonomy_files_pre_ch.collect())
 		taxonomy_files_post_ch = kraken_taxo_post.taxonomy.map { it -> it[1] }
-		counts_post = COUNTS_MERGE_POST(taxonomy_files_pre_ch.collect())
+		counts_post = COUNTS_MERGE_POST(taxonomy_files_post_ch.collect())
 
 		PLOTS_HEATMAP_PRE(counts_pre.counts)
 		PLOTS_HEATMAP_POST(counts_post.counts)
