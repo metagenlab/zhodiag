@@ -55,6 +55,17 @@ ggplot(b, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = tota
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 dev.off()
 
+# boxplot
+b$group <- factor(b$group)
+pdf(paste0(outfile_prefix, "_boxplot_exclHuman.pdf"), width = 12, height = plot_height)
+ggplot(b, aes(x = taxonomy, y = totalCounts, fill = group)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  labs(x = "Taxonomy", y = "Total Counts", fill = "Group") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip()
+dev.off()
+
 # total counts vs distinct minimizers for each sample
 for(s in unique(b$sample)){
 #   print(s)
