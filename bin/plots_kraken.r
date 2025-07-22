@@ -49,7 +49,7 @@ pdf(paste0(outfile_prefix, "_heatmap_exclHuman_facetGroups.pdf"), width = plot_w
 ggplot(b, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
   geom_tile() +
   geom_text(colour='white') +
-  facet_wrap(~factor(group), scales = 'free_x', space = 'free') +
+  facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
   labs(x = '', y = '') +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
@@ -110,7 +110,7 @@ pdf(paste0(outfile_prefix, "_heatmap_exclControls_facetGroups.pdf"), width = plo
 ggplot(bf, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
   geom_tile() +
   geom_text(colour='white') +
-  facet_wrap(~factor(group), scales = 'free_x', space = 'free') +
+  facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
   labs(x = '', y = '') +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
