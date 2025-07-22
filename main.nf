@@ -112,6 +112,20 @@ workflow {
     kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(grouped_kraken_reports_ch)
 	PLOTS_KRAKEN2(kraken_reports_combined.combine_long)
 
+	// kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
+	
+	// kraken_taxo_pre = KRAKEN2_TAXONOMY_PRE(kraken_parse.stat_pre, params.kraken2_parse_threshold, kraken2_db_name_ch, file(params.taxonomy_db))
+	// kraken_taxo_post = KRAKEN2_TAXONOMY_POST(kraken_parse.stat_post, params.kraken2_parse_threshold, kraken2_db_name_ch, file(params.taxonomy_db))
+
+	// taxonomy_files_pre_ch = kraken_taxo_pre.taxonomy.map { it -> it[1] }
+	// counts_pre = COUNTS_MERGE_PRE(taxonomy_files_pre_ch.collect())
+	// taxonomy_files_post_ch = kraken_taxo_post.taxonomy.map { it -> it[1] }
+	// counts_post = COUNTS_MERGE_POST(taxonomy_files_post_ch.collect())
+
+	// PLOTS_HEATMAP_PRE(counts_pre.counts)
+	// PLOTS_HEATMAP_POST(counts_post.counts)
+
+
     // --- Mash screen ---
     mash_db_name = params.mash_screen_db.tokenize('/').last()
     mash_db_name_ch = Channel.value(mash_db_name)
