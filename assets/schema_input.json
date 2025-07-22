@@ -22,7 +22,10 @@
             "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz', '.fastq.gz', '.fq' or '.fastq'",
             "type": "string",
             "format": "file-path"
-          }
+        },
+        "group": {
+            "errorMessage": "Sample group. Useful for plots"
+        }
     },
     "required": ["sample", "fastq_R1"]
     }
