@@ -62,7 +62,7 @@ ggplot(b, aes(x = taxonomy, y = totalCounts, colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
   labs(x = "", y = "Total Counts", colour = "Group") +
   theme_bw() +
-  scale_colour_brewer(palette = "Dark") + 
+  scale_colour_brewer(palette = "Dark2") + 
   # guides(colour = "none") +
   # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_flip()
@@ -74,7 +74,7 @@ ggplot(b, aes(x = taxonomy, y = distinctMinimizers, colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
   labs(x = "", y = "Distinct Minimizers", colour = "Group") +
   theme_bw() +
-  scale_colour_brewer(palette = "Dark") + 
+  scale_colour_brewer(palette = "Dark2") + 
   # guides(colour = "none") +
   # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_flip()
