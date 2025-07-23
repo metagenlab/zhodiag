@@ -58,22 +58,24 @@ dev.off()
 # boxplot totalCounts
 b$group <- factor(b$group)
 pdf(paste0(outfile_prefix, "_boxplot_totalCounts_exclHuman.pdf"), width = 12, height = plot_height)
-ggplot(b, aes(x = taxonomy, y = totalCounts, fill = group, colour = group)) +
+ggplot(b, aes(x = taxonomy, y = totalCounts, colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
-  labs(x = "", y = "Total Counts", fill = "Group") +
+  labs(x = "", y = "Total Counts", colour = "Group") +
   theme_bw() +
-  guides(colour = "none") +
+  scale_fill_brewer(palette = "Set2") + 
+  # guides(colour = "none") +
   # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_flip()
 dev.off()
 
 # boxplot distinctMinimizers
 pdf(paste0(outfile_prefix, "_boxplot_distinctMinimizers_exclHuman.pdf"), width = 12, height = plot_height)
-ggplot(b, aes(x = taxonomy, y = distinctMinimizers, fill = group, colour = group)) +
+ggplot(b, aes(x = taxonomy, y = distinctMinimizers, colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
-  labs(x = "", y = "Distinct Minimizers", fill = "Group") +
+  labs(x = "", y = "Distinct Minimizers", colour = "Group") +
   theme_bw() +
-  guides(colour = "none") +
+  scale_fill_brewer(palette = "Set2") + 
+  # guides(colour = "none") +
   # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_flip()
 dev.off()
