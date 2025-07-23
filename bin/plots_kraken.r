@@ -58,7 +58,7 @@ dev.off()
 # boxplot totalCounts
 b$group <- factor(b$group)
 pdf(paste0(outfile_prefix, "_boxplot_totalCounts_exclHuman.pdf"), width = 12, height = plot_height)
-ggplot(b, aes(x = taxonomy, y = totalCounts, colour = group)) +
+ggplot(b, aes(x = taxonomy, y = log2(totalCounts), colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
   labs(x = "", y = "Total Counts", colour = "Group") +
   theme_bw() +
@@ -70,7 +70,7 @@ dev.off()
 
 # boxplot distinctMinimizers
 pdf(paste0(outfile_prefix, "_boxplot_distinctMinimizers_exclHuman.pdf"), width = 12, height = plot_height)
-ggplot(b, aes(x = taxonomy, y = distinctMinimizers, colour = group)) +
+ggplot(b, aes(x = taxonomy, y = log2(distinctMinimizers), colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
   labs(x = "", y = "Distinct Minimizers", colour = "Group") +
   theme_bw() +
@@ -86,7 +86,7 @@ for(s in unique(b$sample)){
     pdf(paste0(outfile_prefix, "_", s, "_totalCounts_vs_distinctMinimizers.pdf"), 
     width = 10, height = 10)
   p = ggplot(b %>% filter(sample == s), 
-         aes(x = totalCounts, y = distinctMinimizers, label = taxonomy)) +
+         aes(x = log2(totalCounts), y = log2(distinctMinimizers), label = taxonomy)) +
     geom_point() +
     geom_text_repel() +
     scale_y_continuous(limits = c(0, NA)) +
@@ -169,7 +169,7 @@ for(s in unique(b$sample)){
     pdf(paste0(outfile_prefix, "_", s, "_totalCounts_vs_distinctMinimizers_exclControls.pdf"), 
     width = 10, height = 10)
   p = ggplot(b %>% filter(sample == s), 
-         aes(x = totalCounts, y = distinctMinimizers, label = taxonomy)) +
+         aes(x = log2(totalCounts), y = log2(distinctMinimizers), label = taxonomy)) +
     geom_point() +
     geom_text_repel() +
     scale_y_continuous(limits = c(0, NA)) +
