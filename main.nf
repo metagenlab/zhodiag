@@ -15,7 +15,10 @@ include { MINIMAP2_ALIGN as MINIMAP_HOST } from './modules/nf-core/minimap2/alig
 include { SORT_INDEX_BAM } from './modules/local/bam_sort_index/main'
 include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'
+include { KRAKEN2_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
 include { KRAKEN2_COMBINE_REPORTS } from './modules/local/kraken2_combineReports/main'
+include { KRAKEN2_KREPORT2KRONA } from './modules/nf-core/krakentools/kreport2krona/main'
+include { PLOTS_KRONA } from './modules/nf-core/krona/ktimporttext/main'
 include { PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
 include { KRAKEN2_PARSE } from './modules/local/kraken2_parse/main'
 include { KRAKEN2_TAXONOMY as KRAKEN2_TAXONOMY_PRE } from './modules/local/kraken2_taxonomy/main'
@@ -96,6 +99,15 @@ workflow {
     kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, params.kraken2_confidence, true, true, kraken2_db_name_ch)
     kraken_logs = kraken.report
 
+    // Krona plots from krakentools
+    kreport = KRAKEN2_KREPORT2KRONA(kraken.report)
+    PLOTS_KRONA(kreport.txt)
+
+    // Combine reports with krakentools combine_kreports.py
+    kreports_ch = kraken.report.map { it -> it[1] }
+    KRAKEN2_COMBINEKREPORTS(kreports_ch.collect())
+
+    // Combine reports custom: with group variable.
     // Extract reports as tuples [id, group, report_path]
     kraken_reports_ch = kraken.report.map { tuple ->
         def meta = tuple[0]
