@@ -15,6 +15,9 @@ process PLOTS_KRAKEN2 {
     path '*heatmap_exclControls_facetGroups.pdf'
     path '*totalCounts_vs_distinctMinimizers_exclControls.pdf'
     path '*boxplot_exclHuman.pdf'
+    path '*boxplot_distinctMinimizers_exclHuman.pdf'
+    path '*boxplot_totalCounts_exclControls.pdf'
+    path '*boxplot_distinctMinimizers_exclControls.pdf'
 
     script:
     def script_dir = file("bin")

@@ -55,14 +55,24 @@ ggplot(b, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = tota
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 dev.off()
 
-# boxplot
+# boxplot totalCounts
 b$group <- factor(b$group)
-pdf(paste0(outfile_prefix, "_boxplot_exclHuman.pdf"), width = 12, height = plot_height)
-ggplot(b, aes(x = taxonomy, y = totalCounts, fill = group)) +
+pdf(paste0(outfile_prefix, "_boxplot_totalCounts_exclHuman.pdf"), width = 12, height = plot_height)
+ggplot(b, aes(x = taxonomy, y = totalCounts, fill = group, colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
-  labs(x = "Taxonomy", y = "Total Counts", fill = "Group") +
+  labs(x = "", y = "Total Counts", fill = "Group") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip()
+dev.off()
+
+# boxplot distinctMinimizers
+pdf(paste0(outfile_prefix, "_boxplot_distinctMinimizers_exclHuman.pdf"), width = 12, height = plot_height)
+ggplot(b, aes(x = taxonomy, y = distinctMinimizers, fill = group, colour = group)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  labs(x = "", y = "Distinct Minimizers", fill = "Group") +
+  theme_bw() +
+  # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_flip()
 dev.off()
 
@@ -125,6 +135,27 @@ ggplot(bf, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = tot
   labs(x = '', y = '') +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+dev.off()
+
+# boxplot totalCounts
+bf$group <- factor(b$group)
+pdf(paste0(outfile_prefix, "_boxplot_totalCounts_exclControls.pdf"), width = 12, height = plot_height)
+ggplot(bf, aes(x = taxonomy, y = totalCounts, fill = group, colour = group)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  labs(x = "", y = "Total Counts", fill = "Group") +
+  theme_bw() +
+  # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip()
+dev.off()
+
+# boxplot distinctMinimizers
+pdf(paste0(outfile_prefix, "_boxplot_distinctMinimizers_exclControls.pdf"), width = 12, height = plot_height)
+ggplot(bf, aes(x = taxonomy, y = distinctMinimizers, fill = group, colour = group)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  labs(x = "", y = "Distinct Minimizers", fill = "Group") +
+  theme_bw() +
+  # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip()
 dev.off()
 
 # total counts vs distinct minimizers for each sample
