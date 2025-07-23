@@ -60,7 +60,7 @@ b$group <- factor(b$group)
 pdf(paste0(outfile_prefix, "_boxplot_totalCounts_exclHuman.pdf"), width = 12, height = plot_height)
 ggplot(b, aes(x = taxonomy, y = log2(totalCounts), colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
-  labs(x = "", y = "Total Counts", colour = "Group") +
+  labs(x = "", y = "log2 Total Counts", colour = "Group") +
   theme_bw() +
   scale_colour_brewer(palette = "Dark2") + 
   # guides(colour = "none") +
@@ -72,7 +72,7 @@ dev.off()
 pdf(paste0(outfile_prefix, "_boxplot_distinctMinimizers_exclHuman.pdf"), width = 12, height = plot_height)
 ggplot(b, aes(x = taxonomy, y = log2(distinctMinimizers), colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
-  labs(x = "", y = "Distinct Minimizers", colour = "Group") +
+  labs(x = "", y = "log2 Distinct Minimizers", colour = "Group") +
   theme_bw() +
   scale_colour_brewer(palette = "Dark2") + 
   # guides(colour = "none") +
