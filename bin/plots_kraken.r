@@ -146,7 +146,8 @@ if (length(control_cols) == 1) {
 }
 bf <- b %>%
   filter(!taxonomy %in% taxa_to_remove) %>%
-  tidyr::complete(taxonomy, sample, group, fill = list(totalCounts = 0, distinctMinimizers = 0))
+  tidyr::complete(taxonomy, group, fill = list(totalCounts = 0, distinctMinimizers = 0)) %>%
+  filter(!is.na(sample))
 
 n_species <- length(unique(bf$taxonomy))
 n_samples <- length(unique(bf$sample))
