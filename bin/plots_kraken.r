@@ -5,6 +5,7 @@ library(ggrepel)
 args <- commandArgs(trailingOnly = TRUE)
 filename <- args[1]
 outfile_prefix <- args[2]
+contaminants <- as.numeric(strsplit(args[3], ",\\s*")[[1]])
 
 a <- read.table(filename, header = TRUE, sep = '\t')
 
@@ -45,12 +46,13 @@ ggplot(a, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = tota
   geom_tile() +
   geom_text(colour='white') +
   labs(x = '', y = '') +
+  facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 dev.off()
 
-### remove homo sapiens ###
-b <- a %>% filter(taxonomy != 'Homo sapiens')
+### remove contaminants ###
+b <- a %>% filter(!taxID %in% contaminants)
 
 # # heatmap without human
 # pdf(paste0(outfile_prefix, "_heatmap_exclHuman.pdf"), width = plot_width, height = plot_height)
@@ -124,12 +126,9 @@ taxonomy_summary <- b %>%
   summarise(sample_sum = sum(totalCounts), .groups = "drop")
 taxonomy_wide <- taxonomy_summary %>%
   tidyr::pivot_wider(names_from = sample, values_from = sample_sum, values_fill = 0)
-print(head(taxonomy_wide))
 control_cols <- b %>% filter(group == 'control') %>% pull(sample) %>% unique() %>% as.character()
-print(control_cols)
 non_control_cols <- setdiff(names(taxonomy_wide), c(control_cols, "taxonomy"))
 print(non_control_cols)
-print(taxonomy_wide %>% filter(`1020097988` > 0))
 if (length(control_cols) == 1) {
   taxa_to_remove <- taxonomy_wide %>%
     filter(
@@ -145,7 +144,7 @@ if (length(control_cols) == 1) {
     ) %>%
     pull(taxonomy)
 }
-
+print('ok')
 bf <- b %>%
   filter(!taxonomy %in% taxa_to_remove) %>%
   tidyr::complete(taxonomy, group, fill = list(totalCounts = 0, distinctMinimizers = 0))
