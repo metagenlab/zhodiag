@@ -122,7 +122,7 @@ workflow {
         .set { grouped_kraken_reports_ch }
 	grouped_kraken_reports_ch.view()
     kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(grouped_kraken_reports_ch)
-	PLOTS_KRAKEN2(kraken_reports_combined.combine_long)
+	PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminant_taxids)
 
 	// kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
 	
