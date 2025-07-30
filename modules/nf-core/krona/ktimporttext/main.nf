@@ -20,10 +20,14 @@ process PLOTS_KRONA {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def filename = report.getName()
+    def base = filename.replaceFirst(/\.txt$/, '')
+    def parts = base.split('_')
+    def suffix = parts.size() >= 5 ? parts[2..4].join('_') : 'unknown'
     """
     ktImportText  \\
         $args \\
-        -o ${prefix}.html \\
+        -o ${prefix}_${suffix}.html \\
         $report
 
     cat <<-END_VERSIONS > versions_krona.yml

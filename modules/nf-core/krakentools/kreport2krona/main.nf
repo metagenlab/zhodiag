@@ -22,10 +22,14 @@ process KRAKEN2_KREPORT2KRONA {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def VERSION = '1.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
+    def filename = kreport.getName()
+    def base = filename.replaceFirst(/\.txt$/, '')
+    def parts = base.split('_')
+    def suffix = parts.size() >= 4 ? parts[1..3].join('_') : 'unknown'
     """
     kreport2krona.py \\
         -r ${kreport} \\
-        -o ${prefix}_2krona.txt \\
+        -o ${prefix}_${suffix}_2krona.txt \\
         ${args}
 
     cat <<-END_VERSIONS > versions.yml
