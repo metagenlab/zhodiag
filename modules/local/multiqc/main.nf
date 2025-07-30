@@ -1,4 +1,4 @@
-process COLLECT_REPORTS {
+process MULTIQC_COLLECT_REPORTS {
     tag "multiqc_input"
 
     input:

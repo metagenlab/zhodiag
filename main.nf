@@ -2,7 +2,7 @@
 
 include { samplesheetToList } from 'plugin/nf-schema'
 include { MULTIQC } from './modules/nf-core/multiqc/main'
-include { COLLECT_REPORTS } from './modules/local/multiqc/main'
+include { MULTIQC_COLLECT_REPORTS } from './modules/local/multiqc/main'
 include { FASTQC } from './modules/nf-core/fastqc/main'
 include { TRIMMOMATIC } from './modules/nf-core/trimmomatic/main'
 include { BBMAP_BBDUK } from './modules/nf-core/bbmap/bbduk/main'
@@ -168,7 +168,7 @@ workflow {
         )
         .collect()
 
-    multiqc_input = COLLECT_REPORTS(collect_reports_input)
+    multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input)
 
     MULTIQC(multiqc_input)
 }
