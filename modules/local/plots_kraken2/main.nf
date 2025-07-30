@@ -5,6 +5,7 @@ process PLOTS_KRAKEN2 {
 
     input:
     path count_table
+    val contaminants
 
     output:
     path '*summary_kingdoms.tsv'
@@ -12,7 +13,7 @@ process PLOTS_KRAKEN2 {
     // path '*heatmap_exclHuman.pdf'
     // path '*heatmap_exclHuman_facetGroups.pdf'
     // path '*totalCounts_vs_distinctMinimizers.pdf'
-    path '*heatmap_filtContam.pdf'
+    // path '*heatmap_filtContam.pdf'
     path '*heatmap_filtContam_facetGroups.pdf'
     path '*totalCounts_vs_distinctMinimizers_filtContam.pdf'
     // path '*boxplot_totalCounts_exclHuman.pdf'
@@ -30,6 +31,6 @@ process PLOTS_KRAKEN2 {
     def suffix = parts.size() >= 5 ? parts[2..4].join('_') : 'unknown'
 
     """
-    Rscript $plot_heatmap_script $count_table $suffix
+    Rscript $plot_heatmap_script $count_table $suffix $contaminants
     """
 }

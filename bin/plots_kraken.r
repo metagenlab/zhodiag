@@ -128,7 +128,7 @@ taxonomy_wide <- taxonomy_summary %>%
   tidyr::pivot_wider(names_from = sample, values_from = sample_sum, values_fill = 0)
 control_cols <- b %>% filter(group == 'control') %>% pull(sample) %>% unique() %>% as.character()
 non_control_cols <- setdiff(names(taxonomy_wide), c(control_cols, "taxonomy"))
-print(non_control_cols)
+
 if (length(control_cols) == 1) {
   taxa_to_remove <- taxonomy_wide %>%
     filter(
@@ -144,7 +144,6 @@ if (length(control_cols) == 1) {
     ) %>%
     pull(taxonomy)
 }
-print('ok')
 bf <- b %>%
   filter(!taxonomy %in% taxa_to_remove) %>%
   tidyr::complete(taxonomy, group, fill = list(totalCounts = 0, distinctMinimizers = 0))
@@ -154,21 +153,12 @@ n_samples <- length(unique(bf$sample))
 plot_height <- max(base_height, n_species * height_per_species)
 plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-# heatmap together
-pdf(paste0(outfile_prefix, "_heatmap_filtContam.pdf"), width = plot_width, height = plot_height)
-ggplot(bf, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
-  geom_tile() +
-  geom_text(colour='white') +
-  labs(x = '', y = '') +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-dev.off()
 
 # heatmap facet
 pdf(paste0(outfile_prefix, "_heatmap_filtContam_facetGroups.pdf"), width = plot_width, height = plot_height)
 ggplot(bf, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
   geom_tile() +
-  geom_text(colour='white') +
+  geom_text(colour='white', size = 1.5) +
   facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
   labs(x = '', y = '') +
   theme_classic() +
