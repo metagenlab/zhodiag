@@ -10,9 +10,10 @@ process KRAKEN2_COMBINE_REPORTS {
     path "kraken2_combined*.tsv", emit: combine_long
 
     script:
-    def script_dir = file("bin")
-    def kraken_merge_script_long = script_dir.resolve("combine_kraken2_reports_long.py").toString()
-    def kraken_merge_script_wide = script_dir.resolve("combine_kraken2_reports_wide.py").toString()
+    // def script_dir = file("bin")
+    def kraken_merge_script_long = workflow.projectDir.resolve("bin/combine_kraken2_reports_long.py")
+    def kraken_merge_script_wide = workflow.projectDir.resolve("bin/combine_kraken2_reports_wide.py")
+
 
     // Validate and sanitize input list of [id, group, path]
     def sanitized = samples_list.collect { sample ->

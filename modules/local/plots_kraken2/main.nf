@@ -7,21 +7,21 @@ process PLOTS_KRAKEN2 {
     path count_table
 
     output:
+    path '*summary_kingdoms.tsv'
     path '*heatmap_all.pdf'
-    path '*heatmap_exclHuman.pdf'
-    path '*heatmap_exclHuman_facetGroups.pdf'
-    path '*totalCounts_vs_distinctMinimizers.pdf'
-    path '*heatmap_exclControls.pdf'
-    path '*heatmap_exclControls_facetGroups.pdf'
-    path '*totalCounts_vs_distinctMinimizers_exclControls.pdf'
-    path '*boxplot_totalCounts_exclHuman.pdf'
-    path '*boxplot_distinctMinimizers_exclHuman.pdf'
-    // path '*boxplot_totalCounts_exclControls.pdf'
-    // path '*boxplot_distinctMinimizers_exclControls.pdf'
+    // path '*heatmap_exclHuman.pdf'
+    // path '*heatmap_exclHuman_facetGroups.pdf'
+    // path '*totalCounts_vs_distinctMinimizers.pdf'
+    path '*heatmap_filtContam.pdf'
+    path '*heatmap_filtContam_facetGroups.pdf'
+    path '*totalCounts_vs_distinctMinimizers_filtContam.pdf'
+    // path '*boxplot_totalCounts_exclHuman.pdf'
+    // path '*boxplot_distinctMinimizers_exclHuman.pdf'
+    path '*boxplot_totalCounts_filtContam.pdf'
+    path '*boxplot_distinctMinimizers_filtContam.pdf'
 
     script:
-    def script_dir = file("bin")
-    def plot_heatmap_script = script_dir.resolve("plots_kraken.r").toString()
+    def plot_heatmap_script = workflow.projectDir.resolve("bin/plots_kraken.r")
 
     // Extract base name and suffix from file
     def filename = count_table.getName()

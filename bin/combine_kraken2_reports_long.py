@@ -14,12 +14,13 @@ def parse_report(file_path):
             cols = line.split('\t')
             if len(cols) < 8:
                 continue
+            root_reads = int(cols[1])
             total_counts = int(cols[2])
             distinct_minimizers = int(cols[4])
             rank = cols[5]
             taxid = cols[6]
             taxonomy = cols[7].strip()
-            data[taxid] = (total_counts, distinct_minimizers, rank, taxonomy)
+            data[taxid] = (total_counts, distinct_minimizers, rank, taxonomy, root_reads)
     return data
 
 def read_metadata(metadata_path):
@@ -61,7 +62,7 @@ def main(report_files, metadata_path, output_filename_base):
         sample_id, group = metadata[filename]
 
         parsed = parse_report(f)
-        for taxid, (total_counts, distinct_minimizers, rank, taxonomy) in parsed.items():
+        for taxid, (total_counts, distinct_minimizers, rank, taxonomy, root_reads) in parsed.items():
             key = (taxid, sample_id)
             if key in seen:
                 continue
@@ -73,7 +74,8 @@ def main(report_files, metadata_path, output_filename_base):
                 sample_id,
                 group,
                 total_counts,
-                distinct_minimizers
+                distinct_minimizers,
+                root_reads
             ])
 
     # Sort output
@@ -83,7 +85,7 @@ def main(report_files, metadata_path, output_filename_base):
         writer = csv.writer(out, delimiter="\t")
         writer.writerow([
             "taxID", "taxonomy", "rank", "sample", "group",
-            "totalCounts", "distinctMinimizers"
+            "totalCounts", "distinctMinimizers", "rootReads"
         ])
         writer.writerows(rows)
 
