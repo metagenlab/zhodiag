@@ -1,4 +1,4 @@
-process PLOTS_KRONA {
+process KRONA_PLOTS {
     tag "$meta.id"
     label 'process_single'
 
@@ -23,7 +23,7 @@ process PLOTS_KRONA {
     def filename = report.getName()
     def base = filename.replaceFirst(/\.txt$/, '')
     def parts = base.split('_')
-    def suffix = parts.size() >= 5 ? parts[2..4].join('_') : 'unknown'
+    def suffix = parts.size() >= 4 ? parts[1..2].join('_') : 'unknown'
     """
     ktImportText  \\
         $args \\

@@ -11,14 +11,34 @@ include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
 // include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'
 include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
 // include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'
-include { MINIMAP2_ALIGN as MINIMAP_HOST } from './modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAPHOST } from './modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAPFUNGI } from './modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAPBACTERIA } from './modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAPVIRUS } from './modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAPEZVIR } from './modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAPPROTOZOA } from './modules/nf-core/minimap2/align/main'
+include { PAF_PREPARE as MINIMAPPROTOZOA_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
+include { PAF_PREPARE as MINIMAPFUNGI_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
+include { PAF_PREPARE as MINIMAPBACTERIA_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
+include { PAF_PREPARE as MINIMAPVIRUS_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
+
+include { CONCAT_PAFS as MINIMAPPROTOZOA_CONCAT_PAFS } from './modules/local/concat_pafs/main'
+include { CONCAT_PAFS as MINIMAPFUNGI_CONCAT_PAFS } from './modules/local/concat_pafs/main'
+include { CONCAT_PAFS as MINIMAPBACTERIA_CONCAT_PAFS } from './modules/local/concat_pafs/main'
+include { CONCAT_PAFS as MINIMAPVIRUS_CONCAT_PAFS } from './modules/local/concat_pafs/main'
+
+include { PLOTS_MINIMAP2 as PLOTS_PROTOZOA } from './modules/local/plots_minimap2/main'
+include { PLOTS_MINIMAP2 as PLOTS_FUNGI } from './modules/local/plots_minimap2/main'
+include { PLOTS_MINIMAP2 as PLOTS_BACTERIA } from './modules/local/plots_minimap2/main'
+include { PLOTS_MINIMAP2 as PLOTS_VIRUS } from './modules/local/plots_minimap2/main'
+
 include { SORT_INDEX_BAM } from './modules/local/bam_sort_index/main'
 include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'
 include { KRAKEN2_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
 include { KRAKEN2_COMBINE_REPORTS } from './modules/local/kraken2_combineReports/main'
-include { KRAKEN2_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
-include { PLOTS_KRONA } from './modules/nf-core/krona/ktimporttext/main'
+include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
+include { KRONA_PLOTS } from './modules/nf-core/krona/ktimporttext/main'
 include { PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
 include { KRAKEN2_PARSE } from './modules/local/kraken2_parse/main'
 include { KRAKEN2_TAXONOMY as KRAKEN2_TAXONOMY_PRE } from './modules/local/kraken2_taxonomy/main'
@@ -52,7 +72,7 @@ workflow {
         return tuple(meta, reads)
     }
 
-    samples.view()
+//    samples.view()
 
     // --- FASTQC ---
     fastqc = FASTQC(samples)
@@ -83,25 +103,142 @@ workflow {
         unmapped = host_map.unmapped
         mapping_logs = host_map.stats
     } else if (params.host_removal_tool == 'minimap2') {
-        host_map = MINIMAP_HOST(trimmed.reads,
+        host_map = MINIMAPHOST(trimmed.reads,
                                 params.host_fasta,
-                                true, false, false, true)
+                                true, false, false, true, false)
         unmapped = host_map.unmapped
-        mapping_logs = host_map.log
+        mapping_logs = host_map.flagstat
     } else {
         error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
     }
 
+    // * --- Map to kingdoms ---
+    def selected_kingdoms = params.kingdoms.split(',').collect { it.trim().toLowerCase() }
+    def flagstat_channels = []
+
+    // FUNGI
+    if (selected_kingdoms.contains('fungi')) {
+        fungi_map = MINIMAPFUNGI(unmapped, 
+                                params.fungi_fasta,
+                                true, false, false, false, true)
+        // log for multiqc
+        fungi_map_log = fungi_map.flagstat
+        flagstat_channels << fungi_map_log   
+        // annotate paf table and concatenate
+        paf_ch = fungi_map.paf.map { tuple ->
+            def meta = tuple[0]
+            def paf_path = tuple[1]
+            return [meta.id, meta.group, paf_path]
+        }
+        paf_ch.set { grouped_paf_ch }
+        annotated_paf = MINIMAPFUNGI_ANNOTATE_PAF(grouped_paf_ch)
+        annotated_paf.paf
+            .map { it[1] }
+            .collect()
+            .set { collected_annotated_paths }
+        concatenated_pafs = MINIMAPFUNGI_CONCAT_PAFS(collected_annotated_paths)
+        // plots
+        PLOTS_FUNGI(concatenated_pafs.cat, params.mapq_cutoff, "fungi", params.fungi_annotation)
+    }
+    // BACTERIA
+    if (selected_kingdoms.contains('bacteria')) {
+        bacteria_map = MINIMAPBACTERIA(unmapped,
+                                        params.bacteria_fasta,
+                                        true, false, false, false, true)
+        // log for multiqc
+        bacteria_map_log = bacteria_map.flagstat
+        flagstat_channels << bacteria_map_log
+        // annotate paf table and concatenate
+        paf_ch = bacteria_map.paf.map { tuple ->
+            def meta = tuple[0]
+            def paf_path = tuple[1]
+            return [meta.id, meta.group, paf_path]
+        }
+        paf_ch.set { grouped_paf_ch }
+        annotated_paf = MINIMAPBACTERIA_ANNOTATE_PAF(grouped_paf_ch)
+        annotated_paf.paf
+            .map { it[1] }
+            .collect()
+            .set { collected_annotated_paths }
+        concatenated_pafs = MINIMAPBACTERIA_CONCAT_PAFS(collected_annotated_paths)
+        // plots
+        if (params.bacteria_annotation) {
+            PLOTS_BACTERIA(concatenated_pafs.cat, params.mapq_cutoff, "bacteria", params.bacteria_annotation)
+        }
+    }
+    // VIRUS
+    if (selected_kingdoms.contains('virus')) {
+        // REFSEQ
+        virus_refseq_map = MINIMAPVIRUS(unmapped,
+                                        params.virus_fasta,
+                                        true, false, false, false, true)
+        // log for multiqc
+        virus_refseq_map_log = virus_refseq_map.flagstat
+        flagstat_channels << virus_refseq_map_log
+        // annotate paf table and concatenate
+        refseq_paf_ch = virus_refseq_map.paf.map { tuple ->
+            def meta = tuple[0]
+            def paf_path = tuple[1]
+            return [meta.id, meta.group, paf_path]
+        }
+        refseq_paf_ch.set { refseq_grouped_paf_ch }
+        refseq_annotated_paf = MINIMAPVIRUS_ANNOTATE_PAF(refseq_grouped_paf_ch)
+        refseq_annotated_paf.paf
+            .map { it[1] }
+            .collect()
+            .set { refseq_collected_annotated_paths }
+        refseq_concatenated_pafs = MINIMAPVIRUS_CONCAT_PAFS(refseq_collected_annotated_paths)
+        // plots
+        if (params.virus_refseq_annotation){
+            PLOTS_VIRUS(refseq_concatenated_pafs.cat, params.mapq_cutoff, "virus_refseq", params.virus_refseq_annotation)
+        }
+
+
+
+        // // EZVIR
+        // virus_ezvir_map = MINIMAPEZVIR(unmapped,
+        //                                 params.ezvir_fasta,
+        //                                 true, false, false, false, true)
+        // // log for multiqc
+        // virus_ezvir_map_log = virus_ezvir_map.flagstat
+        // flagstat_channels << virus_ezvir_map_log
+    }
+    // PROTOZOA
+    if (selected_kingdoms.contains('protozoa')) {
+        protozoa_map = MINIMAPPROTOZOA(unmapped,
+                                        params.protozoa_fasta,
+                                        true, false, false, false, true)
+        protozoa_map_log = protozoa_map.flagstat
+        // log for multiqc
+        flagstat_channels << protozoa_map_log
+        // annotate paf table and concatenate
+        paf_ch = protozoa_map.paf.map { tuple ->
+            def meta = tuple[0]
+            def paf_path = tuple[1]
+            return [meta.id, meta.group, paf_path]
+        }
+        paf_ch.set { grouped_paf_ch }
+        annotated_paf = MINIMAPPROTOZOA_ANNOTATE_PAF(grouped_paf_ch)
+        annotated_paf.paf
+            .map { it[1] }
+            .collect()
+            .set { collected_annotated_paths }
+        concatenated_pafs = MINIMAPPROTOZOA_CONCAT_PAFS(collected_annotated_paths)
+        // plots
+        PLOTS_PROTOZOA(concatenated_pafs.cat, params.mapq_cutoff, "protozoa", params.protozoa_annotation)
+    }
+    all_flagstats = Channel.empty().mix(*flagstat_channels)
+
     // --- Taxonomic classification with Kraken2 ---
-    kraken2_db_name = params.kraken2_db.tokenize('/').last()
+    kraken2_db_name = params.kraken2_db.tokenize('/').last().replaceAll(/[^a-zA-Z0-9]/, '')
     kraken2_db_name_ch = Channel.value(kraken2_db_name)
 
     kraken = KRAKEN2_KRAKEN2(unmapped, params.kraken2_db, params.kraken2_confidence, true, true, kraken2_db_name_ch)
     kraken_logs = kraken.report
 
     // Krona plots from krakentools
-    kreport = KRAKEN2_KREPORT2KRONA(kraken.report)
-    PLOTS_KRONA(kreport.txt)
+    kreport = KRONA_KREPORT2KRONA(kraken.report)
+    KRONA_PLOTS(kreport.txt)
 
     // Combine reports with krakentools combine_kreports.py
     kreports_ch = kraken.report.map { it -> it[1] }
@@ -114,28 +251,13 @@ workflow {
         def report_path = tuple[1]
         return [meta.id, meta.group, report_path]
     }
-
     // Collect all reports as list of triplets [id, group, report_path]
     kraken_reports_ch
         .collect()
         .map { flat_list -> flat_list.collate(3) }
         .set { grouped_kraken_reports_ch }
-	grouped_kraken_reports_ch.view()
     kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(grouped_kraken_reports_ch)
-	PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminant_taxids)
-
-	// kraken_parse = KRAKEN2_PARSE(kraken.classified_reads_assignment, params.kraken2_parse_threshold, kraken2_db_name_ch)
-	
-	// kraken_taxo_pre = KRAKEN2_TAXONOMY_PRE(kraken_parse.stat_pre, params.kraken2_parse_threshold, kraken2_db_name_ch, file(params.taxonomy_db))
-	// kraken_taxo_post = KRAKEN2_TAXONOMY_POST(kraken_parse.stat_post, params.kraken2_parse_threshold, kraken2_db_name_ch, file(params.taxonomy_db))
-
-	// taxonomy_files_pre_ch = kraken_taxo_pre.taxonomy.map { it -> it[1] }
-	// counts_pre = COUNTS_MERGE_PRE(taxonomy_files_pre_ch.collect())
-	// taxonomy_files_post_ch = kraken_taxo_post.taxonomy.map { it -> it[1] }
-	// counts_post = COUNTS_MERGE_POST(taxonomy_files_post_ch.collect())
-
-	// PLOTS_HEATMAP_PRE(counts_pre.counts)
-	// PLOTS_HEATMAP_POST(counts_post.counts)
+	// PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminant_taxids)
 
 
     // --- Mash screen ---
@@ -164,7 +286,8 @@ workflow {
             fastqc.zip.map { it[1] },
             trim_logs.map { it[1] },
             mapping_logs.map { it[1] },
-            kraken_logs.map { it[1] }
+            kraken_logs.map { it[1] },
+            all_flagstats.map { it[1] }
         )
         .collect()
 

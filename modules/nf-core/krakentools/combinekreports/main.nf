@@ -10,37 +10,41 @@ process KRAKEN2_COMBINEKREPORTS {
     path(kreports)
 
     output:
-    path("krakentools_combine_kreports.tsv"), emit: txt
-    path "versions_krakentools.yml", emit: versions
+    path("*/*/krakentools_combine_kreports.tsv"), emit: txt
+    path("*/*/versions_krakentools.yml"), emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
-    // prefix = task.ext.prefix ?: "${meta.id}"
-    def VERSION = '1.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
+    def VERSION = '1.2'
+
+    def first_report = kreports instanceof List ? kreports[0] : kreports
+    def filename = first_report.getName()  // e.g., 101999248520_pluspf20250402_conf0.5_report.txt
+
+    def matcher = filename =~ /^.+?_(.+?)_(conf\d+(?:\.\d+)?)_report\.txt$/
+    if (!matcher.matches()) {
+        throw new RuntimeException("Filename does not match expected format: ${filename}")
+    }
+
+    def db   = matcher[0][1]  // pluspf20250402
+    def conf = matcher[0][2]  // conf0.5
+    def out_dir = "${db}/${conf}"
+
+    def output_file = "${out_dir}/krakentools_combine_kreports.tsv"
+    def version_file = "${out_dir}/versions_krakentools.yml"
+
     """
+    mkdir -p ${out_dir}
+
     combine_kreports.py \\
-        -r ${kreports} \\
-        -o krakentools_combine_kreports.tsv \\
+        -r ${kreports.collect { it.getName() }.join(' ')} \\
+        -o ${output_file} \\
         --display-headers \\
         ${args}
 
-    cat <<-END_VERSIONS > versions_krakentools.yml
-    "${task.process}":
-        combine_kreports.py: ${VERSION}
-    END_VERSIONS
-    """
-
-    stub:
-    def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
-    def VERSION = '1.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
-    """
-    touch ${prefix}.txt
-
-    cat <<-END_VERSIONS > versions_krakentools.yml
+    cat <<-END_VERSIONS > ${version_file}
     "${task.process}":
         combine_kreports.py: ${VERSION}
     END_VERSIONS

@@ -1,4 +1,4 @@
-process KRAKEN2_KREPORT2KRONA {
+process KRONA_KREPORT2KRONA {
     tag "$meta.id"
     label 'process_single'
 
@@ -25,7 +25,7 @@ process KRAKEN2_KREPORT2KRONA {
     def filename = kreport.getName()
     def base = filename.replaceFirst(/\.txt$/, '')
     def parts = base.split('_')
-    def suffix = parts.size() >= 4 ? parts[1..3].join('_') : 'unknown'
+    def suffix = parts.size() >= 4 ? parts[1..2].join('_') : 'unknown'
     """
     kreport2krona.py \\
         -r ${kreport} \\
