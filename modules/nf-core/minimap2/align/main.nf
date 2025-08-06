@@ -14,10 +14,12 @@ process MINIMAP2_ALIGN {
     val cigar_paf_format
     val cigar_bam
     val unmapped_fq
+    val paf_output
 
     output:
     tuple val(meta), path("*.paf")                  , optional: true, emit: paf
     tuple val(meta), path("*.bam")                  , optional: true, emit: bam
+    tuple val(meta), path("*.sam")                  , optional: true, emit: sam
     tuple val(meta), path("*.flagstat.txt")         , optional: true, emit: flagstat
     tuple val(meta), path("*.fastq.gz")             , optional: true, emit: unmapped
     tuple val(meta), path("*.log")                  , optional: true, emit: log
@@ -33,36 +35,53 @@ process MINIMAP2_ALIGN {
     def args4 = task.ext.args4 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def genome = reference.getBaseName().replaceFirst(/(\.fna|\.fa|\.fasta)?(\.gz)?$/, '')
-    def bam_output_path = "${prefix}_${genome}.bam"
-    def bam_output = bam_format ? "-a | samtools view -@ ${task.cpus-1} -b -o ${prefix}_${genome}.bam" : ''
-    def logfiles = "${prefix}_${genome}.log"
-    def cigar_paf = cigar_paf_format && !bam_format ? "-c" : ''
-    def set_cigar_bam = cigar_bam && bam_format ? "-L" : ''
+
+    def sam_file = "${prefix}_${genome}.sam"
+    def bam_file = "${prefix}_${genome}.bam"
+    def paf_file = "${prefix}_${genome}.paf"
+    def flagstat_file = "${prefix}_${genome}.flagstat.txt"
+    def log_file = "${prefix}_${genome}.log"
+
+    def cigar_paf = cigar_paf_format ? "-c" : ''
+    def set_cigar_bam = cigar_bam ? "-L" : ''
     def bam_input = "${reads.extension}".matches('sam|bam|cram')
     def samtools_reset_fastq = bam_input ? "samtools reset --threads ${task.cpus-1} $args3 $reads | samtools fastq --threads ${task.cpus-1} $args4 |" : ''
     def query = bam_input ? "-" : reads
     def target = reference ?: (bam_input ? error("BAM input requires reference") : reads)
-    def flagstat_file = bam_format ? "${prefix}_${genome}.flagstat.txt" : ''
 
     """
     #!/usr/bin/env bash
     set -euo pipefail
 
+    # 1. Align reads to reference, output to SAM
     {
         $samtools_reset_fastq \\
-        minimap2 -x sr \\
+        minimap2 -ax sr \\
             $args \\
             -t $task.cpus \\
-            $target \\
-            $query \\
             $cigar_paf \\
             $set_cigar_bam \\
-            $bam_output
-    } 2> $logfiles
+            $target \\
+            $query \\
+            > ${sam_file}
+    } 2> ${log_file}
 
-    ${bam_format ? "samtools flagstat ${bam_output_path} > ${flagstat_file}" : ""}
-    ${bam_format && unmapped_fq ? "samtools fastq -f 4 -@ ${task.cpus-1} ${bam_output_path} -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+    # 2. Convert SAM to BAM if requested
+    ${bam_format ? "samtools view -@ ${task.cpus-1} -b ${sam_file} > ${bam_file}" : ""}
 
+    # 3. Generate flagstat from final alignment (BAM or SAM)
+    samtools flagstat ${bam_format ? bam_file : sam_file} > ${flagstat_file}
+
+    # 4. Convert SAM to PAF if requested
+    ${paf_output ? "paftools.js sam2paf ${sam_file} > ${paf_file}" : ""}
+
+    # 5. Extract unmapped reads from BAM if requested
+    ${bam_format && unmapped_fq ? "samtools fastq -f 4 -@ ${task.cpus-1} ${bam_file} -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+
+    # 6. Remove sam
+    ${bam_format ? "rm -f ${sam_file}" : ""}
+
+    # 7. Write versions
     minimap2_ver=\$(minimap2 --version 2>&1)
     samtools_ver=\$(samtools --version | head -n1 | sed 's/^.*samtools //')
 
@@ -73,20 +92,4 @@ process MINIMAP2_ALIGN {
     EOF
     """
 
-    stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def output_file = bam_format ? "${prefix}.bam" : "${prefix}.paf"
-    def bam_index = bam_index_extension ? "touch ${prefix}.bam.${bam_index_extension}" : ""
-    def bam_input = "${reads.extension}".matches('sam|bam|cram')
-    def target = reference ?: (bam_input ? error("BAM input requires reference") : reads)
-
-    """
-    touch $output_file
-    ${bam_index}
-
-    cat <<-END_VERSIONS > versions.yml
-"${task.process}":
-  minimap2: \$(minimap2 --version 2>&1)
-END_VERSIONS
-    """
 }
