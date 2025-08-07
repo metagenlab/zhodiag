@@ -92,9 +92,6 @@ workflow {
     }
 
     // --- Host removal ---
-    Channel
-        .create()
-        .set { unmapped }
     if (params.host_removal_tool == 'bbmap') {
         def index
         if (!params.index_host) {
