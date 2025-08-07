@@ -112,85 +112,87 @@ workflow {
         error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
     }
 
+    unmapped_broadcast = unmapped.broadcast()
+
     // * --- Map to kingdoms ---
     def selected_kingdoms = params.kingdoms.split(',').collect { it.trim().toLowerCase() }
     def flagstat_channels = []
 
     // FUNGI
     if (selected_kingdoms.contains('fungi')) {
-        fungi_map = MINIMAPFUNGI(unmapped, 
+        fungi_map = MINIMAPFUNGI(unmapped_broadcast, 
                                 params.fungi_fasta,
                                 true, false, false, false, true)
         // log for multiqc
         fungi_map_log = fungi_map.flagstat
         flagstat_channels << fungi_map_log   
         // annotate paf table and concatenate
-        paf_ch = fungi_map.paf.map { tuple ->
+        fungi_paf_ch = fungi_map.paf.map { tuple ->
             def meta = tuple[0]
             def paf_path = tuple[1]
             return [meta.id, meta.group, paf_path]
         }
-        paf_ch.set { grouped_paf_ch }
-        annotated_paf = MINIMAPFUNGI_ANNOTATE_PAF(grouped_paf_ch)
-        annotated_paf.paf
+        fungi_paf_ch.set { fungi_grouped_paf_ch }
+        fungi_annotated_paf = MINIMAPFUNGI_ANNOTATE_PAF(fungi_grouped_paf_ch)
+        fungi_annotated_paf.paf
             .map { it[1] }
             .collect()
-            .set { collected_annotated_paths }
-        concatenated_pafs = MINIMAPFUNGI_CONCAT_PAFS(collected_annotated_paths)
+            .set { fungi_collected_annotated_paths }
+        fungi_concatenated_pafs = MINIMAPFUNGI_CONCAT_PAFS(fungi_collected_annotated_paths)
         // plots
-        PLOTS_FUNGI(concatenated_pafs.cat, params.mapq_cutoff, "fungi", params.fungi_annotation)
+        PLOTS_FUNGI(fungi_concatenated_pafs.cat, params.mapq_cutoff, "fungi", params.fungi_annotation)
     }
     // BACTERIA
     if (selected_kingdoms.contains('bacteria')) {
-        bacteria_map = MINIMAPBACTERIA(unmapped,
+        bacteria_map = MINIMAPBACTERIA(unmapped_broadcast,
                                         params.bacteria_fasta,
                                         true, false, false, false, true)
         // log for multiqc
         bacteria_map_log = bacteria_map.flagstat
         flagstat_channels << bacteria_map_log
         // annotate paf table and concatenate
-        paf_ch = bacteria_map.paf.map { tuple ->
+        bacteria_paf_ch = bacteria_map.paf.map { tuple ->
             def meta = tuple[0]
             def paf_path = tuple[1]
             return [meta.id, meta.group, paf_path]
         }
-        paf_ch.set { grouped_paf_ch }
-        annotated_paf = MINIMAPBACTERIA_ANNOTATE_PAF(grouped_paf_ch)
-        annotated_paf.paf
+        bacteria_paf_ch.set { bacteria_grouped_paf_ch }
+        bacteria_annotated_paf = MINIMAPBACTERIA_ANNOTATE_PAF(bacteria_grouped_paf_ch)
+        bacteria_annotated_paf.paf
             .map { it[1] }
             .collect()
-            .set { collected_annotated_paths }
-        concatenated_pafs = MINIMAPBACTERIA_CONCAT_PAFS(collected_annotated_paths)
+            .set { bacteria_collected_annotated_paths }
+        bacteria_concatenated_pafs = MINIMAPBACTERIA_CONCAT_PAFS(bacteria_collected_annotated_paths)
         // plots
         if (params.bacteria_annotation) {
-            PLOTS_BACTERIA(concatenated_pafs.cat, params.mapq_cutoff, "bacteria", params.bacteria_annotation)
+            PLOTS_BACTERIA(bacteria_concatenated_pafs.cat, params.mapq_cutoff, "bacteria", params.bacteria_annotation)
         }
     }
     // VIRUS
     if (selected_kingdoms.contains('virus')) {
         // REFSEQ
-        virus_refseq_map = MINIMAPVIRUS(unmapped,
+        virus_refseq_map = MINIMAPVIRUS(unmapped_broadcast,
                                         params.virus_fasta,
                                         true, false, false, false, true)
         // log for multiqc
         virus_refseq_map_log = virus_refseq_map.flagstat
         flagstat_channels << virus_refseq_map_log
         // annotate paf table and concatenate
-        refseq_paf_ch = virus_refseq_map.paf.map { tuple ->
+        virus_refseq_paf_ch = virus_refseq_map.paf.map { tuple ->
             def meta = tuple[0]
             def paf_path = tuple[1]
             return [meta.id, meta.group, paf_path]
         }
-        refseq_paf_ch.set { refseq_grouped_paf_ch }
-        refseq_annotated_paf = MINIMAPVIRUS_ANNOTATE_PAF(refseq_grouped_paf_ch)
-        refseq_annotated_paf.paf
+        virus_refseq_paf_ch.set { virus_refseq_grouped_paf_ch }
+        virus_refseq_annotated_paf = MINIMAPVIRUS_ANNOTATE_PAF(virus_refseq_grouped_paf_ch)
+        virus_refseq_annotated_paf.paf
             .map { it[1] }
             .collect()
-            .set { refseq_collected_annotated_paths }
-        refseq_concatenated_pafs = MINIMAPVIRUS_CONCAT_PAFS(refseq_collected_annotated_paths)
+            .set { virus_refseq_collected_annotated_paths }
+        virus_refseq_concatenated_pafs = MINIMAPVIRUS_CONCAT_PAFS(virus_refseq_collected_annotated_paths)
         // plots
         if (params.virus_refseq_annotation){
-            PLOTS_VIRUS(refseq_concatenated_pafs.cat, params.mapq_cutoff, "virus_refseq", params.virus_refseq_annotation)
+            PLOTS_VIRUS(virus_refseq_concatenated_pafs.cat, params.mapq_cutoff, "virus_refseq", params.virus_refseq_annotation)
         }
 
 
@@ -205,27 +207,27 @@ workflow {
     }
     // PROTOZOA
     if (selected_kingdoms.contains('protozoa')) {
-        protozoa_map = MINIMAPPROTOZOA(unmapped,
+        protozoa_map = MINIMAPPROTOZOA(unmapped_broadcast,
                                         params.protozoa_fasta,
                                         true, false, false, false, true)
         protozoa_map_log = protozoa_map.flagstat
         // log for multiqc
         flagstat_channels << protozoa_map_log
         // annotate paf table and concatenate
-        paf_ch = protozoa_map.paf.map { tuple ->
+        protozoa_paf_ch = protozoa_map.paf.map { tuple ->
             def meta = tuple[0]
             def paf_path = tuple[1]
             return [meta.id, meta.group, paf_path]
         }
-        paf_ch.set { grouped_paf_ch }
-        annotated_paf = MINIMAPPROTOZOA_ANNOTATE_PAF(grouped_paf_ch)
-        annotated_paf.paf
+        protozoa_paf_ch.set { protozoa_grouped_paf_ch }
+        protozoa_annotated_paf = MINIMAPPROTOZOA_ANNOTATE_PAF(protozoa_grouped_paf_ch)
+        protozoa_annotated_paf.paf
             .map { it[1] }
             .collect()
-            .set { collected_annotated_paths }
-        concatenated_pafs = MINIMAPPROTOZOA_CONCAT_PAFS(collected_annotated_paths)
+            .set { protozoa_collected_annotated_paths }
+        protozoa_concatenated_pafs = MINIMAPPROTOZOA_CONCAT_PAFS(protozoa_collected_annotated_paths)
         // plots
-        PLOTS_PROTOZOA(concatenated_pafs.cat, params.mapq_cutoff, "protozoa", params.protozoa_annotation)
+        PLOTS_PROTOZOA(protozoa_concatenated_pafs.cat, params.mapq_cutoff, "protozoa", params.protozoa_annotation)
     }
     all_flagstats = Channel.empty().mix(*flagstat_channels)
 
