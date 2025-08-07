@@ -66,17 +66,38 @@ process MINIMAP2_ALIGN {
             > ${sam_file}
     } 2> ${log_file}
 
-    # 2. Convert SAM to BAM if requested
-    ${bam_format ? "samtools view -@ ${task.cpus-1} -b ${sam_file} > ${bam_file}" : ""}
+    # Check for @SQ lines in SAM header (i.e., mapped reads)
+    if grep -q '^@SQ' ${sam_file}; then
 
-    # 3. Generate flagstat from final alignment (BAM or SAM)
-    samtools flagstat ${bam_format ? bam_file : sam_file} > ${flagstat_file}
+        echo "Mapped reads detected. Continuing with SAM processing..." >&2
 
-    # 4. Convert SAM to PAF if requested
-    ${paf_output ? "paftools.js sam2paf ${sam_file} > ${paf_file}" : ""}
+        # 2. Convert SAM to BAM if requested
+        ${bam_format ? "samtools view -@ ${task.cpus-1} -b ${sam_file} > ${bam_file}" : ""}
 
-    # 5. Extract unmapped reads from BAM if requested
-    ${bam_format && unmapped_fq ? "samtools fastq -f 4 -@ ${task.cpus-1} ${bam_file} -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+        # 3. Generate flagstat from final alignment (BAM or SAM)
+        samtools flagstat ${bam_format ? bam_file : sam_file} > ${flagstat_file}
+
+        # 4. Convert SAM to PAF if requested
+        ${paf_output ? "paftools.js sam2paf ${sam_file} > ${paf_file}" : ""}
+
+        # 5. Extract unmapped reads from BAM if requested
+        ${bam_format && unmapped_fq ? "samtools fastq -f 4 -@ ${task.cpus-1} ${bam_file} -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+
+    else
+        echo "No mapped reads. Creating empty outputs..." >&2
+
+        # Create empty BAM if requested
+        ${bam_format ? "samtools view -H ${sam_file} | samtools view -b - > ${bam_file}" : ""}
+
+        # Create zeroed-out flagstat
+        echo -e "0 + 0 in total (QC-passed reads + QC-failed reads)\n0 + 0 secondary\n0 + 0 supplementary\n0 + 0 duplicates\n0 + 0 mapped (0.00% : N/A)\n0 + 0 paired in sequencing\n0 + 0 read1\n0 + 0 read2\n0 + 0 properly paired (0.00% : N/A)\n0 + 0 with itself and mate mapped\n0 + 0 singletons (0.00% : N/A)\n0 + 0 with mate mapped to a different chr\n0 + 0 with mate mapped to a different chr (mapQ>=5)" > ${flagstat_file}
+
+        # Create empty PAF if requested
+        ${paf_output ? "touch ${paf_file}" : ""}
+
+        # Optional: Create empty fastqs for unmapped if needed
+        ${bam_format && unmapped_fq ? "touch ${prefix}_${genome}_unmapped_R1.fastq.gz ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+    fi
 
     # 6. Remove sam
     ${bam_format ? "rm -f ${sam_file}" : ""}
@@ -91,5 +112,6 @@ process MINIMAP2_ALIGN {
         samtools: \$samtools_ver
     EOF
     """
+
 
 }
