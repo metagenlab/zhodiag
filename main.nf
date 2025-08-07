@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-
+nextflow.enable.dsl=2
 include { samplesheetToList } from 'plugin/nf-schema'
 include { MULTIQC } from './modules/nf-core/multiqc/main'
 include { MULTIQC_COLLECT_REPORTS } from './modules/local/multiqc/main'
