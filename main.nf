@@ -100,17 +100,18 @@ workflow {
             index = BBMAP_INDEX(params.host_fasta).index
             host_map = BBMAP_ALIGN(trimmed.reads, index)
         }
-        unmapped = host_map.unmapped
+        host_map.unmapped.set { unmapped }
         mapping_logs = host_map.stats
     } else if (params.host_removal_tool == 'minimap2') {
         host_map = MINIMAPHOST(trimmed.reads,
                                 params.host_fasta,
                                 true, false, false, true, false)
-        unmapped = host_map.unmapped
+        host_map.unmapped.set { unmapped }
         mapping_logs = host_map.flagstat
     } else {
         error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
     }
+    unmapped_broadcast = unmapped.broadcast()
     
     // * --- Map to kingdoms ---
     def selected_kingdoms = params.kingdoms.split(',').collect { it.trim().toLowerCase() }
@@ -118,7 +119,7 @@ workflow {
 
     // FUNGI
     if (selected_kingdoms.contains('fungi')) {
-        fungi_map = MINIMAPFUNGI(unmapped, 
+        fungi_map = MINIMAPFUNGI(unmapped_broadcast, 
                                 params.fungi_fasta,
                                 true, false, false, false, true)
         // log for multiqc
@@ -142,7 +143,7 @@ workflow {
     }
     // BACTERIA
     if (selected_kingdoms.contains('bacteria')) {
-        bacteria_map = MINIMAPBACTERIA(unmapped,
+        bacteria_map = MINIMAPBACTERIA(unmapped_broadcast,
                                         params.bacteria_fasta,
                                         true, false, false, false, true)
         // log for multiqc
@@ -169,7 +170,7 @@ workflow {
     // VIRUS
     if (selected_kingdoms.contains('virus')) {
         // REFSEQ
-        virus_refseq_map = MINIMAPVIRUS(unmapped,
+        virus_refseq_map = MINIMAPVIRUS(unmapped_broadcast,
                                         params.virus_fasta,
                                         true, false, false, false, true)
         // log for multiqc
@@ -196,7 +197,7 @@ workflow {
 
 
         // // EZVIR
-        // virus_ezvir_map = MINIMAPEZVIR(unmapped,
+        // virus_ezvir_map = MINIMAPEZVIR(unmapped_broadcast,
         //                                 params.ezvir_fasta,
         //                                 true, false, false, false, true)
         // // log for multiqc
@@ -205,7 +206,7 @@ workflow {
     }
     // PROTOZOA
     if (selected_kingdoms.contains('protozoa')) {
-        protozoa_map = MINIMAPPROTOZOA(unmapped,
+        protozoa_map = MINIMAPPROTOZOA(unmapped_broadcast,
                                         params.protozoa_fasta,
                                         true, false, false, false, true)
         protozoa_map_log = protozoa_map.flagstat
