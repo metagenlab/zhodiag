@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
+
 include { samplesheetToList } from 'plugin/nf-schema'
 include { MULTIQC } from './modules/nf-core/multiqc/main'
 include { MULTIQC_COLLECT_REPORTS } from './modules/local/multiqc/main'
@@ -111,16 +111,14 @@ workflow {
     } else {
         error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
     }
-
-    unmapped_broadcast = unmapped.broadcast()
-
+    
     // * --- Map to kingdoms ---
     def selected_kingdoms = params.kingdoms.split(',').collect { it.trim().toLowerCase() }
     def flagstat_channels = []
 
     // FUNGI
     if (selected_kingdoms.contains('fungi')) {
-        fungi_map = MINIMAPFUNGI(unmapped_broadcast, 
+        fungi_map = MINIMAPFUNGI(unmapped, 
                                 params.fungi_fasta,
                                 true, false, false, false, true)
         // log for multiqc
@@ -144,7 +142,7 @@ workflow {
     }
     // BACTERIA
     if (selected_kingdoms.contains('bacteria')) {
-        bacteria_map = MINIMAPBACTERIA(unmapped_broadcast,
+        bacteria_map = MINIMAPBACTERIA(unmapped,
                                         params.bacteria_fasta,
                                         true, false, false, false, true)
         // log for multiqc
@@ -171,7 +169,7 @@ workflow {
     // VIRUS
     if (selected_kingdoms.contains('virus')) {
         // REFSEQ
-        virus_refseq_map = MINIMAPVIRUS(unmapped_broadcast,
+        virus_refseq_map = MINIMAPVIRUS(unmapped,
                                         params.virus_fasta,
                                         true, false, false, false, true)
         // log for multiqc
@@ -207,7 +205,7 @@ workflow {
     }
     // PROTOZOA
     if (selected_kingdoms.contains('protozoa')) {
-        protozoa_map = MINIMAPPROTOZOA(unmapped_broadcast,
+        protozoa_map = MINIMAPPROTOZOA(unmapped,
                                         params.protozoa_fasta,
                                         true, false, false, false, true)
         protozoa_map_log = protozoa_map.flagstat
