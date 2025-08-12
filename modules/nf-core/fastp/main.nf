@@ -41,6 +41,7 @@ process FASTP {
 
         fastp \\
             --stdout \\
+            --low_complexity_filter \\
             --in1 ${prefix}.fastq.gz \\
             --thread $task.cpus \\
             --json ${prefix}.fastp.json \\
