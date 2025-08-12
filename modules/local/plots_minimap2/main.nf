@@ -11,6 +11,7 @@ process PLOTS_MINIMAP2 {
     output:
     path '*/*/*_boxplot_all.pdf'
     path '*/*/*_heatmap_all.pdf'
+    path '*/*/*_filtered_hits.tsv'
 
     script:
     def plot_script = workflow.projectDir.resolve("bin/plots_minimap2.r")
@@ -23,6 +24,7 @@ process PLOTS_MINIMAP2 {
 
     mv *_heatmap_all.pdf ${out_dir}/
     mv *_boxplot_all.pdf ${out_dir}/
+    mv *_filtered_hits.tsv ${out_dir}/
     """
 
 }

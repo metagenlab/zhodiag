@@ -11,7 +11,7 @@ annotation <- args[4]
 # read annotation
 annot <- read.table(annotation, header = TRUE, sep = '\t')
 colnames(annot) <- c("accession", "name", "gembasesID", "taxid")
-
+annot$taxid <- as.integer(annot$taxid)
 # read paf
 a <- read.table(filename, header = TRUE, sep = '\t')
 column_names <- c('query_name','query_length','query_start','query_stop','strand','target_name','target_length','target_start','targer_end',
@@ -20,12 +20,13 @@ colnames(a) <- column_names
 
 # filter by quality, and extract taxID and accession
 a <- a %>% filter(quality >= mapq) %>%
-  separate(target_name, into = c("accession", "taxid", NA),sep = "\\|") %>%
-  separate(taxid, into = c(NA, "taxid"), sep = ":") 
+  separate(target_name, into = c("accession", NA, "taxid"),sep = "\\|")
 a$taxid <- as.integer(a$taxid)
 
 # join annotation (names)
 a.annot <- left_join(a, annot, by = c("accession", "taxid"))
+write.table(a.annot, paste0(outfile_prefix, "_filtered_hits.tsv"), col.names = TRUE, row.names = FALSE,
+    sep = '\t', quote = FALSE)
 
 # number of reads per hit, per sample and group
 b <- a.annot %>% group_by(group, sample, taxid, name) %>%
