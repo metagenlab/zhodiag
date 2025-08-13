@@ -65,7 +65,7 @@ dev.off()
 for(gr in setdiff(unique(a$group), 'control')){
   print(gr)
   pdf(paste0(outfile_prefix, "_", gr, "_group_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
-  ggplot(a %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
+  p = ggplot(a %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
          aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
     geom_tile() +
     geom_text(colour='white') +
@@ -73,6 +73,7 @@ for(gr in setdiff(unique(a$group), 'control')){
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  print(p)
   dev.off()
 }
 
