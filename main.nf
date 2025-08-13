@@ -282,6 +282,7 @@ workflow {
 
     // --- Taxonomic classification with Kraken2 for selected kingdoms ---
     def selected_kingdoms_k2 = params.kraken2_kingdoms.split(',').collect { it.trim().toLowerCase() }
+    def kraken_channels = []
 
     if (selected_kingdoms_k2.contains('fpv')) {
         // get db name
@@ -296,6 +297,7 @@ workflow {
                                     true, 
                                     kraken2_db_name_ch)
         fpv_kraken_logs = fpv_kraken.report
+        kraken_channels << fpv_kraken_logs
 
         // Combine reports with krakentools combine_kreports.py
         fpv_kreports_ch = fpv_kraken.report.map { it -> it[1] }
@@ -332,6 +334,7 @@ workflow {
                                     true, 
                                     kraken2_db_name_ch)
         bacteria_kraken_logs = bacteria_kraken.report
+        kraken_channels << bacteria_kraken_logs
 
         // Combine reports with krakentools combine_kreports.py
         bacteria_kreports_ch = bacteria_kraken.report.map { it -> it[1] }
@@ -403,6 +406,14 @@ workflow {
         SORT_INDEX_BAM(map_candidates.bam)
     }
 
+
+    // Merge all into one channel
+    kraken_logs_ch = Channel.empty()
+    kraken_channels.each { ch ->
+        kraken_logs_ch = kraken_logs_ch.mix(ch)
+    }
+    kraken_logs_ch = kraken_logs_ch.map { it[1] }
+
     // --- Collect all reports for MultiQC ---
     collect_reports_input = fastqc.html
         .map { it[1] }
@@ -410,8 +421,7 @@ workflow {
             fastqc.zip.map { it[1] },
             trim_logs.map { it[1] },
             mapping_logs.map { it[1] },
-            fpv_kraken_logs.map { it[1] },
-            bacteria_kraken_logs.map { it[1] },
+            kraken_logs_ch,
             all_flagstats.map { it[1] }
         )
         .collect()
