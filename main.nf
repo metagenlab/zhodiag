@@ -289,32 +289,32 @@ workflow {
         kraken2_db_name_ch = Channel.value(kraken2_db_name)
 
         // run kraken2
-        kraken = KRAKEN2FPV(unmapped, 
+        fpv_kraken = KRAKEN2FPV(unmapped, 
                                     params.fpv_kraken2db, 
                                     params.kraken2_confidence, 
                                     true, 
                                     true, 
                                     kraken2_db_name_ch)
-        kraken_logs = kraken.report
+        fpv_kraken_logs = fpv_kraken.report
 
         // Combine reports with krakentools combine_kreports.py
-        kreports_ch = kraken.report.map { it -> it[1] }
-        KRAKEN2FPV_COMBINEKREPORTS(kreports_ch.collect())
+        fpv_kreports_ch = fpv_kraken.report.map { it -> it[1] }
+        KRAKEN2FPV_COMBINEKREPORTS(fpv_kreports_ch.collect())
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
-        kraken_reports_ch = kraken.report.map { tuple ->
+        fpv_kraken_reports_ch = fpv_kraken.report.map { tuple ->
             def meta = tuple[0]
             def report_path = tuple[1]
             return [meta.id, meta.group, report_path]
         }
         // Collect all reports as list of triplets [id, group, report_path]
-        kraken_reports_ch
+        fpv_kraken_reports_ch
             .collect()
             .map { flat_list -> flat_list.collate(3) }
-            .set { grouped_kraken_reports_ch }
-        kraken_reports_combined = KRAKEN2FPV_COMBINE_REPORTS(grouped_kraken_reports_ch)
-        PLOTS_KRAKEN2_FPV(kraken_reports_combined.combine_long, params.contaminant_taxids)
+            .set { fpv_grouped_kraken_reports_ch }
+        fpv_kraken_reports_combined = KRAKEN2FPV_COMBINE_REPORTS(fpv_grouped_kraken_reports_ch)
+        PLOTS_KRAKEN2_FPV(fpv_kraken_reports_combined.combine_long, params.contaminant_taxids)
     }
 
 
@@ -325,32 +325,32 @@ workflow {
         kraken2_db_name_ch = Channel.value(kraken2_db_name)
 
         // run kraken2
-        kraken = KRAKEN2BACTERIA(unmapped, 
+        bacteria_kraken = KRAKEN2BACTERIA(unmapped, 
                                     params.bacteria_kraken2db, 
                                     params.kraken2_confidence, 
                                     true, 
                                     true, 
                                     kraken2_db_name_ch)
-        kraken_logs = kraken.report
+        bacteria_kraken_logs = bacteria_kraken.report
 
         // Combine reports with krakentools combine_kreports.py
-        kreports_ch = kraken.report.map { it -> it[1] }
-        KRAKEN2BACTERIA_COMBINEKREPORTS(kreports_ch.collect())
+        bacteria_kreports_ch = bacteria_kraken.report.map { it -> it[1] }
+        KRAKEN2BACTERIA_COMBINEKREPORTS(bacteria_kreports_ch.collect())
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
-        kraken_reports_ch = kraken.report.map { tuple ->
+        bacteria_kraken_reports_ch = bacteria_kraken.report.map { tuple ->
             def meta = tuple[0]
             def report_path = tuple[1]
             return [meta.id, meta.group, report_path]
         }
         // Collect all reports as list of triplets [id, group, report_path]
-        kraken_reports_ch
+        bacteria_kraken_reports_ch
             .collect()
             .map { flat_list -> flat_list.collate(3) }
-            .set { grouped_kraken_reports_ch }
-        kraken_reports_combined = KRAKEN2BACTERIA_COMBINE_REPORTS(grouped_kraken_reports_ch)
-        PLOTS_KRAKEN2_BACTERIA(kraken_reports_combined.combine_long, params.contaminant_taxids)
+            .set { bacteria_grouped_kraken_reports_ch }
+        bacteria_kraken_reports_combined = KRAKEN2BACTERIA_COMBINE_REPORTS(bacteria_grouped_kraken_reports_ch)
+        PLOTS_KRAKEN2_BACTERIA(bacteria_kraken_reports_combined.combine_long, params.contaminant_taxids)
     }
 
     // --- Taxonomic classification with Kraken2 ---
@@ -410,7 +410,8 @@ workflow {
             fastqc.zip.map { it[1] },
             trim_logs.map { it[1] },
             mapping_logs.map { it[1] },
-            kraken_logs.map { it[1] },
+            fpv_kraken_logs.map { it[1] },
+            bacteria_kraken_logs.map { it[1] },
             all_flagstats.map { it[1] }
         )
         .collect()
