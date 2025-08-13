@@ -6,8 +6,8 @@ process KRAKEN2_COMBINE_REPORTS {
     val samples_list
 
     output:
-    path "*/*/kraken2_reports_combined_wide.tsv", emit: combine_wide
-    path "*/*/kraken2_combined*.tsv", emit: combine_long
+    // path "*/*/kraken2_reports_combined_wide*.tsv", emit: combine_wide
+    path "${db}/${conf}/kraken2_combined*.tsv", emit: combine_long
     path "*/*/versions_krakentools.yml", emit: versions
 
 
@@ -57,7 +57,6 @@ process KRAKEN2_COMBINE_REPORTS {
     mkdir -p ${out_dir}
     echo -e '${metadata_lines}' > ${out_dir}/${metadataFile}
 
-    $kraken_merge_script_wide ${reportFiles} ${out_dir}/kraken2_reports_combined_wide.tsv
     $kraken_merge_script_long ${reportFiles} ${out_dir}/${metadataFile} ${out_dir}/kraken2_combined
     
     
@@ -67,3 +66,4 @@ process KRAKEN2_COMBINE_REPORTS {
     END_VERSIONS
 """
 }
+    // $kraken_merge_script_wide ${reportFiles} ${out_dir}/kraken2_reports_combined_wide_${db}_${conf}.tsv
