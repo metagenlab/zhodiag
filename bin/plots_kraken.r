@@ -204,10 +204,11 @@ ggplot(bf %>% filter(distinctMinimizers != 0),
 dev.off()
 
 # heatmap by group vs control
-for(gr in setdiff(unique(a$group), 'control')){
+for(gr in setdiff(unique(bf$group), 'control')){
   print(gr)
   pdf(paste0(outfile_prefix, "_", gr, "_group_heatmap_totalCounts_filtContam.pdf"), height = plot_height, width = 12)
-  ggplot(bf %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+  ggplot(bf %>% filter(totalCounts != 0) %>% filter(group %in% c("control", gr)), 
+    aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
   geom_tile() +
   geom_text(colour='white', size = 1.5) +
   facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
@@ -256,7 +257,7 @@ dev.off()
 
 
 # boxplot by group vs control
-for(gr in setdiff(unique(a$group), 'control')){
+for(gr in setdiff(unique(bf$group), 'control')){
   print(gr)
   pdf(paste0(outfile_prefix, "_", gr, "_group_boxplot_totalCounts_filtContam.pdf"), height = plot_height, width = 12)
   ggplot(bf %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
