@@ -35,7 +35,7 @@ process KRAKEN2_KRAKEN2 {
     def classified_option = save_output_fastqs ? "--classified-out ${classified}" : ""
     def unclassified_option = save_output_fastqs ? "--unclassified-out ${unclassified}" : ""
     def readclassification_option = save_reads_assignment ? "--output ${out_dir}/${prefix}_classifiedreads.txt" : "--output /dev/null"
-    def compress_reads_command = save_output_fastqs ? "pigz -p $task.cpus ${out_dir}/*.fastq" : ""
+    def compress_reads_command = save_output_fastqs ? "pigz -f -p $task.cpus ${out_dir}/*.fastq" : ""
 
     """
     mkdir -p ${out_dir}
@@ -51,6 +51,7 @@ process KRAKEN2_KRAKEN2 {
         $classified_option \\
         $readclassification_option \\
         $paired \\
+        $args \\
         $reads
 
 
