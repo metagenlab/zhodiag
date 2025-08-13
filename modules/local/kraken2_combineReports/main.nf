@@ -55,6 +55,7 @@ process KRAKEN2_COMBINE_REPORTS {
 
     """
     mkdir -p ${out_dir}
+    echo "hi"
     echo -e '${metadata_lines}' > ${out_dir}/${metadataFile}
 
     $kraken_merge_script_wide ${reportFiles} ${out_dir}/kraken2_reports_combined_wide.tsv
