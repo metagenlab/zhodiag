@@ -86,13 +86,11 @@ for(gr in setdiff(unique(b$group), "control")){
   print(gr)
   pdf(paste0(outfile_prefix, "_", gr, "_group_boxplot.pdf"), width = plot_width, height = plot_height)
   p = ggplot(b %>%  filter(!is.na(name)) %>% filter(group %in% c("control", gr)),
-         aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
-    geom_tile() +
-    geom_text(colour = 'white') +
-    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
-    theme_bw() +
-    labs(x = '', y = '') +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  aes(x = log2(counts), y = name, colour = group)) +
+  geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.75), size = 2) +
+  theme_bw() +
+  labs(y = '')
   print(p)
   dev.off()
 }
