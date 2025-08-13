@@ -213,7 +213,7 @@ for(gr in setdiff(unique(a$group), 'control')){
   facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
   labs(x = '', y = '') +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  dev.off()
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
   dev.off()
 }
 
