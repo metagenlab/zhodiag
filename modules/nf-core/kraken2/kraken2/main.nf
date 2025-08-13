@@ -51,7 +51,6 @@ process KRAKEN2_KRAKEN2 {
         $classified_option \\
         $readclassification_option \\
         $paired \\
-        $args \\
         $reads
 
 
