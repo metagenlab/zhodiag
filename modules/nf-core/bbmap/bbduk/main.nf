@@ -34,6 +34,7 @@ process BBMAP_BBDUK {
         $raw \\
         $trimmed \\
         threads=$task.cpus \\
+        entropy=0.8 \\
         $args \\
         $contaminants_fa \\
         $stats \\
