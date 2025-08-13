@@ -161,7 +161,7 @@ workflow {
         bacteria_concatenated_pafs = MINIMAP2BACTERIA_CONCAT_PAFS(bacteria_collected_annotated_paths)
         // plots
         if (params.bacteria_annotation) {
-            PLOTS_BACTERIA(bacteria_concatenated_pafs.cat, params.mapq_cutoff, "bacteria", params.bacteria_annotation)
+            PLOTS_BACTERIA(bacteria_concatenated_pafs.cat, params.mapq_cutoff, params.coverage_cutoff, "bacteria", params.bacteria_annotation)
         }
     }
     // FUNGI + PROTOZOA + VIRUS
@@ -187,7 +187,7 @@ workflow {
         fpv_concatenated_pafs = MINIMAP2FPV_CONCAT_PAFS(fpv_collected_annotated_paths)
         // plots
         if (params.fpv_annotation) {
-            PLOTS_FPV(fpv_concatenated_pafs.cat, params.mapq_cutoff, "fpv", params.fpv_annotation)
+            PLOTS_FPV(fpv_concatenated_pafs.cat, params.mapq_cutoff, params.coverage_cutoff, "fpv", params.fpv_annotation)
         }
     }
 
@@ -213,7 +213,7 @@ workflow {
             .set { fungi_collected_annotated_paths }
         fungi_concatenated_pafs = MINIMAP2FUNGI_CONCAT_PAFS(fungi_collected_annotated_paths)
         // plots
-        PLOTS_FUNGI(fungi_concatenated_pafs.cat, params.mapq_cutoff, "fungi", params.fungi_annotation)
+        PLOTS_FUNGI(fungi_concatenated_pafs.cat, params.mapq_cutoff, params.coverage_cutoff, "fungi", params.fungi_annotation)
     }
     // VIRUS
     if (selected_kingdoms.contains('virus')) {
@@ -239,7 +239,7 @@ workflow {
         virus_refseq_concatenated_pafs = MINIMAP2VIRUS_CONCAT_PAFS(virus_refseq_collected_annotated_paths)
         // plots
         if (params.virus_refseq_annotation){
-            PLOTS_VIRUS(virus_refseq_concatenated_pafs.cat, params.mapq_cutoff, "virus_refseq", params.virus_refseq_annotation)
+            PLOTS_VIRUS(virus_refseq_concatenated_pafs.cat, params.mapq_cutoff, params.coverage_cutoff, "virus_refseq", params.virus_refseq_annotation)
         }
 
 
@@ -274,7 +274,7 @@ workflow {
             .set { protozoa_collected_annotated_paths }
         protozoa_concatenated_pafs = MINIMAP2PROTOZOA_CONCAT_PAFS(protozoa_collected_annotated_paths)
         // plots
-        PLOTS_PROTOZOA(protozoa_concatenated_pafs.cat, params.mapq_cutoff, "protozoa", params.protozoa_annotation)
+        PLOTS_PROTOZOA(protozoa_concatenated_pafs.cat, params.mapq_cutoff, params.coverage_cutoff, "protozoa", params.protozoa_annotation)
     }
     all_flagstats = Channel.empty().mix(*flagstat_channels)
 

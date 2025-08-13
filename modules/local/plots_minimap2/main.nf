@@ -5,6 +5,7 @@ process PLOTS_MINIMAP2 {
     input:
     path(paf)
     val mapq
+    val coverage
     val kingdom
     path(annotation)
 
@@ -20,7 +21,7 @@ process PLOTS_MINIMAP2 {
 
     """
     mkdir -p ${out_dir}
-    Rscript $plot_script $paf ${prefix} $mapq $annotation
+    Rscript $plot_script $paf ${prefix} $mapq $coverage $annotation
 
     mv *_heatmap_all.pdf ${out_dir}/
     mv *_boxplot_all.pdf ${out_dir}/

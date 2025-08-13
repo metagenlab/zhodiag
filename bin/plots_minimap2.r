@@ -6,7 +6,8 @@ args <- commandArgs(trailingOnly = TRUE)
 filename <- args[1]
 outfile_prefix <- args[2]
 mapq <- as.numeric(args[3])
-annotation <- args[4]
+cov <- as.numeric(args[4])
+annotation <- args[5]
 
 # read annotation
 annot <- read.table(annotation, header = TRUE, sep = '\t')
@@ -19,12 +20,13 @@ column_names <- c('query_name','query_length','query_start','query_stop','strand
 colnames(a) <- column_names
 
 # filter by quality, and extract taxID and accession
-a <- a %>% filter(quality >= mapq) %>%
+a <- a %>% mutate(coverage = (query_stop - query_start) / query_length)
+af <- a %>% filter(quality >= mapq) %>% filter(coverage >= cov) %>%
   separate(target_name, into = c("accession", NA, "taxid"),sep = "\\|")
-a$taxid <- as.integer(a$taxid)
+af$taxid <- as.integer(af$taxid)
 
 # join annotation (names)
-a.annot <- left_join(a, annot, by = c("accession", "taxid"))
+a.annot <- left_join(af, annot, by = c("accession", "taxid"))
 write.table(a.annot, paste0(outfile_prefix, "_filtered_hits.tsv"), col.names = TRUE, row.names = FALSE,
     sep = '\t', quote = FALSE)
 
@@ -45,7 +47,7 @@ plot_height <- max(base_height, n_species * height_per_species)
 plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 pdf(paste0(outfile_prefix, "_heatmap_all.pdf"), width = plot_width, height = plot_height)
-ggplot(b, aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
+ggplot(b %>%  filter(!is.na(name)), aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
   geom_tile() +
   geom_text(colour = 'white') +
   facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
@@ -56,9 +58,9 @@ dev.off()
 
 # plot boxplot
 pdf(paste0(outfile_prefix, "_boxplot_all.pdf"), width = 12, height = plot_height)
-ggplot(b, aes(x = log2(counts), y = name, colour = group)) +
+ggplot(b %>%  filter(!is.na(name)), aes(x = log2(counts), y = name, colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
   geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.75), size = 2) +
-  theme_classic() +
+  theme_bw() +
   labs(y = '')
 dev.off()

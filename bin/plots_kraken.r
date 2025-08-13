@@ -41,8 +41,8 @@ base_width <- 8            # minimal width in inches
 plot_height <- max(base_height, n_species * height_per_species)
 plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-pdf(paste0(outfile_prefix, "_heatmap_all.pdf"), width = plot_width, height = plot_height)
-ggplot(a, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+pdf(paste0(outfile_prefix, "_heatmap_totalCounts_all.pdf"), width = plot_width, height = plot_height)
+ggplot(a  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
   geom_tile() +
   geom_text(colour='white') +
   labs(x = '', y = '') +
@@ -50,6 +50,30 @@ ggplot(a, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = tota
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 dev.off()
+
+pdf(paste0(outfile_prefix, "_heatmap_distinctMinimizers_all.pdf"), width = plot_width, height = plot_height)
+ggplot(a %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
+  geom_tile() +
+  geom_text(colour='white') +
+  labs(x = '', y = '') +
+  facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+dev.off()
+
+# heatmap by group
+for(gr in setdiff(unique(a$group), 'control')){
+  print(gr)
+  ggplot(a %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
+         aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+    geom_tile() +
+    geom_text(colour='white') +
+    labs(x = '', y = '') +
+    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  ggsave(paste0(outfile_prefix, "_", gr, "_group_heatmap_totalCounts_all.pdf"), height = plot_height, width = plot_width)
+}
 
 ### remove contaminants ###
 b <- a %>% filter(!taxID %in% contaminants)
@@ -155,9 +179,21 @@ plot_height <- max(base_height, n_species * height_per_species)
 plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 
-# heatmap facet
-pdf(paste0(outfile_prefix, "_heatmap_filtContam_facetGroups.pdf"), width = plot_width, height = plot_height)
-ggplot(bf, aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+# heatmap facet total counts
+pdf(paste0(outfile_prefix, "_heatmap_totalCounts_filtContam_facetGroups.pdf"), width = plot_width, height = plot_height)
+ggplot(bf %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+  geom_tile() +
+  geom_text(colour='white', size = 1.5) +
+  facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+  labs(x = '', y = '') +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+dev.off()
+
+# heatmap facet disstinct minimizers
+pdf(paste0(outfile_prefix, "_heatmap_distinctMinimizers_filtContam_facetGroups.pdf"), width = plot_width, height = plot_height)
+ggplot(bf %>% filter(distinctMinimizers != 0), 
+    aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
   geom_tile() +
   geom_text(colour='white', size = 1.5) +
   facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
@@ -169,7 +205,7 @@ dev.off()
 # boxplot totalCounts
 bf$group <- factor(bf$group)
 pdf(paste0(outfile_prefix, "_boxplot_totalCounts_filtContam.pdf"), width = 12, height = plot_height)
-ggplot(bf, aes(x = taxonomy, y = log2(totalCounts + 1), colour = group)) +
+ggplot(bf %>% filter(totalCounts != 0), aes(x = taxonomy, y = log2(totalCounts + 1), colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
   labs(x = "", y = "log2 Total Counts", colour = "Group") +
   theme_bw() +
@@ -181,7 +217,7 @@ dev.off()
 
 # boxplot distinctMinimizers
 pdf(paste0(outfile_prefix, "_boxplot_distinctMinimizers_filtContam.pdf"), width = 12, height = plot_height)
-ggplot(bf, aes(x = taxonomy, y = log2(distinctMinimizers + 1), colour = group)) +
+ggplot(bf %>% filter(distinctMinimizers != 0), aes(x = taxonomy, y = log2(distinctMinimizers + 1), colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
   labs(x = "", y = "log2 Distinct Minimizers", colour = "Group") +
   theme_bw() +
@@ -190,6 +226,22 @@ ggplot(bf, aes(x = taxonomy, y = log2(distinctMinimizers + 1), colour = group)) 
   # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   coord_flip()
 dev.off()
+
+
+# boxplot by group vs control
+for(gr in setdiff(unique(a$group), 'control')){
+  print(gr)
+ggplot(bf %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
+        aes(x = taxonomy, y = log2(totalCounts + 1), colour = group)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  labs(x = "", y = "log2 Total Counts", colour = "Group") +
+  theme_bw() +
+  scale_colour_brewer(palette = "Dark2") + 
+  # guides(colour = "none") +
+  # theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip()
+  ggsave(paste0(outfile_prefix, "_", gr, "_group_boxplot_totalCounts_filtContam.pdf"), height = plot_height, width = 12)
+}
 
 # total counts vs distinct minimizers for each sample
 for(s in unique(b$sample)){
