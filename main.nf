@@ -46,8 +46,8 @@ include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'
 include { KRAKEN2_KRAKEN2 as KRAKEN2BACTERIA } from './modules/nf-core/kraken2/kraken2/main'
 include { KRAKEN2_KRAKEN2 as KRAKEN2FPV } from './modules/nf-core/kraken2/kraken2/main'
 
-include { KRAKEN2_COMBINEKREPORTS as KRAKEN2BACTERIA_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
-include { KRAKEN2_COMBINEKREPORTS as KRAKEN2FPV_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
+// include { KRAKEN2_COMBINEKREPORTS as KRAKEN2BACTERIA_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
+// include { KRAKEN2_COMBINEKREPORTS as KRAKEN2FPV_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
 
 include { KRAKEN2_COMBINE_REPORTS as KRAKEN2BACTERIA_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
 include { KRAKEN2_COMBINE_REPORTS as KRAKEN2FPV_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
@@ -305,8 +305,8 @@ workflow {
         kraken_channels << fpv_kraken_logs
 
         // Combine reports with krakentools combine_kreports.py
-        fpv_kreports_ch = fpv_kraken.report.map { it -> it[1] }
-        KRAKEN2FPV_COMBINEKREPORTS(fpv_kreports_ch.collect())
+        // fpv_kreports_ch = fpv_kraken.report.map { it -> it[1] }
+        // KRAKEN2FPV_COMBINEKREPORTS(fpv_kreports_ch.collect())
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
@@ -342,25 +342,8 @@ workflow {
         kraken_channels << bacteria_kraken_logs
 
         // Combine reports with krakentools combine_kreports.py
-        bacteria_kreports_ch = bacteria_kraken.report.map { meta, report_path ->
-            // Add the sample ID to the staged filename so combine process sees unique names
-            def unique_file = file("${meta.id}_${report_path.getName()}")
-            // Return tuple: [groupKey, filePath] — groupKey can be based on db/conf
-            def group_key = "${meta.db}_${meta.conf}"
-            tuple(group_key, unique_file)
-        }
-
-        // Group by DB/conf and collect into lists of files
-        bacteria_kreports_ch
-            .groupTuple()
-            .map { group_key, file_list ->
-                // Pass only the files to the process
-                file_list.collect { it }
-            }
-            .set { bacteria_kreports_grouped_ch }
-
-        // Send each group (list of files) to the combine process
-        KRAKEN2BACTERIA_COMBINEKREPORTS(bacteria_kreports_grouped_ch)
+        // bacteria_kreports_ch = bacteria_kraken.report.map { it -> it[1] }
+        // KRAKEN2BACTERIA_COMBINEKREPORTS(bacteria_kreports_ch.collect())
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
