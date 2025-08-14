@@ -19,8 +19,11 @@ include { MINIMAP2_ALIGN as MINIMAP2EZVIR } from './modules/nf-core/minimap2/ali
 include { MINIMAP2_ALIGN as MINIMAP2PROTOZOA } from './modules/nf-core/minimap2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2FPV } from './modules/nf-core/minimap2/align/main'
 
-// include { SAMTOOLS_DEPTH as MINIMAP2BACTERIA_DEPTH} from './modules/nf-core/samtools/depth/main'
-// include { SAMTOOLS_DEPTH as MINIMAP2FPV_DEPTH} from './modules/nf-core/samtools/depth/main'
+include { SAMTOOLS_SORT as MINIMAP2BACTERIA_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
+include { SAMTOOLS_SORT as MINIMAP2FPV_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
+
+include { SAMTOOLS_DEPTH as MINIMAP2BACTERIA_DEPTH} from './modules/nf-core/samtools/depth/main'
+include { SAMTOOLS_DEPTH as MINIMAP2FPV_DEPTH} from './modules/nf-core/samtools/depth/main'
 
 include { PAF_PREPARE as MINIMAP2PROTOZOA_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
 include { PAF_PREPARE as MINIMAP2FUNGI_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
@@ -49,6 +52,7 @@ include { KRAKEN2_KRAKEN2 as KRAKEN2FPV } from './modules/nf-core/kraken2/kraken
 // include { KRAKEN2_COMBINEKREPORTS as KRAKEN2BACTERIA_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
 // include { KRAKEN2_COMBINEKREPORTS as KRAKEN2FPV_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
 
+include { KRAKEN2_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
 include { KRAKEN2_COMBINE_REPORTS as KRAKEN2BACTERIA_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
 include { KRAKEN2_COMBINE_REPORTS as KRAKEN2FPV_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
 
@@ -175,8 +179,10 @@ workflow {
         // log for multiqc
         fpv_map_log = fpv_map.flagstat
         flagstat_channels << fpv_map_log
-        // // depth
-        // fpv_depth = MINIMAP2FPV_DEPTH(fpv_map.bam)
+        // sort bam
+        fpv_sorted_bam = MINIMAP2FPV_SORT(fpv_map.bam)
+        // depth
+        fpv_depth = MINIMAP2FPV_DEPTH(fpv_map.sorted_bam)
         // annotate paf table and concatenate
         fpv_paf_ch = fpv_map.paf.map { tuple ->
             def meta = tuple[0]
@@ -283,8 +289,9 @@ workflow {
     }
     all_flagstats = Channel.empty().mix(*flagstat_channels)
 
-
-
+    //////////
+    // KRAKEN //
+    //////////
     // --- Taxonomic classification with Kraken2 for selected kingdoms ---
     def selected_kingdoms_k2 = params.kraken2_kingdoms.split(',').collect { it.trim().toLowerCase() }
     def kraken_channels = []
