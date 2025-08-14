@@ -19,8 +19,8 @@ include { MINIMAP2_ALIGN as MINIMAP2EZVIR } from './modules/nf-core/minimap2/ali
 include { MINIMAP2_ALIGN as MINIMAP2PROTOZOA } from './modules/nf-core/minimap2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2FPV } from './modules/nf-core/minimap2/align/main'
 
-include { SAMTOOLS_DEPTH as MINIMAP2BACTERIA_DEPTH} from './modules/nf-core/samtools/depth/main'
-include { SAMTOOLS_DEPTH as MINIMAP2FPV_DEPTH} from './modules/nf-core/samtools/depth/main'
+// include { SAMTOOLS_DEPTH as MINIMAP2BACTERIA_DEPTH} from './modules/nf-core/samtools/depth/main'
+// include { SAMTOOLS_DEPTH as MINIMAP2FPV_DEPTH} from './modules/nf-core/samtools/depth/main'
 
 include { PAF_PREPARE as MINIMAP2PROTOZOA_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
 include { PAF_PREPARE as MINIMAP2FUNGI_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
