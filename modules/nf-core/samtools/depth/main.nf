@@ -28,7 +28,7 @@ process SAMTOOLS_DEPTH {
         depth \\
         --threads ${task.cpus-1} \\
         $args \\
-        -o ${prefix}.tsv \\
+        -o ${prefix}_depth.tsv \\
         $bam
 
     cat <<-END_VERSIONS > versions_samtoolsdepth.yml
