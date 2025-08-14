@@ -14,7 +14,7 @@ process KRAKEN2_COMBINE_REPORTS {
     script:
     // def script_dir = file("bin")
     def kraken_merge_script_long = workflow.projectDir.resolve("bin/combine_kraken2_reports_long.py")
-    def kraken_merge_script_wide = workflow.projectDir.resolve("bin/combine_kraken2_reports_wide.py")
+    // def kraken_merge_script_wide = workflow.projectDir.resolve("bin/combine_kraken2_reports_wide.py")
 
 
     // Validate and sanitize input list of [id, group, path]
