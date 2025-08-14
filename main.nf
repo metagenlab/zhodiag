@@ -286,7 +286,7 @@ workflow {
         // plots
         PLOTS_PROTOZOA(protozoa_concatenated_pafs.cat, params.mapq_cutoff, params.coverage_cutoff, "protozoa", params.protozoa_annotation)
     }
-//    all_flagstats = Channel.empty().mix(*flagstat_channels)
+    all_flagstats = Channel.empty().mix(*flagstat_channels)
 
     //////////
     // KRAKEN //
@@ -437,19 +437,19 @@ workflow {
     }
     kraken_logs_ch = kraken_logs_ch.map { it[1] }
 
-    // // --- Collect all reports for MultiQC ---
-    // collect_reports_input = fastqc.html
-    //     .map { it[1] }
-    //     .merge(
-    //         fastqc.zip.map { it[1] },
-    //         trim_logs.map { it[1] },
-    //         mapping_logs.map { it[1] },
-    //         kraken_logs_ch,
-    //         all_flagstats.map { it[1] }
-    //     )
-    //     .collect()
+    // --- Collect all reports for MultiQC ---
+    collect_reports_input = fastqc.html
+        .map { it[1] }
+        .merge(
+            fastqc.zip.map { it[1] },
+            trim_logs.map { it[1] },
+            mapping_logs.map { it[1] },
+            kraken_logs_ch,
+            all_flagstats.map { it[1] }
+        )
+        .collect()
 
-    // multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input)
+    multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input)
 
-    // MULTIQC(multiqc_input)
+    MULTIQC(multiqc_input)
 }
