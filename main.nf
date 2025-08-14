@@ -182,7 +182,7 @@ workflow {
         // sort bam
         fpv_sorted_bam = MINIMAP2FPV_SORT(fpv_map.bam)
         // depth
-        fpv_depth = MINIMAP2FPV_DEPTH(fpv_map.sorted_bam)
+        fpv_depth = MINIMAP2FPV_DEPTH(fpv_sorted_bam.sorted_bam)
         // annotate paf table and concatenate
         fpv_paf_ch = fpv_map.paf.map { tuple ->
             def meta = tuple[0]
