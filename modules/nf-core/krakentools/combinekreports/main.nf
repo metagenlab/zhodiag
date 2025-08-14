@@ -1,4 +1,4 @@
-process KRAKEN2BACTERIA_COMBINEKREPORTS {
+process KRAKEN2_COMBINEKREPORTS {
   label 'process_single'
 
   conda "${moduleDir}/environment.yml"
