@@ -27,7 +27,7 @@ process SAMTOOLS_SORT {
         -o ${prefix}_sorted.bam \\
         $bam
 
-    cat <<-END_VERSIONS > versions.yml
+    cat <<-END_VERSIONS > versions_samtools.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
     END_VERSIONS

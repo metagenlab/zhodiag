@@ -31,7 +31,7 @@ process SAMTOOLS_DEPTH {
         -o ${prefix}.tsv \\
         $bam
 
-    cat <<-END_VERSIONS > versions.yml
+    cat <<-END_VERSIONS > versions_samtoolsdepth.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
     END_VERSIONS
