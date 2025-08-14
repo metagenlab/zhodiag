@@ -1,52 +1,53 @@
-process KRAKEN2_COMBINEKREPORTS {
-    label 'process_single'
+process KRAKEN2BACTERIA_COMBINEKREPORTS {
+  label 'process_single'
 
-    conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/krakentools:1.2--pyh5e36f6f_0':
-        'biocontainers/krakentools:1.2--pyh5e36f6f_0' }"
+  conda "${moduleDir}/environment.yml"
+  container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+      'https://depot.galaxyproject.org/singularity/krakentools:1.2--pyh5e36f6f_0':
+      'biocontainers/krakentools:1.2--pyh5e36f6f_0' }"
 
-    input:
-    path(kreports)
+  input:
+  // NOTE: kreports is a LIST of paths (because of .collect()).
+  // stageAs closure runs per file and we derive a unique staged name:
+  path(kreports, stageAs: { p ->
+      def db   = p.getParent().getParent().getFileName().toString()
+      def conf = p.getParent().getFileName().toString()
+      "${db}_${conf}_${p.getFileName().toString()}"
+  })
 
-    output:
-    path("*/*/krakentools_combine_kreports.tsv"), emit: txt
-    path("*/*/versions_krakentools.yml"), emit: versions
+  output:
+  path("*/*/krakentools_combine_kreports.tsv"), emit: txt
+  path("*/*/versions_krakentools.yml"), emit: versions
 
-    when:
-    task.ext.when == null || task.ext.when
+  when:
+  task.ext.when == null || task.ext.when
 
-    script:
-    def args = task.ext.args ?: ''
-    def VERSION = '1.2'
+  script:
+  def args    = task.ext.args ?: ''
+  def VERSION = '1.2'
 
-    def first_report = kreports instanceof List ? kreports[0] : kreports
-    def filename = first_report.getName()  // e.g., 101999248520_pluspf20250402_conf0.5_report.txt
+  // Use the first file to infer db/conf for the out_dir (same logic as before)
+  def first_report = kreports[0]
+  def fname = first_report.getFileName().toString()
+  def m = fname =~ /^.+?_(.+?)_(conf\d+(?:\.\d+)?)_report\.txt$/
+  if( !m.matches() ) throw new RuntimeException("Filename does not match expected format: ${fname}")
 
-    def matcher = filename =~ /^.+?_(.+?)_(conf\d+(?:\.\d+)?)_report\.txt$/
-    if (!matcher.matches()) {
-        throw new RuntimeException("Filename does not match expected format: ${filename}")
-    }
+  def db   = m[0][1]
+  def conf = m[0][2]
+  def out_dir = "${db}/${conf}"
 
-    def db   = matcher[0][1]  // pluspf20250402
-    def conf = matcher[0][2]  // conf0.5
-    def out_dir = "${db}/${conf}"
+  """
+  mkdir -p ${out_dir}
 
-    def output_file = "${out_dir}/krakentools_combine_kreports.tsv"
-    def version_file = "${out_dir}/versions_krakentools.yml"
+  combine_kreports.py \\
+      -r ${kreports.collect{ it.getFileName().toString() }.join(' ')} \\
+      -o ${out_dir}/krakentools_combine_kreports.tsv \\
+      --display-headers \\
+      ${args}
 
-    """
-    mkdir -p ${out_dir}
-
-    combine_kreports.py \\
-        -r ${kreports.collect { it.getName() }.join(' ')} \\
-        -o ${output_file} \\
-        --display-headers \\
-        ${args}
-
-    cat <<-END_VERSIONS > ${version_file}
-    "${task.process}":
-        combine_kreports.py: ${VERSION}
-    END_VERSIONS
-    """
+  cat <<-END_VERSIONS > ${out_dir}/versions_krakentools.yml
+  "${task.process}":
+      combine_kreports.py: ${VERSION}
+  END_VERSIONS
+  """
 }
