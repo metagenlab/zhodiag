@@ -7,7 +7,7 @@ process KRAKEN2_COMBINEKREPORTS {
         'biocontainers/krakentools:1.2--pyh5e36f6f_0' }"
 
     input:
-    path(kreports)
+    tuple val(sample_id), path(kreports)
 
     output:
     path("*/*/krakentools_combine_kreports.tsv"), emit: txt

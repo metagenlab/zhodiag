@@ -19,6 +19,9 @@ include { MINIMAP2_ALIGN as MINIMAP2EZVIR } from './modules/nf-core/minimap2/ali
 include { MINIMAP2_ALIGN as MINIMAP2PROTOZOA } from './modules/nf-core/minimap2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2FPV } from './modules/nf-core/minimap2/align/main'
 
+include { SAMTOOLS_DEPTH as MINIMAP2BACTERIA_DEPTH} from './modules/nf-core/samtools/depth/main'
+include { SAMTOOLS_DEPTH as MINIMAP2FPV_DEPTH} from './modules/nf-core/samtools/depth/main'
+
 include { PAF_PREPARE as MINIMAP2PROTOZOA_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
 include { PAF_PREPARE as MINIMAP2FUNGI_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
 include { PAF_PREPARE as MINIMAP2BACTERIA_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
@@ -171,7 +174,9 @@ workflow {
                                 true, false, false, false, true)
         // log for multiqc
         fpv_map_log = fpv_map.flagstat
-        flagstat_channels << fpv_map_log   
+        flagstat_channels << fpv_map_log
+        // depth
+        fpv_depth = MINIMAP2FPV_DEPTH(fpv_map.bam)
         // annotate paf table and concatenate
         fpv_paf_ch = fpv_map.paf.map { tuple ->
             def meta = tuple[0]
@@ -337,8 +342,13 @@ workflow {
         kraken_channels << bacteria_kraken_logs
 
         // Combine reports with krakentools combine_kreports.py
-        bacteria_kreports_ch = bacteria_kraken.report.map { it -> it[1] }
+        bacteria_kreports_ch = bacteria_kraken.report.map { tuple ->
+            def meta = tuple[0]
+            def file = tuple[1]
+            return tuple(meta.id, file)
+        }
         KRAKEN2BACTERIA_COMBINEKREPORTS(bacteria_kreports_ch.collect())
+
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
