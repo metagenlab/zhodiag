@@ -342,13 +342,25 @@ workflow {
         kraken_channels << bacteria_kraken_logs
 
         // Combine reports with krakentools combine_kreports.py
+        // Each element in bacteria_kraken.report is: [meta, report_path]
         bacteria_kreports_ch = bacteria_kraken.report.map { tuple ->
             def meta = tuple[0]
-            def file = tuple[1]
-            return tuple(meta.id, file)
+            def report_path = tuple[1]
+            // Add the sample ID to the staged filename
+            def unique_name = "${meta.id}_${report_path.name}"
+            tuple(unique_name, report_path)
         }
-        KRAKEN2BACTERIA_COMBINEKREPORTS(bacteria_kreports_ch.collect())
 
+        // Group by DB/conf and collect
+        bacteria_kreports_ch
+            .groupTuple() // ensures grouping by DB/conf if meta contains that
+            .map { group_id, files ->
+                files.collect { it[1] } // extract file paths
+            }
+            .set { bacteria_kreports_grouped }
+
+        // Send each group to the combine process
+        KRAKEN2BACTERIA_COMBINEKREPORTS(bacteria_kreports_grouped)
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
