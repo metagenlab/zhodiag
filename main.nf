@@ -50,11 +50,10 @@ include { KRAKEN2_KRAKEN2 as KRAKEN2BACTERIA } from './modules/nf-core/kraken2/k
 include { KRAKEN2_KRAKEN2 as KRAKEN2FPV } from './modules/nf-core/kraken2/kraken2/main'
 
 // include { KRAKEN2_COMBINEKREPORTS as KRAKEN2BACTERIA_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
-// include { KRAKEN2_COMBINEKREPORTS as KRAKEN2FPV_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
+//include { KRAKEN2_COMBINEKREPORTS as KRAKEN2FPV_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
 
-include { KRAKEN2_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
-include { KRAKEN2_COMBINE_REPORTS as KRAKEN2BACTERIA_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
-include { KRAKEN2_COMBINE_REPORTS as KRAKEN2FPV_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
+include { KRAKEN2_COMBINE_REPORTS2 as KRAKEN2BACTERIA_COMBINE_REPORTS} from './modules/local/kraken2_combineReports2/main'
+include { KRAKEN2_COMBINE_REPORTS2 as KRAKEN2FPV_COMBINE_REPORTS} from './modules/local/kraken2_combineReports2/main'
 
 include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
 
@@ -287,7 +286,7 @@ workflow {
         // plots
         PLOTS_PROTOZOA(protozoa_concatenated_pafs.cat, params.mapq_cutoff, params.coverage_cutoff, "protozoa", params.protozoa_annotation)
     }
-    all_flagstats = Channel.empty().mix(*flagstat_channels)
+//    all_flagstats = Channel.empty().mix(*flagstat_channels)
 
     //////////
     // KRAKEN //
@@ -311,23 +310,29 @@ workflow {
         fpv_kraken_logs = fpv_kraken.report
         kraken_channels << fpv_kraken_logs
 
-        // Combine reports with krakentools combine_kreports.py
-        // fpv_kreports_ch = fpv_kraken.report.map { it -> it[1] }
+        // Combine reports
+        fpv_kreports_ch = fpv_kraken.report.map { it -> it[1] }
+        fpv_kreports_ch.view()
+        def metadata_file = file(params.input, checkExists: true)
+        Channel.fromPath(metadata_file).set { metadata_ch }
+        fpv_kraken_reports_combined = KRAKEN2FPV_COMBINE_REPORTS(fpv_kreports_ch.collect(), metadata_ch)
+
         // KRAKEN2FPV_COMBINEKREPORTS(fpv_kreports_ch.collect())
 
-        // Combine reports custom: with group variable.
-        // Extract reports as tuples [id, group, report_path]
-        fpv_kraken_reports_ch = fpv_kraken.report.map { tuple ->
-            def meta = tuple[0]
-            def report_path = tuple[1]
-            return [meta.id, meta.group, report_path]
-        }
-        // Collect all reports as list of triplets [id, group, report_path]
-        fpv_kraken_reports_ch
-            .collect()
-            .map { flat_list -> flat_list.collate(3) }
-            .set { fpv_grouped_kraken_reports_ch }
-        fpv_kraken_reports_combined = KRAKEN2FPV_COMBINE_REPORTS(fpv_grouped_kraken_reports_ch)
+
+        // // Combine reports custom: with group variable.
+        // // Extract reports as tuples [id, group, report_path]
+        // fpv_kraken_reports_ch = fpv_kraken.report.map { tuple ->
+        //     def meta = tuple[0]
+        //     def report_path = tuple[1]
+        //     return [meta.id, meta.group, report_path]
+        // }
+        // // Collect all reports as list of triplets [id, group, report_path]
+        // fpv_kraken_reports_ch
+        //     .collect()
+        //     .map { flat_list -> flat_list.collate(3) }
+        //     .set { fpv_grouped_kraken_reports_ch }
+        // fpv_kraken_reports_combined = KRAKEN2FPV_COMBINE_REPORTS(fpv_grouped_kraken_reports_ch)
         PLOTS_KRAKEN2_FPV(fpv_kraken_reports_combined.combine_long, params.contaminant_taxids)
     }
 
@@ -348,23 +353,29 @@ workflow {
         bacteria_kraken_logs = bacteria_kraken.report
         kraken_channels << bacteria_kraken_logs
 
+        // Combine reports
+        bacteria_kreports_ch = bacteria_kraken.report.map { it -> it[1] }
+        def metadata_file = file(params.input, checkExists: true)
+        Channel.fromPath(metadata_file).set { metadata_ch }
+        bacteria_kraken_reports_combined = KRAKEN2BACTERIA_COMBINE_REPORTS(bacteria_kreports_ch.collect(), metadata_ch)
+
         // Combine reports with krakentools combine_kreports.py
         // bacteria_kreports_ch = bacteria_kraken.report.map { it -> it[1] }
         // KRAKEN2BACTERIA_COMBINEKREPORTS(bacteria_kreports_ch.collect())
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
-        bacteria_kraken_reports_ch = bacteria_kraken.report.map { tuple ->
-            def meta = tuple[0]
-            def report_path = tuple[1]
-            return [meta.id, meta.group, report_path]
-        }
-        // Collect all reports as list of triplets [id, group, report_path]
-        bacteria_kraken_reports_ch
-            .collect()
-            .map { flat_list -> flat_list.collate(3) }
-            .set { bacteria_grouped_kraken_reports_ch }
-        bacteria_kraken_reports_combined = KRAKEN2BACTERIA_COMBINE_REPORTS(bacteria_grouped_kraken_reports_ch)
+        // bacteria_kraken_reports_ch = bacteria_kraken.report.map { tuple ->
+        //     def meta = tuple[0]
+        //     def report_path = tuple[1]
+        //     return [meta.id, meta.group, report_path]
+        // }
+        // // Collect all reports as list of triplets [id, group, report_path]
+        // bacteria_kraken_reports_ch
+        //     .collect()
+        //     .map { flat_list -> flat_list.collate(3) }
+        //     .set { bacteria_grouped_kraken_reports_ch }
+        // bacteria_kraken_reports_combined = KRAKEN2BACTERIA_COMBINE_REPORTS(bacteria_grouped_kraken_reports_ch)
         PLOTS_KRAKEN2_BACTERIA(bacteria_kraken_reports_combined.combine_long, params.contaminant_taxids)
     }
 
@@ -426,19 +437,19 @@ workflow {
     }
     kraken_logs_ch = kraken_logs_ch.map { it[1] }
 
-    // --- Collect all reports for MultiQC ---
-    collect_reports_input = fastqc.html
-        .map { it[1] }
-        .merge(
-            fastqc.zip.map { it[1] },
-            trim_logs.map { it[1] },
-            mapping_logs.map { it[1] },
-            kraken_logs_ch,
-            all_flagstats.map { it[1] }
-        )
-        .collect()
+    // // --- Collect all reports for MultiQC ---
+    // collect_reports_input = fastqc.html
+    //     .map { it[1] }
+    //     .merge(
+    //         fastqc.zip.map { it[1] },
+    //         trim_logs.map { it[1] },
+    //         mapping_logs.map { it[1] },
+    //         kraken_logs_ch,
+    //         all_flagstats.map { it[1] }
+    //     )
+    //     .collect()
 
-    multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input)
+    // multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input)
 
-    MULTIQC(multiqc_input)
+    // MULTIQC(multiqc_input)
 }

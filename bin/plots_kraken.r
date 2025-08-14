@@ -79,10 +79,11 @@ for(gr in setdiff(unique(a$group), 'control')){
 
 # total counts vs distinct minimizers for each sample
 for(s in unique(a$sample)){
+  print(s)
   pdf(paste0(outfile_prefix, "_", s, "_totalCounts_vs_distinctMinimizers.pdf"), 
   width = 10, height = 10)
   p = ggplot(a %>% filter(sample == s), 
-         aes(x = log2(totalCounts), y = log2(distinctMinimizers), label = taxonomy)) +
+         aes(x = log2(totalCounts+1), y = log2(distinctMinimizers+1), label = taxonomy)) +
     geom_point() +
     geom_text_repel() +
     scale_y_continuous(limits = c(0, NA)) +

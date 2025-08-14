@@ -32,7 +32,7 @@ process PLOTS_KRAKEN2 {
     def count_table_name = count_table.getName()
     def filename = count_table.getName()
 
-    def matcher = filename =~ /^kraken2_combined_(.+?)_(conf\d+(?:\.\d+)?)_report\.txt\.tsv$/
+    def matcher = filename =~ /^kraken2_combined_(.+?)_(conf\d+(?:\.\d+)?)_report\.tsv$/
     if (!matcher.matches()) {
         throw new RuntimeException("Filename does not match expected pattern: ${filename}")
     }
