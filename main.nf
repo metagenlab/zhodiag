@@ -175,8 +175,8 @@ workflow {
         // log for multiqc
         fpv_map_log = fpv_map.flagstat
         flagstat_channels << fpv_map_log
-        // depth
-        fpv_depth = MINIMAP2FPV_DEPTH(fpv_map.bam)
+        // // depth
+        // fpv_depth = MINIMAP2FPV_DEPTH(fpv_map.bam)
         // annotate paf table and concatenate
         fpv_paf_ch = fpv_map.paf.map { tuple ->
             def meta = tuple[0]
