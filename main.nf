@@ -95,7 +95,7 @@ workflow {
         return tuple(meta, reads)
     }
 
-//    samples.view()
+    samples.view()
 
     // --- FASTQC ---
     fastqc = FASTQC(samples)
@@ -303,11 +303,11 @@ workflow {
 
         // run kraken2
         fpv_kraken = KRAKEN2FPV(unmapped, 
-                                    params.fpv_kraken2db, 
-                                    params.kraken2_confidence, 
-                                    true, 
-                                    true, 
-                                    kraken2_db_name_ch)
+                                params.fpv_kraken2db, 
+                                params.kraken2_confidence, 
+                                true, 
+                                true, 
+                                kraken2_db_name_ch)
         fpv_kraken_logs = fpv_kraken.report
         kraken_channels << fpv_kraken_logs
 
@@ -317,6 +317,7 @@ workflow {
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
+        /*
         fpv_kraken_reports_ch = fpv_kraken.report.map { tuple ->
             def meta = tuple[0]
             def report_path = tuple[1]
@@ -327,7 +328,10 @@ workflow {
             .collect()
             .map { flat_list -> flat_list.collate(3) }
             .set { fpv_grouped_kraken_reports_ch }
-        fpv_kraken_reports_combined = KRAKEN2FPV_COMBINE_REPORTS(fpv_grouped_kraken_reports_ch)
+        */
+        fpv_kraken.report.collect{it[1]}.set{fpv_kraken_reports_list} 
+        fpv_kraken_reports_list.view()
+        fpv_kraken_reports_combined = KRAKEN2FPV_COMBINE_REPORTS(fpv_kraken_reports_list, params.input)
         PLOTS_KRAKEN2_FPV(fpv_kraken_reports_combined.combine_long, params.contaminant_taxids)
     }
 
@@ -354,7 +358,7 @@ workflow {
 
         // Combine reports custom: with group variable.
         // Extract reports as tuples [id, group, report_path]
-        bacteria_kraken_reports_ch = bacteria_kraken.report.map { tuple ->
+        /* bacteria_kraken_reports_ch = bacteria_kraken.report.map { tuple ->
             def meta = tuple[0]
             def report_path = tuple[1]
             return [meta.id, meta.group, report_path]
@@ -364,7 +368,10 @@ workflow {
             .collect()
             .map { flat_list -> flat_list.collate(3) }
             .set { bacteria_grouped_kraken_reports_ch }
-        bacteria_kraken_reports_combined = KRAKEN2BACTERIA_COMBINE_REPORTS(bacteria_grouped_kraken_reports_ch)
+        */
+        bacteria_kraken.report.collect{it[1]}.set{bacteria_kraken_reports_list} 
+        bacteria_kraken_reports_list.view()
+        bacteria_kraken_reports_combined = KRAKEN2BACTERIA_COMBINE_REPORTS(bacteria_kraken_reports_list, params.input)
         PLOTS_KRAKEN2_BACTERIA(bacteria_kraken_reports_combined.combine_long, params.contaminant_taxids)
     }
 
@@ -438,7 +445,7 @@ workflow {
         )
         .collect()
 
-    multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input)
+//    multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input)
 
-    MULTIQC(multiqc_input)
+//    MULTIQC(multiqc_input)
 }
