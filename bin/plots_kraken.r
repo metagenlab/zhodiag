@@ -4,8 +4,8 @@ library(ggrepel)
 
 args <- commandArgs(trailingOnly = TRUE)
 filename <- args[1]
-outfile_prefix <- args[2]
-contaminants <- as.numeric(strsplit(args[3], ",\\s*")[[1]])
+# outfile_prefix <- args[2]
+contaminants <- as.numeric(strsplit(args[2], ",\\s*")[[1]])
 
 a <- read.table(filename, header = TRUE, sep = '\t')
 
@@ -24,7 +24,7 @@ sum.domains <- a %>%
   summarise(nreads = sum(rootReads), .groups = "drop") %>%
   pivot_wider(names_from = domain, values_from = nreads) %>%
   mutate(across(everything(), ~replace_na(., 0)))
-write.table(sum.domains, paste0(outfile_prefix, "_summary_kingdoms.tsv"),
+write.table(sum.domains, "summary_kingdoms.tsv",
             quote = FALSE, col.names = TRUE, row.names = FALSE, sep = '\t')
 
 # select rank species
@@ -41,7 +41,7 @@ base_width <- 8            # minimal width in inches
 plot_height <- max(base_height, n_species * height_per_species)
 plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-pdf(paste0(outfile_prefix, "_all_heatmap_totalCounts.pdf"), width = plot_width, height = plot_height)
+pdf("all_heatmap_totalCounts.pdf", width = plot_width, height = plot_height)
 ggplot(a  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
   geom_tile() +
   geom_text(colour='white') +
@@ -51,7 +51,7 @@ ggplot(a  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fi
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 dev.off()
 
-pdf(paste0(outfile_prefix, "_all_heatmap_distinctMinimizers.pdf"), width = plot_width, height = plot_height)
+pdf("all_heatmap_distinctMinimizers.pdf", width = plot_width, height = plot_height)
 ggplot(a %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
   geom_tile() +
   geom_text(colour='white') +
@@ -64,7 +64,7 @@ dev.off()
 # heatmap by group
 for(gr in setdiff(unique(a$group), 'control')){
   print(gr)
-  pdf(paste0(outfile_prefix, "_", gr, "_group_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
+  pdf(paste0(gr, "_group_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
   p = ggplot(a %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
          aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
     geom_tile() +
@@ -80,7 +80,7 @@ for(gr in setdiff(unique(a$group), 'control')){
 # total counts vs distinct minimizers for each sample
 for(s in unique(a$sample)){
   print(s)
-  pdf(paste0(outfile_prefix, "_", s, "_totalCounts_vs_distinctMinimizers.pdf"), 
+  pdf(paste0(s, "_totalCounts_vs_distinctMinimizers.pdf"), 
   width = 10, height = 10)
   p = ggplot(a %>% filter(sample == s), 
          aes(x = log2(totalCounts+1), y = log2(distinctMinimizers+1), label = taxonomy)) +

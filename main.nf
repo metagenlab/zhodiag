@@ -49,11 +49,8 @@ include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'
 include { KRAKEN2_KRAKEN2 as KRAKEN2BACTERIA } from './modules/nf-core/kraken2/kraken2/main'
 include { KRAKEN2_KRAKEN2 as KRAKEN2FPV } from './modules/nf-core/kraken2/kraken2/main'
 
-// include { KRAKEN2_COMBINEKREPORTS as KRAKEN2BACTERIA_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
-//include { KRAKEN2_COMBINEKREPORTS as KRAKEN2FPV_COMBINEKREPORTS } from './modules/nf-core/krakentools/combinekreports/main'
-
-include { KRAKEN2_COMBINE_REPORTS2 as KRAKEN2BACTERIA_COMBINE_REPORTS} from './modules/local/kraken2_combineReports2/main'
-include { KRAKEN2_COMBINE_REPORTS2 as KRAKEN2FPV_COMBINE_REPORTS} from './modules/local/kraken2_combineReports2/main'
+include { KRAKEN2_COMBINE_REPORTS as KRAKEN2BACTERIA_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
+include { KRAKEN2_COMBINE_REPORTS as KRAKEN2FPV_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
 
 include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
 
@@ -312,7 +309,6 @@ workflow {
 
         // Combine reports
         fpv_kreports_ch = fpv_kraken.report.map { it -> it[1] }
-        fpv_kreports_ch.view()
         def metadata_file = file(params.input, checkExists: true)
         Channel.fromPath(metadata_file).set { metadata_ch }
         fpv_kraken_reports_combined = KRAKEN2FPV_COMBINE_REPORTS(fpv_kreports_ch.collect(), metadata_ch)

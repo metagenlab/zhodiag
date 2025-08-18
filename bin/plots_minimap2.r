@@ -4,10 +4,10 @@ library(ggrepel)
 
 args <- commandArgs(trailingOnly = TRUE)
 filename <- args[1]
-outfile_prefix <- args[2]
-mapq <- as.numeric(args[3])
-cov <- as.numeric(args[4])
-annotation <- args[5]
+# outfile_prefix <- args[2]
+mapq <- as.numeric(args[2])
+cov <- as.numeric(args[3])
+annotation <- args[4]
 
 # read annotation
 annot <- read.table(annotation, header = TRUE, sep = '\t')
@@ -27,7 +27,7 @@ af$taxid <- as.integer(af$taxid)
 
 # join annotation (names)
 a.annot <- left_join(af, annot, by = c("accession", "taxid"))
-write.table(a.annot, paste0(outfile_prefix, "_filtered_hits.tsv"), col.names = TRUE, row.names = FALSE,
+write.table(a.annot, paste0("filtered_hits.tsv"), col.names = TRUE, row.names = FALSE,
     sep = '\t', quote = FALSE)
 
 # number of reads per hit, per sample and group
@@ -46,7 +46,7 @@ base_width <- 12            # minimal width in inches
 plot_height <- max(base_height, n_species * height_per_species)
 plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-pdf(paste0(outfile_prefix, "_all_heatmap.pdf"), width = plot_width, height = plot_height)
+pdf(paste0("all_heatmap.pdf"), width = plot_width, height = plot_height)
 ggplot(b %>%  filter(!is.na(name)), aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
   geom_tile() +
   geom_text(colour = 'white') +
@@ -57,7 +57,7 @@ ggplot(b %>%  filter(!is.na(name)), aes(x = factor(sample), y = name, fill = log
 dev.off()
 
 # plot boxplot
-pdf(paste0(outfile_prefix, "_all_boxplot.pdf"), width = 12, height = plot_height)
+pdf(paste0("all_boxplot.pdf"), width = 12, height = plot_height)
 ggplot(b %>%  filter(!is.na(name)), aes(x = log2(counts), y = name, colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
   geom_point(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.75), size = 2) +
@@ -68,7 +68,7 @@ dev.off()
 # heatmap by group
 for(gr in setdiff(unique(b$group), "control")){
   print(gr)
-  pdf(paste0(outfile_prefix, "_", gr, "_group_heatmap.pdf"), width = plot_width, height = plot_height)
+  pdf(paste0(gr, "_group_heatmap.pdf"), width = plot_width, height = plot_height)
   p = ggplot(b %>%  filter(!is.na(name)) %>% filter(group %in% c("control", gr)),
          aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
     geom_tile() +
@@ -84,7 +84,7 @@ for(gr in setdiff(unique(b$group), "control")){
 # boxplot by group
 for(gr in setdiff(unique(b$group), "control")){
   print(gr)
-  pdf(paste0(outfile_prefix, "_", gr, "_group_boxplot.pdf"), width = plot_width, height = plot_height)
+  pdf(paste0(gr, "_group_boxplot.pdf"), width = plot_width, height = plot_height)
   p = ggplot(b %>%  filter(!is.na(name)) %>% filter(group %in% c("control", gr)),
   aes(x = log2(counts), y = name, colour = group)) +
   geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +

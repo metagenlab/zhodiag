@@ -22,6 +22,6 @@ dfg = left_join(df, metadata, by = "sample")
 colnames(dfg) = c("perc_reads", "rootReads", "totalCounts", 
                     "minimizers", "distinctMinimizers", "rank",
                     "taxid", "taxonomy", "sample", "group")
-write.table(dfg, paste0(outfile_prefix, "_report.tsv"),
+write.table(dfg, paste0(outfile_prefix),
             col.names = TRUE, row.names = FALSE,
             sep = '\t', quote = FALSE)

@@ -15,10 +15,10 @@ process KRAKEN2_KRAKEN2 {
     val kraken2_db_name
 
     output:
-    tuple val(meta), path("${kraken2_db_name}/conf${confidence}/*_classified{.,_}*"), optional: true, emit: classified_reads_fastq
-    tuple val(meta), path("${kraken2_db_name}/conf${confidence}/*_unclassified{.,_}*"), optional: true, emit: unclassified_reads_fastq
-    tuple val(meta), path("${kraken2_db_name}/conf${confidence}/*_classifiedreads.txt"), optional: true, emit: classified_reads_assignment
-    tuple val(meta), path("${kraken2_db_name}/conf${confidence}/*_report.txt"), emit: report
+    tuple val(meta), path("*_classified{.,_}*"), optional: true, emit: classified_reads_fastq
+    tuple val(meta), path("*_unclassified{.,_}*"), optional: true, emit: unclassified_reads_fastq
+    tuple val(meta), path("*_classifiedreads.txt"), optional: true, emit: classified_reads_assignment
+    tuple val(meta), path("*_report.txt"), emit: report
     path "versions_kraken2.yml", emit: versions
 
     when:
@@ -28,14 +28,14 @@ process KRAKEN2_KRAKEN2 {
     def args = task.ext.args ?: ''
     def paired = meta.single_end ? "" : "--paired"
     def conf = confidence
-    def out_dir = "${kraken2_db_name}/conf${conf}"
+    def out_dir = "."
     def prefix = task.ext.prefix ?: "${meta.id}_${kraken2_db_name}_conf${conf}"
-    def classified   = meta.single_end ? "${out_dir}/${prefix}_classified.fastq"   : "${out_dir}/${prefix}_classified_#.fastq"
-    def unclassified = meta.single_end ? "${out_dir}/${prefix}_unclassified.fastq" : "${out_dir}/${prefix}_unclassified_#.fastq"
+    def classified   = meta.single_end ? "${prefix}_classified.fastq"   : "${prefix}_classified_#.fastq"
+    def unclassified = meta.single_end ? "${prefix}_unclassified.fastq" : "${prefix}_unclassified_#.fastq"
     def classified_option = save_output_fastqs ? "--classified-out ${classified}" : ""
     def unclassified_option = save_output_fastqs ? "--unclassified-out ${unclassified}" : ""
-    def readclassification_option = save_reads_assignment ? "--output ${out_dir}/${prefix}_classifiedreads.txt" : "--output /dev/null"
-    def compress_reads_command = save_output_fastqs ? "pigz -f -p $task.cpus ${out_dir}/*.fastq" : ""
+    def readclassification_option = save_reads_assignment ? "--output ${prefix}_classifiedreads.txt" : "--output /dev/null"
+    def compress_reads_command = save_output_fastqs ? "pigz -f -p $task.cpus *.fastq" : ""
 
     """
     mkdir -p ${out_dir}
@@ -44,7 +44,7 @@ process KRAKEN2_KRAKEN2 {
         --db $db \\
         --confidence $conf \\
         --threads $task.cpus \\
-        --report ${out_dir}/${prefix}_report.txt \\
+        --report ${prefix}_report.txt \\
         --report-minimizer-data \\
         --gzip-compressed \\
         $unclassified_option \\
