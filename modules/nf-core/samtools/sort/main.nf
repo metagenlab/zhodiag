@@ -12,6 +12,7 @@ process SAMTOOLS_SORT {
 
     output:
     tuple val(meta), path("*.bam"),  emit: sorted_bam,  optional: true
+    tuple val(meta), path("*.bai"),  emit: index_bam,  optional: true
     path  "versions_samtools.yml",            emit: versions
 
     when:
@@ -26,6 +27,7 @@ process SAMTOOLS_SORT {
         --threads $task.cpus \\
         -o ${prefix}_sorted.bam \\
         $bam
+    samtools index ${prefix}_sorted.bam
 
     cat <<-END_VERSIONS > versions_samtools.yml
     "${task.process}":
