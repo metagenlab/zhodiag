@@ -27,6 +27,16 @@ Minimap2 to fpv (fungi/protozoa/virus from refseq). Minimap2 to pandb currently 
 nextflow run main.nf -profile singularity --input data/example_groups.csv --outdir OUTPUT -resume
 ```
 
+## Output
+The output will be organised by software, for example:
+
+* fastqc: output of qc control step.
+* fastp: output of trimming step, including cleaned-reads fastq files and log files.
+* minimpap2: output of all mapping steps. Subdirectories include "host", containing fastq files after removing human-mapping reads; as well as kingdom subdirectories with mapping output to them. All mapping steps include flagstat log files, bam files. Kingdom-mapping steps include paf files. 
+* kraken2: output of kraken2 classification, including output and report files.
+* mash: output of classification with mash.
+* plots_and_tables: including summary tables derived from kraken2 (conf subfolders) and minimap2 (mapq/cov subfolders), as well as relevant result plots.
+* pipeline_info: nextflow run logs.
 
 ## Diagram (not up-to-date)
 
