@@ -21,7 +21,9 @@ Minimap2 to fpv (fungi/protozoa/virus from refseq). Minimap2 to pandb currently 
 
 4. Run (with -resume if re-launching):
 
-`nextflow run main.nf -profile singularity --input data/example_groups.csv --outdir OUTPUT -resume`
+```
+nextflow run main.nf -profile singularity --input data/example_groups.csv --outdir OUTPUT -resume
+```
 
 
 ## Diagram (not up-to-date)
