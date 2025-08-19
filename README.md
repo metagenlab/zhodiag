@@ -5,7 +5,9 @@
 ### Pre-requisites
 A conda environment with nextflow version 24.10.5 (other versions not tested.). You can find a working environment called `vcs_nextflow_24.10.5` in asterix:
 
-`conda activate vcs_nextflow_24.10.5`
+```
+conda activate vcs_nextflow_24.10.5
+```
 
 ### Usage
 1. Clone the repo
