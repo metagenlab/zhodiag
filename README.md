@@ -18,8 +18,8 @@ conda activate vcs_nextflow_24.10.5
 * fastq_1 and fastq_2: full path to R1 and R2 reads.
 * group: variable used in final plots. You will need at least two groups for the plots to work. A "control" group is useful.
 
-3. Edit `nextflow.config` with parameters of choice. The current config works, so you should *not need to change anything*. 
-Minimap2 to fpv (fungi/protozoa/virus from refseq). Minimap2 to pandb currently not working (due to duplicated headers). Kraken to fpv and/or bacteria.
+3. Edit `nextflow.config` with parameters of choice. The current config works, so you should have **no need to change anything**. 
+Minimap2 using a reference fasta of your choice. Currently, the pandb fasta needs fixing so this one will not work (due to duplicated headers). Therefore, for now, I have set the ref fasta to the fpv one. If a reference annotation is provided, plots will be generated.
 
 4. Run (with -resume if re-launching):
 
@@ -32,7 +32,7 @@ The output will be organised by software, for example:
 
 * fastqc: output of qc control step.
 * fastp: output of trimming step, including cleaned-reads fastq files and log files.
-* minimap2: output of all mapping steps. Subdirectories include "host", containing fastq files after removing human-mapping reads; as well as kingdom subdirectories with mapping output to them. All mapping steps include flagstat log files, bam files. Kingdom-mapping steps include paf files. 
+* minimap2: output of all mapping steps. The "host" subdirectory contains output files after removing human-mapping reads. The rest of the folder contains output of mapping to reference fasta. All mapping steps include flagstat log files and bam files. Reference-mapping step include paf files. 
 * kraken2: output of kraken2 classification, including output and report files.
 * mash: output of classification with mash.
 * plots_and_tables: including summary tables derived from kraken2 (conf subfolders) and minimap2 (mapq/cov subfolders), as well as relevant result plots.
