@@ -11,7 +11,7 @@ annotation <- args[4]
 
 # read annotation
 annot <- read.table(annotation, header = TRUE, sep = '\t')
-colnames(annot) <- c("accession", "name", "gembasesID", "taxid")
+colnames(annot) <- c("accession", "name", "taxid", "full_taxonomy")
 annot$taxid <- as.integer(annot$taxid)
 # read paf
 a <- read.table(filename, header = TRUE, sep = '\t')
