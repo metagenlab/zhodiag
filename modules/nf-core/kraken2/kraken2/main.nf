@@ -12,7 +12,6 @@ process KRAKEN2_KRAKEN2 {
     val confidence
     val save_output_fastqs
     val save_reads_assignment
-    val kraken2_db_name
 
     output:
     tuple val(meta), path("*_classified{.,_}*"), optional: true, emit: classified_reads_fastq
@@ -29,7 +28,7 @@ process KRAKEN2_KRAKEN2 {
     def paired = meta.single_end ? "" : "--paired"
     def conf = confidence
     def out_dir = "."
-    def prefix = task.ext.prefix ?: "${meta.id}_${kraken2_db_name}_conf${conf}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def classified   = meta.single_end ? "${prefix}_classified.fastq"   : "${prefix}_classified_#.fastq"
     def unclassified = meta.single_end ? "${prefix}_unclassified.fastq" : "${prefix}_unclassified_#.fastq"
     def classified_option = save_output_fastqs ? "--classified-out ${classified}" : ""

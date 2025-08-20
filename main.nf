@@ -155,16 +155,15 @@ workflow {
     // --------------------------------------------- //
     // --- Taxonomic classification with Kraken2 ---
     // --------------------------------------------- //
-    kraken2_db_name = params.kraken2_db.tokenize('/').last() //.replaceFirst(/_.*/, '').replaceAll(/[0-9]/, '')
-    kraken2_db_name_ch = Channel.value(kraken2_db_name)
+    // kraken2_db_name = params.kraken2_db.tokenize('/').last() //.replaceFirst(/_.*/, '').replaceAll(/[0-9]/, '')
+    // kraken2_db_name_ch = Channel.value(kraken2_db_name)
 
     // run kraken2
     kraken = KRAKEN2_KRAKEN2(unmapped, 
                                 params.kraken2_db, 
                                 params.kraken2_confidence, 
                                 true, 
-                                true, 
-                                kraken2_db_name_ch)
+                                true)
     // collect log for multiqc
     kraken_logs = kraken.report
     // combine sample reports into one
