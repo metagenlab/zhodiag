@@ -17,19 +17,15 @@ include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/alig
 
 include { MINIMAP2_ALIGN as MINIMAP2_ALL } from './modules/nf-core/minimap2/align/main'
 
-include { SAMTOOLS_SORT as SAMTOOLS_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
+include { SAMTOOLS_SORT as MINIMAP2_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
 
-include { SAMTOOLS_DEPTH as SAMTOOLS_DEPTH} from './modules/nf-core/samtools/depth/main'
+include { SAMTOOLS_DEPTH as MINIMAP2_DEPTH} from './modules/nf-core/samtools/depth/main'
 
 include { PAF_PREPARE as MINIMAP2_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
 
 include { CONCAT_PAFS as MINIMAP2_CONCAT_PAFS } from './modules/local/concat_pafs/main'
 
 include { PLOTS_MINIMAP2 as PLOTS_MINIMAP2 } from './modules/local/plots_minimap2/main'
-
-
-include { SORT_INDEX_BAM } from './modules/local/bam_sort_index/main'
-include { KRAKEN2_BUILD } from './modules/nf-core/kraken2/build/main'
 
 include { KRAKEN2_KRAKEN2 as KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'
 
@@ -46,6 +42,8 @@ include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'
 
 include { KRAKENTOOLS_EXTRACTKRAKENREADS } from './modules/nf-core/krakentools/extractkrakenreads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES } from './modules/nf-core/minimap2/align/main'
+include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
+include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH} from './modules/nf-core/samtools/depth/main'
 
 
     // --------------------------------------------- //
@@ -121,14 +119,17 @@ workflow {
     }
 
     // --------------------------------------------- //
-    // * --- MINIMAP2 on all kingdoms ---
+    // ---------- MINIMAP2 on all kingdoms ---------
     // --------------------------------------------- //
-    if (params.map_all) {
+//    if (params.map_all) {
         map = MINIMAP2_ALL(unmapped,
-                                        params.reference_fasta,
-                                        true, false, false, false, true)
+                            params.reference_fasta,
+                            true, false, false, false, true)
         // log for multiqc
         minimap_log = map.flagstat
+        // samtools sort, index, depth
+        map_sorted = MINIMAP2_SORT(map.bam)
+        MINIMAP2_DEPTH(map_sorted.sorted_bam)
         // annotate paf table and concatenate
         paf_ch = map.paf.map { tuple ->
             def meta = tuple[0]
@@ -147,10 +148,9 @@ workflow {
             PLOTS_MINIMAP2(concatenated_pafs.cat, 
                             params.mapq_cutoff, 
                             params.coverage_cutoff, 
-                            "everything", 
                             params.reference_annotation)
         }
-    }
+//    }
 
     // --------------------------------------------- //
     // --- Taxonomic classification with Kraken2 ---
@@ -199,8 +199,8 @@ workflow {
                                            false,
                                            false,
                                            true)
-        SAMTOOLS_SORT(map_candidates.bam)
-        SAMTOOLS_DEPTH(map_candidates.bam)
+        candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT(map_candidates.bam)
+        CANDIDATES_SAMTOOLS_DEPTH(candidate_sorted_bam.sorted_bam)
     }
 
     // --------------------------------------------- //
@@ -213,7 +213,7 @@ workflow {
             trim_logs.map { it[1] },
             mapping_logs.map { it[1] },
             kraken_logs.map { it[1] },
-            // minimap_log.map { it[1] } // TO BE ADDED WHEN READY
+            minimap_log.map { it[1] }
         )
         .collect()
 

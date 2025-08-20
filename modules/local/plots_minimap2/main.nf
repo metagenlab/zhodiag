@@ -6,7 +6,6 @@ process PLOTS_MINIMAP2 {
     path(paf)
     val mapq
     val coverage
-    val kingdom
     path(annotation)
 
     output:
