@@ -57,7 +57,7 @@ process MINIMAP2_ALIGN {
     {
         $samtools_reset_fastq \\
         minimap2 -ax sr \\
-            --split-prefix ${prefix}_${genome}_tmp \\
+            --split-prefix ${prefix}_${genome}.sam \\
             $args \\
             -t $task.cpus \\
             $cigar_paf \\

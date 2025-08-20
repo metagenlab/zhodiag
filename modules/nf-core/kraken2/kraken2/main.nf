@@ -28,7 +28,8 @@ process KRAKEN2_KRAKEN2 {
     def paired = meta.single_end ? "" : "--paired"
     def conf = confidence
     def out_dir = "."
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def genome = db.getBaseName()
+    def prefix = task.ext.prefix ?: "${meta.id}_${genome}"
     def classified   = meta.single_end ? "${prefix}_classified.fastq"   : "${prefix}_classified_#.fastq"
     def unclassified = meta.single_end ? "${prefix}_unclassified.fastq" : "${prefix}_unclassified_#.fastq"
     def classified_option = save_output_fastqs ? "--classified-out ${classified}" : ""
