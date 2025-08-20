@@ -99,13 +99,7 @@ workflow {
     // --- Host removal ---
     // --------------------------------------------- //
     if (params.host_removal_tool == 'bbmap') {
-        def index
-        if (!params.index_host) {
-            host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
-        } else {
-            index = BBMAP_INDEX(params.host_fasta).index
-            host_map = BBMAP_ALIGN(trimmed.reads, index)
-        }
+        host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
         unmapped = host_map.unmapped
         mapping_logs = host_map.stats
     } else if (params.host_removal_tool == 'minimap2') {
