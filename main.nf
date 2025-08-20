@@ -47,6 +47,13 @@ include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'
 include { KRAKENTOOLS_EXTRACTKRAKENREADS } from './modules/nf-core/krakentools/extractkrakenreads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES } from './modules/nf-core/minimap2/align/main'
 
+
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // -------------- WORKFLOW --------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+
 workflow {
     // Convert sample sheet CSV into a channel of tuples (meta, reads)
     samples = Channel.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
@@ -69,10 +76,14 @@ workflow {
 
 //    samples.view()
 
+    // --------------------------------------------- //
     // --- FASTQC ---
+    // --------------------------------------------- //
     fastqc = FASTQC(samples)
 
+    // --------------------------------------------- //
     // --- Adapter trimming ---
+    // --------------------------------------------- //
     if (params.trim_tool == "bbduk") {
         trimmed = BBMAP_BBDUK(samples, params.adapters)
         trim_logs = trimmed.stats
@@ -86,7 +97,9 @@ workflow {
         error("Unsupported trim tool. Options are 'bbduk', 'fastp' or 'trimmomatic'.")
     }
 
+    // --------------------------------------------- //
     // --- Host removal ---
+    // --------------------------------------------- //
     if (params.host_removal_tool == 'bbmap') {
         def index
         if (!params.index_host) {
@@ -107,7 +120,9 @@ workflow {
         error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
     }
 
+    // --------------------------------------------- //
     // * --- MINIMAP2 on all kingdoms ---
+    // --------------------------------------------- //
     if (params.map_all) {
         map = MINIMAP2_ALL(unmapped,
                                         params.reference_fasta,
@@ -137,7 +152,9 @@ workflow {
         }
     }
 
+    // --------------------------------------------- //
     // --- Taxonomic classification with Kraken2 ---
+    // --------------------------------------------- //
     kraken2_db_name = params.kraken2_db.tokenize('/').last() //.replaceFirst(/_.*/, '').replaceAll(/[0-9]/, '')
     kraken2_db_name_ch = Channel.value(kraken2_db_name)
 
@@ -157,13 +174,17 @@ workflow {
     kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
     PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminant_taxids)
 
+    // --------------------------------------------- //
     // --- Mash screen ---
+    // --------------------------------------------- //
     mash_db_name = params.mash_screen_db.tokenize('/').last()
     mash_db_name_ch = Channel.value(mash_db_name)
 
     MASH_SCREEN(unmapped, params.mash_screen_db, mash_db_name_ch)
 
+    // --------------------------------------------- //
     // --- Minimap2 selected candidates ---
+    // --------------------------------------------- //
     if (params.minimap2_candidates) {
     // extract reads from kraken
         k2_extracted_reads = KRAKENTOOLS_EXTRACTKRAKENREADS(params.candidates,
@@ -182,7 +203,9 @@ workflow {
         SAMTOOLS_DEPTH(map_candidates.bam)
     }
 
-    // --- Collect all reports for MultiQC ---
+    // --------------------------------------------- //
+    // --- MultiQC ---
+    // --------------------------------------------- //
     collect_reports_input = fastqc.html
         .map { it[1] }
         .merge(
