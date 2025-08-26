@@ -98,24 +98,26 @@ workflow {
     // --------------------------------------------- //
     // --- Host removal ---
     // --------------------------------------------- //
-    if (params.host_removal_tool == 'bbmap') {
-        host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
-        unmapped = host_map.unmapped
-        mapping_logs = host_map.stats
-    } else if (params.host_removal_tool == 'minimap2') {
-        host_map = MINIMAP2HOST(trimmed.reads,
-                                params.host_fasta,
-                                true, false, false, true, false)
-        unmapped = host_map.unmapped
-        mapping_logs = host_map.flagstat
-    } else {
-        error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
+    if (run_host_removal) {
+        if (params.host_removal_tool == 'bbmap') {
+            host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
+            unmapped = host_map.unmapped
+            mapping_logs = host_map.stats
+        } else if (params.host_removal_tool == 'minimap2') {
+            host_map = MINIMAP2HOST(trimmed.reads,
+                                    params.host_fasta,
+                                    true, false, false, true, false)
+            unmapped = host_map.unmapped
+            mapping_logs = host_map.flagstat
+        } else {
+            error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
+        }
     }
-
+    
     // --------------------------------------------- //
     // ---------- MINIMAP2 on all kingdoms ---------
     // --------------------------------------------- //
-//    if (params.map_all) {
+    if (params.run_minimap2) {
         map = MINIMAP2_ALL(unmapped,
                             params.reference_fasta,
                             true, false, false, false, true)
@@ -144,7 +146,7 @@ workflow {
                             params.coverage_cutoff, 
                             params.reference_annotation)
         }
-//    }
+    }
 
     // --------------------------------------------- //
     // --- Taxonomic classification with Kraken2 ---
@@ -153,27 +155,31 @@ workflow {
     // kraken2_db_name_ch = Channel.value(kraken2_db_name)
 
     // run kraken2
-    kraken = KRAKEN2_KRAKEN2(unmapped, 
-                                params.kraken2_db, 
-                                params.kraken2_confidence, 
-                                true, 
-                                true)
-    // collect log for multiqc
-    kraken_logs = kraken.report
-    // combine sample reports into one
-    kreports_ch = kraken.report.map { it -> it[1] }
-    def metadata_file = file(params.input, checkExists: true)
-    Channel.fromPath(metadata_file).set { metadata_ch }
-    kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
-    PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminant_taxids)
+    if (params.run_kraken2) {
+        kraken = KRAKEN2_KRAKEN2(unmapped, 
+                                    params.kraken2_db, 
+                                    params.kraken2_confidence, 
+                                    true, 
+                                    true)
+        // collect log for multiqc
+        kraken_logs = kraken.report
+        // combine sample reports into one
+        kreports_ch = kraken.report.map { it -> it[1] }
+        def metadata_file = file(params.input, checkExists: true)
+        Channel.fromPath(metadata_file).set { metadata_ch }
+        kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
+        PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminant_taxids)
+    }
 
     // --------------------------------------------- //
     // --- Mash screen ---
     // --------------------------------------------- //
-    mash_db_name = params.mash_screen_db.tokenize('/').last()
-    mash_db_name_ch = Channel.value(mash_db_name)
+    if (params.run_mash) {
+        mash_db_name = params.mash_screen_db.tokenize('/').last()
+        mash_db_name_ch = Channel.value(mash_db_name)
 
-    MASH_SCREEN(unmapped, params.mash_screen_db, mash_db_name_ch)
+        MASH_SCREEN(unmapped, params.mash_screen_db, mash_db_name_ch)
+    }
 
     // --------------------------------------------- //
     // --- Minimap2 selected candidates ---
@@ -199,15 +205,33 @@ workflow {
     // --------------------------------------------- //
     // --- MultiQC ---
     // --------------------------------------------- //
-    collect_reports_input = fastqc.html
-        .map { it[1] }
-        .merge(
-            fastqc.zip.map { it[1] },
-            trim_logs.map { it[1] },
-            mapping_logs.map { it[1] },
-            kraken_logs.map { it[1] },
-            minimap_log.map { it[1] }
-        )
+    // collect_reports_input = fastqc.html
+    //     .map { it[1] }
+    //     .merge(
+    //         fastqc.zip.map { it[1] },
+    //         trim_logs.map { it[1] },
+    //         mapping_logs.map { it[1] },
+    //         kraken_logs.map { it[1] },
+    //         minimap_log.map { it[1] }
+    //     )
+    //     .collect()
+
+    def report_channels = [
+        fastqc.html.map { it[1] },
+        fastqc.zip.map { it[1] },
+        trim_logs.map { it[1] },
+        mapping_logs.map { it[1] }
+    ]
+
+    if (params.run_minimap2) {
+        report_channels << minimap_log.map { it[1] }
+    }
+
+    if (params.run_kraken2) {
+        report_channels << kraken_logs.map { it[1] }
+    }
+    collect_reports_input = Channel
+        .merge(*report_channels)
         .collect()
 
     multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input)
