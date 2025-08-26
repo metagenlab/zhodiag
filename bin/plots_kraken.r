@@ -30,7 +30,16 @@ write.table(sum.domains, "summary_kingdoms.tsv",
 # select rank species
 a <- a %>% filter(rank == "S") %>% select(-rootReads)
 
-# heatmap all
+## heatmap all species
+# reorder by total reads per species across all samples
+totals <- a %>%
+  group_by(taxonomy) %>%
+  summarise(totReads_species = sum(totalCounts))
+a <- a %>%
+  left_join(totals, by = "taxonomy")
+a <- a %>%
+  mutate(taxonomy = fct_reorder(taxonomy, totReads_species))
+
 # plot size
 n_species <- length(unique(a$taxonomy))
 n_samples <- length(unique(a$sample))
