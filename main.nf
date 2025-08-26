@@ -82,37 +82,34 @@ workflow {
     // --------------------------------------------- //
     // --- Adapter trimming ---
     // --------------------------------------------- //
-    if (params.run_trim) {
-        if (params.trim_tool == "bbduk") {
-            trimmed = BBMAP_BBDUK(samples, params.adapters)
-            trim_logs = trimmed.stats
-        } else if (params.trim_tool == "fastp") {
-            trimmed = FASTP(samples, params.adapters, false, false, false)
-            trim_logs = trimmed.json
-        } else if (params.trim_tool == "trimmomatic") {
-            trimmed = TRIMMOMATIC(samples, params.adapters)
-            trim_logs = trimmed.out_log
-        } else {
-            error("Unsupported trim tool. Options are 'bbduk', 'fastp' or 'trimmomatic'.")
-        }
+    if (params.trim_tool == "bbduk") {
+        trimmed = BBMAP_BBDUK(samples, params.adapters)
+        trim_logs = trimmed.stats
+    } else if (params.trim_tool == "fastp") {
+        trimmed = FASTP(samples, params.adapters, false, false, false)
+        trim_logs = trimmed.json
+    } else if (params.trim_tool == "trimmomatic") {
+        trimmed = TRIMMOMATIC(samples, params.adapters)
+        trim_logs = trimmed.out_log
+    } else {
+        error("Unsupported trim tool. Options are 'bbduk', 'fastp' or 'trimmomatic'.")
     }
+
     // --------------------------------------------- //
     // --- Host removal ---
     // --------------------------------------------- //
-    if (params.run_host_removal) {
-        if (params.host_removal_tool == 'bbmap') {
-            host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
-            unmapped = host_map.unmapped
-            mapping_logs = host_map.stats
-        } else if (params.host_removal_tool == 'minimap2') {
-            host_map = MINIMAP2HOST(trimmed.reads,
-                                    params.host_fasta,
-                                    true, false, false, true, false)
-            unmapped = host_map.unmapped
-            mapping_logs = host_map.flagstat
-        } else {
-            error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
-        }
+    if (params.host_removal_tool == 'bbmap') {
+        host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
+        unmapped = host_map.unmapped
+        mapping_logs = host_map.stats
+    } else if (params.host_removal_tool == 'minimap2') {
+        host_map = MINIMAP2HOST(trimmed.reads,
+                                params.host_fasta,
+                                true, false, false, true, false)
+        unmapped = host_map.unmapped
+        mapping_logs = host_map.flagstat
+    } else {
+        error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
     }
 
     // --------------------------------------------- //
@@ -219,15 +216,10 @@ workflow {
 
     def report_channels = [
         fastqc.html.map { it[1] },
-        fastqc.zip.map { it[1] } 
+        fastqc.zip.map { it[1] },
+        trim_logs.map { it[1] },
+        mapping_logs.map { it[1] }
         ]
-    if (params.run_trim) {
-        report_channels << trim_logs.map { it[1] }
-    }
-
-    if (params.run_host_removal) {
-        report_channels << mapping_logs.map { it[1] }
-    }
 
     if (params.run_minimap2) {
         report_channels << minimap_log.map { it[1] }
