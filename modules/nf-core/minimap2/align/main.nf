@@ -54,7 +54,8 @@ process MINIMAP2_ALIGN {
     set -euo pipefail
 
     # 1. Align reads to reference, output to SAM
-    {
+    {   
+        ln -s ${target} local_genome
         $samtools_reset_fastq \\
         minimap2 -ax sr \\
             --split-prefix ${prefix}_${genome}.sam \\
@@ -62,7 +63,7 @@ process MINIMAP2_ALIGN {
             -t $task.cpus \\
             $cigar_paf \\
             $set_cigar_bam \\
-            $target \\
+            local_genome \\
             $query \\
             > ${sam_file}
     } 2> ${log_file}
