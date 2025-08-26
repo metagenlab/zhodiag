@@ -221,7 +221,19 @@ workflow {
             fastqc.zip.map { it[1] },
             trim_logs.map { it[1] },
             mapping_logs.map { it[1] }
-        ),
+        )
+
+    if (params.run_minimap2) {
+        collect_reports_input = collect_reports_input
+            .merge(minimap_log.map { it[1] } )
+    }
+
+    if (params.run_kraken2) {
+        collect_reports_input = collect_reports_input
+            .merge(kraken_logs.map { it[1] } )
+    }
+    multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input.collect())
+
         //     kraken_logs.map { it[1] },
         //     minimap_log.map { it[1] }
         // )
@@ -234,20 +246,10 @@ workflow {
     //     mapping_logs.map { it[1] }
     //     ]
 
-    if (params.run_minimap2) {
-        collect_reports_input = collect_reports_input
-            .merge(minimap_log.map { it[1] } )
-    }
-
-    if (params.run_kraken2) {
-        collect_reports_input = collect_reports_input
-            .merge(kraken_logs.map { it[1] } )
-    }
     // collect_reports_input = Channel
     //     .merge(*report_channels)
     //     .collect()
 
-    multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input.collect())
 
     MULTIQC(multiqc_input)
 }
