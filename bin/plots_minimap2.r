@@ -12,7 +12,10 @@ annotation <- args[4]
 # read annotation
 annot <- read.table(annotation, header = TRUE, sep = '\t')
 colnames(annot) <- c("accession", "name", "gembasesID", "taxid")
+annot <- annot %>%
+  mutate(name = str_extract(name, "^\\S+\\s+\\S+"))
 annot$taxid <- as.integer(annot$taxid)
+
 # read paf
 a <- read.table(filename, header = TRUE, sep = '\t')
 column_names <- c('query_name','query_length','query_start','query_stop','strand','target_name','target_length','target_start','targer_end',
@@ -34,8 +37,6 @@ write.table(a.annot, paste0("filtered_hits.tsv"), col.names = TRUE, row.names = 
 b <- a.annot %>% group_by(group, sample, taxid, name) %>%
   summarise(counts = n())
 
-
-# heatmap all
 # plot size
 n_species <- length(unique(b$name))
 n_samples <- length(unique(b$sample))
@@ -46,6 +47,12 @@ base_width <- 12            # minimal width in inches
 plot_height <- max(base_height, n_species * height_per_species)
 plot_width  <- max(base_width,  n_samples * width_per_sample)
 
+# sort by abundance
+totals <- b %>% group_by(name) %>% summarise(totReads_species = sum(counts), .groups = "drop")
+b <- b %>% left_join(totals,  by = c("name"))
+b$name <- factor(b$name, levels = totals$name[order(totals$totReads_species)])
+
+# heatmap all
 pdf(paste0("all_heatmap.pdf"), width = plot_width, height = plot_height)
 ggplot(b %>%  filter(!is.na(name)), aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
   geom_tile() +

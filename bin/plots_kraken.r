@@ -35,10 +35,11 @@ a <- a %>% filter(rank == "S") %>% select(-rootReads)
 totals <- a %>%
   group_by(taxonomy) %>%
   summarise(totReads_species = sum(totalCounts))
-a <- a %>%
-  left_join(totals, by = "taxonomy")
-a <- a %>%
-  mutate(taxonomy = fct_reorder(taxonomy, totReads_species))
+a <- a %>% left_join(totals, by = "taxonomy")
+a$taxonomy <- factor(a$taxonomy, levels = totals$taxonomy[order(totals$totReads_species)])
+
+# a <- a %>%
+#   mutate(taxonomy = fct_reorder(taxonomy, totReads_species))
 
 # plot size
 n_species <- length(unique(a$taxonomy))
