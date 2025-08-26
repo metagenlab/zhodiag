@@ -104,7 +104,7 @@ workflow {
         mapping_logs = host_map.stats
     } else if (params.host_removal_tool == 'minimap2') {
         host_map = MINIMAP2HOST(trimmed.reads,
-                                params.host_fasta,
+                                params.host_minimap2_index,
                                 true, false, false, true, false)
         unmapped = host_map.unmapped
         mapping_logs = host_map.flagstat
