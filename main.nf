@@ -222,7 +222,7 @@ workflow {
         fastqc.zip.map { it[1] } 
         ]
     if (params.run_trim) {
-        report_channels << trim_logs.map { it[1] },
+        report_channels << trim_logs.map { it[1] }
     }
 
     if (params.run_host_removal) {
