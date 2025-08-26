@@ -77,28 +77,31 @@ workflow {
     // --------------------------------------------- //
     // --- FASTQC ---
     // --------------------------------------------- //
-    fastqc = FASTQC(samples)
+    if (params.run_fastqc) {
+        fastqc = FASTQC(samples)
+    }
 
     // --------------------------------------------- //
     // --- Adapter trimming ---
     // --------------------------------------------- //
-    if (params.trim_tool == "bbduk") {
-        trimmed = BBMAP_BBDUK(samples, params.adapters)
-        trim_logs = trimmed.stats
-    } else if (params.trim_tool == "fastp") {
-        trimmed = FASTP(samples, params.adapters, false, false, false)
-        trim_logs = trimmed.json
-    } else if (params.trim_tool == "trimmomatic") {
-        trimmed = TRIMMOMATIC(samples, params.adapters)
-        trim_logs = trimmed.out_log
-    } else {
-        error("Unsupported trim tool. Options are 'bbduk', 'fastp' or 'trimmomatic'.")
+    if (params.run_trim) {
+        if (params.trim_tool == "bbduk") {
+            trimmed = BBMAP_BBDUK(samples, params.adapters)
+            trim_logs = trimmed.stats
+        } else if (params.trim_tool == "fastp") {
+            trimmed = FASTP(samples, params.adapters, false, false, false)
+            trim_logs = trimmed.json
+        } else if (params.trim_tool == "trimmomatic") {
+            trimmed = TRIMMOMATIC(samples, params.adapters)
+            trim_logs = trimmed.out_log
+        } else {
+            error("Unsupported trim tool. Options are 'bbduk', 'fastp' or 'trimmomatic'.")
+        }
     }
-
     // --------------------------------------------- //
     // --- Host removal ---
     // --------------------------------------------- //
-    if (run_host_removal) {
+    if (params.run_host_removal) {
         if (params.host_removal_tool == 'bbmap') {
             host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
             unmapped = host_map.unmapped
@@ -113,7 +116,7 @@ workflow {
             error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
         }
     }
-    
+
     // --------------------------------------------- //
     // ---------- MINIMAP2 on all kingdoms ---------
     // --------------------------------------------- //
