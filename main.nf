@@ -77,9 +77,7 @@ workflow {
     // --------------------------------------------- //
     // --- FASTQC ---
     // --------------------------------------------- //
-    if (params.run_fastqc) {
         fastqc = FASTQC(samples)
-    }
 
     // --------------------------------------------- //
     // --- Adapter trimming ---
@@ -221,10 +219,15 @@ workflow {
 
     def report_channels = [
         fastqc.html.map { it[1] },
-        fastqc.zip.map { it[1] },
+        fastqc.zip.map { it[1] } 
+        ]
+    if (params.run_trim) {
         trim_logs.map { it[1] },
+    }
+
+    if (params.run_host_removal) {
         mapping_logs.map { it[1] }
-    ]
+    }
 
     if (params.run_minimap2) {
         report_channels << minimap_log.map { it[1] }
