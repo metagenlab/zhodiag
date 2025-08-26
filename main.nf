@@ -142,7 +142,8 @@ workflow {
             PLOTS_MINIMAP2(concatenated_pafs.cat, 
                             params.mapq_cutoff, 
                             params.coverage_cutoff, 
-                            params.reference_annotation)
+                            params.reference_annotation,
+                            params.contaminant_taxids)
         }
     }
 

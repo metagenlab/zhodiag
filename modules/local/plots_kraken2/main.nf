@@ -5,7 +5,7 @@ process PLOTS_KRAKEN2 {
 
     input:
     path count_table
-    val contaminants
+    path contaminants
 
     output:
     path '*.tsv'
