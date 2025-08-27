@@ -141,14 +141,11 @@ workflow {
         // add full taxonomy 
         minimap2_report_taxonomy = MINIMAP2_TAXONOMY(concatenated_pafs.cat)
         // plots
-        if (params.reference_annotation) {
-            PLOTS_MINIMAP2(minimap2_report_taxonomy.taxonomy, 
-                            params.mapq_cutoff, 
-                            params.coverage_cutoff, 
-                            params.reference_annotation,
-                            params.contaminants,
-                            params.taxonomy_level)
-        }
+        PLOTS_MINIMAP2(minimap2_report_taxonomy.taxonomy, 
+                        params.mapq_cutoff, 
+                        params.coverage_cutoff, 
+                        params.contaminants,
+                        params.taxonomy_level)
     }
 
     // --------------------------------------------- //

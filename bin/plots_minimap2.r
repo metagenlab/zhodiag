@@ -7,9 +7,8 @@ filename <- args[1]
 # outfile_prefix <- args[2]
 mapq <- as.numeric(args[2])
 cov <- as.numeric(args[3])
-annotation <- args[4]
-contaminants <- args[5]
-tax_level <- as.character(args[6])
+contaminants <- args[4]
+tax_level <- as.character(args[5])
 
 # read paf
 a <- read.table(filename, header = TRUE, sep = '\t')
