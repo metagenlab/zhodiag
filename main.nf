@@ -141,10 +141,11 @@ workflow {
         // add full taxonomy 
         minimap2_report_taxonomy = MINIMAP2_TAXONOMY(concatenated_pafs.cat)
         // plots
+        contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
         PLOTS_MINIMAP2(minimap2_report_taxonomy.taxonomy, 
                         params.mapq_cutoff, 
                         params.coverage_cutoff, 
-                        params.contaminants,
+                        contaminants_ch,
                         params.taxonomy_level)
     }
 
@@ -169,7 +170,10 @@ workflow {
         Channel.fromPath(metadata_file).set { metadata_ch }
         kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
         // kraken_report_taxonomy = KRAKEN2_TAXONOMY(kraken_reports_combined.combine_long)
-        PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminants, params.taxonomy_level)
+        contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
+        PLOTS_KRAKEN2(kraken_reports_combined.combine_long,
+                        contaminants_ch, 
+                        params.taxonomy_level)
     }
 
     // --------------------------------------------- //

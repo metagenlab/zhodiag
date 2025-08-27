@@ -111,71 +111,77 @@ for(s in unique(a$sample)){
 }
 
 ### remove contaminants ###
-conta <- read.table(contaminants, header = FALSE, sep = '\t')$V1
+### remove contaminants ###
+if (contaminants != "") {
+  print('Contaminant file provided')
+  conta <- read.table(contaminants, header = FALSE, sep = '\t')$V1
+  b <- a %>% filter(!taxid %in% conta)
 
-b <- a %>% filter(!taxid %in% conta)
+  # plot size
+  n_species <- length(unique(a$taxonomy))
+  n_samples <- length(unique(a$sample))
+  height_per_species <- 0.2  # inches per species
+  base_height <- 4           # minimal height in inches
+  width_per_sample <- 0.5    # inches per sample
+  base_width <- 8            # minimal width in inches
+  plot_height <- max(base_height, n_species * height_per_species)
+  plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-# plot size
-n_species <- length(unique(a$taxonomy))
-n_samples <- length(unique(a$sample))
-height_per_species <- 0.2  # inches per species
-base_height <- 4           # minimal height in inches
-width_per_sample <- 0.5    # inches per sample
-base_width <- 8            # minimal width in inches
-plot_height <- max(base_height, n_species * height_per_species)
-plot_width  <- max(base_width,  n_samples * width_per_sample)
-
-pdf(paste0(tax_level, "_heatmap_totalCounts_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
-ggplot(b  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
-  geom_tile() +
-  geom_text(colour='white') +
-  labs(x = '', y = '') +
-  facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-dev.off()
-
-pdf(paste0(tax_level, "_heatmap_distinctMinimizers_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
-ggplot(b %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
-  geom_tile() +
-  geom_text(colour='white') +
-  labs(x = '', y = '') +
-  facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-dev.off()
-
-# heatmap by group
-for(gr in setdiff(unique(a$group), 'control')){
-  print(gr)
-  pdf(paste0(gr, "_", tax_level, "_group_heatmap_totalCounts_contaminantsRemoved.pdf"), height = plot_height, width = plot_width)
-  p = ggplot(b %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
-         aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+  pdf(paste0(tax_level, "_heatmap_totalCounts_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
+  ggplot(b  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-  print(p)
   dev.off()
+
+  pdf(paste0(tax_level, "_heatmap_distinctMinimizers_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
+  ggplot(b %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
+    geom_tile() +
+    geom_text(colour='white') +
+    labs(x = '', y = '') +
+    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  dev.off()
+
+  # heatmap by group
+  for(gr in setdiff(unique(a$group), 'control')){
+    print(gr)
+    pdf(paste0(gr, "_", tax_level, "_group_heatmap_totalCounts_contaminantsRemoved.pdf"), height = plot_height, width = plot_width)
+    p = ggplot(b %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
+          aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+      geom_tile() +
+      geom_text(colour='white') +
+      labs(x = '', y = '') +
+      facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+      theme_classic() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(p)
+    dev.off()
+  }
+
+  # total counts vs distinct minimizers for each sample
+  for(s in unique(a$sample)){
+    print(s)
+    pdf(paste0(s, "_", tax_level, "_totalCounts_vs_distinctMinimizers_contaminantsRemoved.pdf"), 
+    width = 10, height = 10)
+    p = ggplot(b %>% filter(sample == s), 
+          aes(x = log2(totalCounts+1), y = log2(distinctMinimizers+1), label = taxonomy)) +
+      geom_point() +
+      geom_text_repel() +
+      scale_y_continuous(limits = c(0, NA)) +
+      scale_x_continuous(limits = c(0, NA)) +
+      theme_classic() +
+      theme(axis.title = element_text(size = 14),
+            axis.text = element_text(size = 14)) +
+      ggtitle(s)
+    print(p)
+    dev.off()
+  }
+} else {
+  print('No contaminant file provided')
 }
 
-# total counts vs distinct minimizers for each sample
-for(s in unique(a$sample)){
-  print(s)
-  pdf(paste0(s, "_", tax_level, "_totalCounts_vs_distinctMinimizers_contaminantsRemoved.pdf"), 
-  width = 10, height = 10)
-  p = ggplot(b %>% filter(sample == s), 
-         aes(x = log2(totalCounts+1), y = log2(distinctMinimizers+1), label = taxonomy)) +
-    geom_point() +
-    geom_text_repel() +
-    scale_y_continuous(limits = c(0, NA)) +
-    scale_x_continuous(limits = c(0, NA)) +
-    theme_classic() +
-    theme(axis.title = element_text(size = 14),
-          axis.text = element_text(size = 14)) +
-    ggtitle(s)
-  print(p)
-  dev.off()
-}

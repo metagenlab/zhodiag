@@ -93,43 +93,48 @@ for(gr in setdiff(unique(b$group), "control")){
 # }
 
 ### remove contaminants ###
-conta <- read.table(contaminants, header = FALSE, sep = '\t')$V1
+if (contaminants != "") {
+    print('Contaminant file provided')
+    conta <- read.table(contaminants, header = FALSE, sep = '\t')$V1
+    bc <- b %>% filter(!taxid %in% conta)
 
-bc <- b %>% filter(!taxid %in% conta)
+    # plot size
+    n_species <- length(unique(b$name))
+    n_samples <- length(unique(b$sample))
+    height_per_species <- 0.4  # inches per species
+    base_height <- 10           # minimal height in inches
+    width_per_sample <- 0.7    # inches per sample
+    base_width <- 12            # minimal width in inches
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-# plot size
-n_species <- length(unique(b$name))
-n_samples <- length(unique(b$sample))
-height_per_species <- 0.4  # inches per species
-base_height <- 10           # minimal height in inches
-width_per_sample <- 0.7    # inches per sample
-base_width <- 12            # minimal width in inches
-plot_height <- max(base_height, n_species * height_per_species)
-plot_width  <- max(base_width,  n_samples * width_per_sample)
-
-# heatmap all
-pdf(paste0(tax_level, "_heatmap_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
-ggplot(bc %>%  filter(!is.na(name)), aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
-  geom_tile() +
-  geom_text(colour = 'white') +
-  facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
-  theme_classic() +
-  labs(x = '', y = '') +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-dev.off()
-
-# heatmap by group
-for(gr in setdiff(unique(b$group), "control")){
-  print(gr)
-  pdf(paste0(gr, "_", tax_level, "_group_heatmap_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
-  p = ggplot(bc %>%  filter(!is.na(name)) %>% filter(group %in% c("control", gr)),
-         aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
+    # heatmap all
+    pdf(paste0(tax_level, "_heatmap_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
+    ggplot(bc %>%  filter(!is.na(name)), aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
     geom_tile() +
     geom_text(colour = 'white') +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
-    theme_bw() +
+    theme_classic() +
     labs(x = '', y = '') +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-  print(p)
-  dev.off()
+    dev.off()
+
+    # heatmap by group
+    for(gr in setdiff(unique(b$group), "control")){
+    print(gr)
+    pdf(paste0(gr, "_", tax_level, "_group_heatmap_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
+    p = ggplot(bc %>%  filter(!is.na(name)) %>% filter(group %in% c("control", gr)),
+            aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
+        geom_tile() +
+        geom_text(colour = 'white') +
+        facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+        theme_bw() +
+        labs(x = '', y = '') +
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(p)
+    dev.off()
+    }
+} else {
+    print('No contaminant file provided')
 }
+

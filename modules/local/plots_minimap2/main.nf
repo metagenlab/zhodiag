@@ -6,7 +6,7 @@ process PLOTS_MINIMAP2 {
     path(paf)
     val mapq
     val coverage
-    path contaminants
+    val contaminants
     val tax_level
 
     output:
@@ -17,7 +17,7 @@ process PLOTS_MINIMAP2 {
     def plot_script = workflow.projectDir.resolve("bin/plots_minimap2.r")
 
     """
-    Rscript $plot_script $paf $mapq $coverage $contaminants $tax_level
+    Rscript $plot_script $paf $mapq $coverage "$contaminants" $tax_level
     """
 
 }
