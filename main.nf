@@ -34,7 +34,7 @@ include { KRAKEN2_COMBINE_REPORTS as KRAKEN2_COMBINE_REPORTS} from './modules/lo
 // include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
 
 // include { KRONA_PLOTS } from './modules/nf-core/krona/ktimporttext/main'
-include { KRAKEN2_TAXONOMY } from './modules/local/kraken2_taxonomy/main'
+include { MINIMAP2_TAXONOMY } from './modules/local/minimap2_taxonomy/main'
 
 include { PLOTS_KRAKEN2 as PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
 
@@ -138,13 +138,16 @@ workflow {
             .collect()
             .set { collected_annotated_paths }
         concatenated_pafs = MINIMAP2_CONCAT_PAFS(collected_annotated_paths)
+        // add full taxonomy 
+        minimap2_report_taxonomy = MINIMAP2_TAXONOMY(concatenated_pafs.cat)
         // plots
         if (params.reference_annotation) {
-            PLOTS_MINIMAP2(concatenated_pafs.cat, 
+            PLOTS_MINIMAP2(minimap2_report_taxonomy.taxonomy, 
                             params.mapq_cutoff, 
                             params.coverage_cutoff, 
                             params.reference_annotation,
-                            params.contaminants)
+                            params.contaminants,
+                            params.taxonomy_level)
         }
     }
 
