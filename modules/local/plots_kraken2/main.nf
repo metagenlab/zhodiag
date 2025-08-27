@@ -6,6 +6,7 @@ process PLOTS_KRAKEN2 {
     input:
     path count_table
     val contaminants
+    val tax_level
 
     output:
     path '*.tsv'
@@ -15,6 +16,6 @@ process PLOTS_KRAKEN2 {
     def plot_heatmap_script = workflow.projectDir.resolve("bin/plots_kraken.r")
 
     """
-    Rscript $plot_heatmap_script $count_table $contaminants
+    Rscript $plot_heatmap_script $count_table "$contaminants" $tax_level
     """
 }

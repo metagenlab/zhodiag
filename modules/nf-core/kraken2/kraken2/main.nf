@@ -1,6 +1,6 @@
 process KRAKEN2_KRAKEN2 {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_veryhigh'
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/29/29ed8f68315625eca61a3de9fcb7b8739fe8da23f5779eda3792b9d276aa3b8f/data' :
@@ -12,7 +12,6 @@ process KRAKEN2_KRAKEN2 {
     val confidence
     val save_output_fastqs
     val save_reads_assignment
-    val kraken2_db_name
 
     output:
     tuple val(meta), path("*_classified{.,_}*"), optional: true, emit: classified_reads_fastq
@@ -29,7 +28,8 @@ process KRAKEN2_KRAKEN2 {
     def paired = meta.single_end ? "" : "--paired"
     def conf = confidence
     def out_dir = "."
-    def prefix = task.ext.prefix ?: "${meta.id}_${kraken2_db_name}_conf${conf}"
+    def genome = db.getBaseName()
+    def prefix = task.ext.prefix ?: "${meta.id}_${genome}"
     def classified   = meta.single_end ? "${prefix}_classified.fastq"   : "${prefix}_classified_#.fastq"
     def unclassified = meta.single_end ? "${prefix}_unclassified.fastq" : "${prefix}_unclassified_#.fastq"
     def classified_option = save_output_fastqs ? "--classified-out ${classified}" : ""
