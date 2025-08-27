@@ -34,6 +34,7 @@ include { KRAKEN2_COMBINE_REPORTS as KRAKEN2_COMBINE_REPORTS} from './modules/lo
 // include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
 
 // include { KRONA_PLOTS } from './modules/nf-core/krona/ktimporttext/main'
+include { KRAKEN2_TAXONOMY } from './modules/local/kraken2_taxonomy/main'
 
 include { PLOTS_KRAKEN2 as PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
 
@@ -143,7 +144,7 @@ workflow {
                             params.mapq_cutoff, 
                             params.coverage_cutoff, 
                             params.reference_annotation,
-                            params.contaminant_taxids)
+                            params.contaminants)
         }
     }
 
@@ -167,7 +168,8 @@ workflow {
         def metadata_file = file(params.input, checkExists: true)
         Channel.fromPath(metadata_file).set { metadata_ch }
         kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
-        PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminant_taxids)
+        // kraken_report_taxonomy = KRAKEN2_TAXONOMY(kraken_reports_combined.combine_long)
+        PLOTS_KRAKEN2(kraken_reports_combined.combine_long, params.contaminants, params.taxonomy_level)
     }
 
     // --------------------------------------------- //
