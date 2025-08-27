@@ -16,27 +16,21 @@ include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/align/main'
 
 include { MINIMAP2_ALIGN as MINIMAP2_ALL } from './modules/nf-core/minimap2/align/main'
-
 include { SAMTOOLS_SORT as MINIMAP2_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
-
 include { SAMTOOLS_DEPTH as MINIMAP2_DEPTH} from './modules/nf-core/samtools/depth/main'
+include { MINIMAP2_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
+include { MINIMAP2_CONCAT_PAFS } from './modules/local/concat_pafs/main'
+include { MINIMAP2_TAXONOMY } from './modules/local/minimap2_taxonomy/main'
+include { PLOTS_MINIMAP2 } from './modules/local/plots_minimap2/main'
 
-include { PAF_PREPARE as MINIMAP2_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
-
-include { CONCAT_PAFS as MINIMAP2_CONCAT_PAFS } from './modules/local/concat_pafs/main'
-
-include { PLOTS_MINIMAP2 as PLOTS_MINIMAP2 } from './modules/local/plots_minimap2/main'
-
-include { KRAKEN2_KRAKEN2 as KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'
-
-include { KRAKEN2_COMBINE_REPORTS as KRAKEN2_COMBINE_REPORTS} from './modules/local/kraken2_combineReports/main'
+include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'
+include { KRAKEN2_COMBINE_REPORTS } from './modules/local/kraken2_combineReports/main'
+include { PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
 
 // include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
 
 // include { KRONA_PLOTS } from './modules/nf-core/krona/ktimporttext/main'
-include { MINIMAP2_TAXONOMY } from './modules/local/minimap2_taxonomy/main'
 
-include { PLOTS_KRAKEN2 as PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
 
 include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'
 include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'

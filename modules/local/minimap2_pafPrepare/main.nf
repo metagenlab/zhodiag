@@ -1,4 +1,4 @@
-process PAF_PREPARE {
+process MINIMAP2_ANNOTATE_PAF {
     tag { sample }
     input:
     tuple val(sample), val(group), path(paf_path)

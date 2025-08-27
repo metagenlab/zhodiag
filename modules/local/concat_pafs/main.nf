@@ -1,4 +1,4 @@
-process CONCAT_PAFS {
+process MINIMAP2_CONCAT_PAFS {
     tag "concat pafs"
 
     input:
