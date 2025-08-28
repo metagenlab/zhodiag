@@ -1,5 +1,10 @@
 # zhodiag: Ze shotgun metagenomics pipeline for diagnostics
 
+
+## Pipeline overview
+![Diagram in progress](misc/zhodiag_diagram.drawio.png)
+
+
 ## How to use:
 
 ### Pre-requisites
@@ -42,6 +47,4 @@ The output will be organised by software, for example:
 * plots_and_tables: includes summary tables derived from kraken2 and minimap2 processes, as well as relevant result plots. The tables are the input to generate all plots and can be used to manually genereate any downstream plot of interest.
 * pipeline_info: nextflow run logs.
 
-## Diagram (not up-to-date)
 
-![Diagram in progress](misc/diagram.png)
