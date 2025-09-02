@@ -20,7 +20,9 @@ process SAMTOOLS_VIEW {
     task.ext.when == null || task.ext.when
 
     script:
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ''
+    def output_file = "${prefix}_filtered.bam"
 
     """
     samtools \\
