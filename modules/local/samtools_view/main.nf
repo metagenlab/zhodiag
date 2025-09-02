@@ -30,7 +30,7 @@ process SAMTOOLS_VIEW {
         --threads ${task.cpus-1} \\
         $args \\
         -q $quality \\
-        -e '(sclen/qlen) > $cov \\
+        -e '(sclen/qlen) > $cov' \\
         -o ${output_file} \\
         $input
 
