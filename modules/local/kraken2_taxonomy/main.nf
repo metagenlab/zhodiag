@@ -3,7 +3,6 @@ process KRAKEN2_TAXONOMY {
     tag "Adding full taxonomy"
 
     conda "${moduleDir}/environment.yml"
-    // container './modules/local/kraken2_taxonomy/ete3_custom.sif'
     container "docker://metagenlab/ete:1.0"
 
     input:
@@ -16,17 +15,13 @@ process KRAKEN2_TAXONOMY {
     script:
     def script_dir = file("bin")
     def kraken_taxonomy_script = script_dir.resolve("kraken2taxonomy.py").toString()
-    def counts_files = kraken2_counts.collect { it.getName() }.join(' ')
-    def minimizer_files = kraken2_minimizers.collect { it.getName() }.join(' ')
+
+    def count_cmds = kraken2_counts.collect { f -> "python3 $kraken_taxonomy_script -i ${f.getName()}" }.join('\n')
+    def minimizer_cmds = kraken2_minimizers.collect { f -> "python3 $kraken_taxonomy_script -i ${f.getName()}" }.join('\n')
 
     """
-    for file in $counts_files; do
-        python3 $kraken_taxonomy_script -i $kraken2_counts
-    done
+    $count_cmds
 
-    for file in $minimizer_files; do
-        python3 $kraken_taxonomy_script -i $kraken2_minimizers
-    done
+    $minimizer_cmds
     """
-
 }
