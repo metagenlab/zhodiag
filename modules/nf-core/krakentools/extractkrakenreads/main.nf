@@ -26,22 +26,44 @@ process KRAKENTOOLS_EXTRACTKRAKENREADS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def extension = args.contains("--fastq-output") ? "fastq" : "fasta"
-    def input_reads_command = meta.single_end ? "-s $classified_reads_fastq" : "-s1 ${classified_reads_fastq[0]} -s2 ${classified_reads_fastq[1]}"
-    def output_reads_command = meta.single_end ? "-o ${prefix}.extracted_kraken2_read.${extension}" : "-o ${prefix}.extracted_kraken2_read_1.${extension} -o2 ${prefix}.extracted_kraken2_read_2.${extension}"
-    def gzip_reads_command = meta.single_end ? "gzip ${prefix}.extracted_kraken2_read.${extension}" : "gzip ${prefix}.extracted_kraken2_read_1.${extension}; gzip ${prefix}.extracted_kraken2_read_2.${extension}"
+    def is_single_end = meta.single_end
+    def input_reads_command = is_single_end ?
+        "-s $classified_reads_fastq" :
+        "-s1 ${classified_reads_fastq[0]} -s2 ${classified_reads_fastq[1]}"
+    def output_reads_command = is_single_end ?
+        "-o ${prefix}.extracted_kraken2_read.${extension}" :
+        "-o ${prefix}.extracted_kraken2_read_1.${extension} -o2 ${prefix}.extracted_kraken2_read_2.${extension}"
+    def gzip_reads_command = is_single_end ?
+        "gzip ${prefix}.extracted_kraken2_read.${extension}" :
+        "gzip ${prefix}.extracted_kraken2_read_1.${extension}; gzip ${prefix}.extracted_kraken2_read_2.${extension}"
     def report_option = report ? "-r ${report}" : ""
-    def VERSION = '1.2' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
+    def VERSION = '1.2'
 
     """
-    extract_kraken_reads.py \\
-        ${args} \\
-        -t $taxid \\
-        -k $classified_reads_assignment \\
-        $report_option \\
-        $input_reads_command \\
-        $output_reads_command
+    # Check if FASTQ files are empty or if there are no classified reads
+    if ! grep -qv '^U' ${classified_reads_assignment} || \
+    [ ! -s ${classified_reads_fastq[0]} ] || \
+    [ ! -s ${classified_reads_fastq[1]} ]; then
 
-    $gzip_reads_command
+        echo "No classified reads or empty FASTQ files. Creating empty output."
+
+        ${is_single_end ?
+            "touch ${prefix}.extracted_kraken2_read.${extension}" :
+            "touch ${prefix}.extracted_kraken2_read_1.${extension}; touch ${prefix}.extracted_kraken2_read_2.${extension}"}
+
+        $gzip_reads_command
+
+    else
+        extract_kraken_reads.py \\
+            ${args} \\
+            -t $taxid \\
+            -k $classified_reads_assignment \\
+            $report_option \\
+            $input_reads_command \\
+            $output_reads_command
+
+        $gzip_reads_command
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
