@@ -18,6 +18,6 @@ process PLOTS_KRAKEN2 {
     def plot_heatmap_script = workflow.projectDir.resolve("bin/plots_kraken.r")
 
     """
-    Rscript $plot_heatmap_script $count_table "$contaminants" $tax_level
+    Rscript $plot_heatmap_script $count_table "$contaminants" "$tax_level"
     """
 }
