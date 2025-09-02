@@ -54,8 +54,8 @@ process MINIMAP2_ALIGN {
     """
     #!/usr/bin/env bash
     set -euo pipefail
+    bash <<'EOF'
 
-    # Check if reads are empty
     if [[ $(zcat ${read1} | wc -l) -eq 0 ]]; then
         echo "Input read file ${reads[0]} is empty. Skipping minimap2." >&2
 
