@@ -30,6 +30,7 @@ include { PLOTS_MINIMAP2 } from './modules/local/plots_minimap2/main'
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'
 include { KRAKEN2_COMBINE_REPORTS } from './modules/local/kraken2_combineReports/main'
 include { PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
+include { KRAKEN2_TAXONOMY } from './modules/local/kraken2_taxonomy/main'
 
 // include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
 // include { KRONA_PLOTS } from './modules/nf-core/krona/ktimporttext/main'
@@ -172,9 +173,11 @@ workflow {
         kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
         // kraken_report_taxonomy = KRAKEN2_TAXONOMY(kraken_reports_combined.combine_long)
         contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
-        PLOTS_KRAKEN2(kraken_reports_combined.combine_long,
+        results_kraken = PLOTS_KRAKEN2(kraken_reports_combined.combine_long,
                         contaminants_ch, 
                         params.taxonomy_level)
+        KRAKEN2_TAXONOMY(results_kraken.counts, 
+                            results_kraken.minimizers)
     }
 
     // --------------------------------------------- //

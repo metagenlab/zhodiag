@@ -9,6 +9,8 @@ process PLOTS_KRAKEN2 {
     val tax_level
 
     output:
+    path 'table_at*totalCounts.tsv',           emit: counts
+    path 'table_at*distinctMinimizers.tsv',    emit: minimizers
     path '*.tsv'
     path '*.pdf'
 
