@@ -16,10 +16,17 @@ process KRAKEN2_TAXONOMY {
     script:
     def script_dir = file("bin")
     def kraken_taxonomy_script = script_dir.resolve("kraken2taxonomy.py").toString()
+    def counts_files = kraken2_counts.collect { it.getName() }.join(' ')
+    def minimizer_files = kraken2_minimizers.collect { it.getName() }.join(' ')
 
     """
-    python3 $kraken_taxonomy_script -i $kraken2_counts
-    python3 $kraken_taxonomy_script -i $kraken2_minimizers
+    for file in $counts_files; do
+        python3 $kraken_taxonomy_script -i $kraken2_counts
+    done
+
+    for file in $minimizer_files; do
+        python3 $kraken_taxonomy_script -i $kraken2_minimizers
+    done
     """
 
 }
