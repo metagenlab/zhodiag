@@ -36,14 +36,24 @@ a <- df %>% filter(rank == selected_rank) %>% select(totalCounts, distinctMinimi
 write.table(a, paste0("long_table_at_", tax_level, "_level.tsv"),
       row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
 # wide table
-wa <- a %>%
+watot <- a %>%
   unite(sample_group, sample, group, sep = "_") %>%
   pivot_wider(
     names_from = sample_group,
-    values_from = c(totalCounts, distinctMinimizers),
+    values_from = totalCounts,
     values_fill = 0
   )
-write.table(wa, paste0("table_at_", tax_level, "_level.tsv"),
+write.table(watot, paste0("table_at_", tax_level, "_level_totalCounts.tsv"),
+      row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
+
+wadis <- a %>%
+  unite(sample_group, sample, group, sep = "_") %>%
+  pivot_wider(
+    names_from = sample_group,
+    values_from = distinctMinimizers,
+    values_fill = 0
+  )
+write.table(wadis, paste0("table_at_", tax_level, "_level_distinctMinimizers.tsv"),
       row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
 
 ## heatmap all species
