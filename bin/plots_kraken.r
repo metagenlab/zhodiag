@@ -102,7 +102,7 @@ dev.off()
 # heatmap by group
 for(gr in setdiff(unique(a$group), 'control')){
   print(gr)
-  pdf(paste0(gr, "_", tax_level, "_group_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
+  pdf(paste0(gr, "_group", tax_level, "_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
   p = ggplot(a %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
          aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
     geom_tile() +
@@ -134,7 +134,6 @@ for(s in unique(a$sample)){
   dev.off()
 }
 
-### remove contaminants ###
 ### remove contaminants ###
 if (contaminants != "") {
   print('Contaminant file provided')
@@ -174,7 +173,7 @@ if (contaminants != "") {
   # heatmap by group
   for(gr in setdiff(unique(a$group), 'control')){
     print(gr)
-    pdf(paste0(gr, "_", tax_level, "_group_heatmap_totalCounts_contaminantsRemoved.pdf"), height = plot_height, width = plot_width)
+    pdf(paste0(gr, "_group", tax_level, "_heatmap_totalCounts_contaminantsRemoved.pdf"), height = plot_height, width = plot_width)
     p = ggplot(b %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
           aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
       geom_tile() +
