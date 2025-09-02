@@ -8,7 +8,7 @@ filename <- args[1]
 # contaminants <- as.numeric(strsplit(args[2], ",\\s*")[[1]])
 contaminants <- args[2]
 # tax_level <- as.character(args[3])
-tax_levels <- unlist(strsplit(args[3], ",\\s*"))
+tax_levels <- strsplit(args[3], ",\\s*")[[1]]
 print(tax_levels)
 
 df <- read.table(filename, header = TRUE, sep = '\t')
@@ -33,7 +33,7 @@ write.table(sum.domains, "summary_kingdoms.tsv",
 
 # select rank
 for(tax_level in tax_levels) {
-  print(paste0("Processing at ", tax_level, "level"))
+  print(paste0("Processing at ", tax_level, " level"))
   selected_rank <- toupper(substr(tax_level, 1, 1))
   a <- df %>% filter(rank == selected_rank) %>% select(totalCounts, distinctMinimizers, taxid, taxonomy, sample, group)
 
