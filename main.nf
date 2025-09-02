@@ -229,8 +229,8 @@ workflow {
             map_candidates_filter = MINIMAP_FILTER_AUTO(map_candidates.bam,
                                                             params.mapq_cutoff,
                                                             params.coverage_cutoff)
-            // candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.bam)
-            // candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(candidate_sorted_bam.sorted_bam)
+            candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.bam)
+            candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(candidate_sorted_bam.sorted_bam)
         }
     }
 
