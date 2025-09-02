@@ -20,8 +20,8 @@ process KRAKEN2_TAXONOMY {
     def minimizers_out = kraken2_minimizers.getSimpleName().replaceFirst(/\.tsv$/, '_full_taxonomy.tsv')
 
     """
-    python3 $kraken_taxonomy_script -i $kraken2_counts -o $counts_out
-    python3 $kraken_taxonomy_script -i $kraken2_minimizers -o $minimizers_out
+    python3 $kraken_taxonomy_script -i $kraken2_counts
+    python3 $kraken_taxonomy_script -i $kraken2_minimizers
     """
 
 }
