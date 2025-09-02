@@ -16,8 +16,6 @@ process KRAKEN2_TAXONOMY {
     script:
     def script_dir = file("bin")
     def kraken_taxonomy_script = script_dir.resolve("kraken2taxonomy.py").toString()
-    def counts_out = kraken2_counts.getSimpleName().replaceFirst(/\.tsv$/, '_full_taxonomy.tsv')
-    def minimizers_out = kraken2_minimizers.getSimpleName().replaceFirst(/\.tsv$/, '_full_taxonomy.tsv')
 
     """
     python3 $kraken_taxonomy_script -i $kraken2_counts
