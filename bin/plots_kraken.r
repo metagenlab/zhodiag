@@ -33,7 +33,7 @@ write.table(sum.domains, "summary_kingdoms.tsv",
 selected_rank <- toupper(substr(tax_level, 1, 1))
 a <- df %>% filter(rank == selected_rank) %>% select(totalCounts, distinctMinimizers, taxid, taxonomy, sample, group)
 
-write.table(a, paste0("long_table_at_", tax_level, "level.tsv"),
+write.table(a, paste0("long_table_at_", tax_level, "_level.tsv"),
       row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
 # wide table
 wa <- a %>%
@@ -43,7 +43,7 @@ wa <- a %>%
     values_from = c(totalCounts, distinctMinimizers),
     values_fill = 0
   )
-write.table(a, paste0("table_at_", tax_level, "level.tsv"),
+write.table(wa, paste0("table_at_", tax_level, "_level.tsv"),
       row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
 
 ## heatmap all species
