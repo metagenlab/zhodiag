@@ -53,56 +53,85 @@ process MINIMAP2_ALIGN {
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # 1. Align reads to reference, output to SAM
-    {   
-        ln -s ${target} local_genome
-        $samtools_reset_fastq \\
-        minimap2 -ax sr \\
-            --split-prefix ${prefix}_${genome}.sam \\
-            $args \\
-            -t $task.cpus \\
-            $cigar_paf \\
-            $set_cigar_bam \\
-            local_genome \\
-            $query \\
-            > ${sam_file}
-    } 2> ${log_file}
+    # Check if reads are empty
+    if [[ $(zcat ${reads[0]} | wc -l) -eq 0 ]]; then
+        echo "Input read file ${reads[0]} is empty. Skipping minimap2." >&2
 
-    # Check for @SQ lines in SAM header (i.e., mapped reads)
-    if grep -q '^@SQ' ${sam_file}; then
+        # Create empty outputs to avoid Nextflow errors
+        ${bam_format ? "touch ${prefix}_${genome}.bam" : ""}
+        ${paf_output ? "touch ${prefix}_${genome}.paf" : ""}
+        echo -e "0 + 0 in total (QC-passed reads + QC-failed reads)
+    0 + 0 secondary
+    0 + 0 supplementary
+    0 + 0 duplicates
+    0 + 0 mapped (0.00% : N/A)
+    0 + 0 paired in sequencing
+    0 + 0 read1
+    0 + 0 read2
+    0 + 0 properly paired (0.00% : N/A)
+    0 + 0 with itself and mate mapped
+    0 + 0 singletons (0.00% : N/A)
+    0 + 0 with mate mapped to a different chr
+    0 + 0 with mate mapped to a different chr (mapQ>=5)" > ${prefix}_${genome}.flagstat.txt
 
-        echo "Mapped reads detected. Continuing with SAM processing..." >&2
-
-        # 2. Convert SAM to BAM if requested
-        ${bam_format ? "samtools view -@ ${task.cpus-1} -b ${sam_file} > ${bam_file}" : ""}
-
-        # 3. Generate flagstat from final alignment (BAM or SAM)
-        samtools flagstat ${bam_format ? bam_file : sam_file} > ${flagstat_file}
-
-        # 4. Convert SAM to PAF if requested
-        ${paf_output ? "paftools.js sam2paf ${sam_file} > ${paf_file}" : ""}
-
-        # 5. Extract unmapped reads from BAM if requested
-        ${bam_format && unmapped_fq ? "samtools fastq -f 4 -@ ${task.cpus-1} ${bam_file} -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+        ${bam_format && unmapped_fq ? "touch ${prefix}_${genome}_unmapped_R1.fastq.gz ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
 
     else
-        echo "No mapped reads. Creating empty outputs..." >&2
 
-        # Create empty BAM if requested
-        ${bam_format ? "samtools view -H ${sam_file} | samtools view -b - > ${bam_file}" : ""}
+        echo "Running minimap2 alignment..." >&2
 
-        # Create zeroed-out flagstat
-        echo -e "0 + 0 in total (QC-passed reads + QC-failed reads)\n0 + 0 secondary\n0 + 0 supplementary\n0 + 0 duplicates\n0 + 0 mapped (0.00% : N/A)\n0 + 0 paired in sequencing\n0 + 0 read1\n0 + 0 read2\n0 + 0 properly paired (0.00% : N/A)\n0 + 0 with itself and mate mapped\n0 + 0 singletons (0.00% : N/A)\n0 + 0 with mate mapped to a different chr\n0 + 0 with mate mapped to a different chr (mapQ>=5)" > ${flagstat_file}
+        # 1. Align reads to reference, output to SAM
+        {   
+            ln -s ${target} local_genome
+            $samtools_reset_fastq \\
+            minimap2 -ax sr \\
+                --split-prefix ${prefix}_${genome}.sam \\
+                $args \\
+                -t $task.cpus \\
+                $cigar_paf \\
+                $set_cigar_bam \\
+                local_genome \\
+                $query \\
+                > ${sam_file}
+        } 2> ${log_file}
 
-        # Create empty PAF if requested
-        ${paf_output ? "touch ${paf_file}" : ""}
+        # Check for @SQ lines in SAM header (i.e., mapped reads)
+        if grep -q '^@SQ' ${sam_file}; then
+            echo "Mapped reads detected. Continuing with SAM processing..." >&2
 
-        # Optional: Create empty fastqs for unmapped if needed
-        ${bam_format && unmapped_fq ? "touch ${prefix}_${genome}_unmapped_R1.fastq.gz ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+            ${bam_format ? "samtools view -@ ${task.cpus-1} -b ${sam_file} > ${bam_file}" : ""}
+
+            samtools flagstat ${bam_format ? bam_file : sam_file} > ${flagstat_file}
+
+            ${paf_output ? "paftools.js sam2paf ${sam_file} > ${paf_file}" : ""}
+
+            ${bam_format && unmapped_fq ? "samtools fastq -f 4 -@ ${task.cpus-1} ${bam_file} -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+
+        else
+            echo "No mapped reads. Creating empty outputs..." >&2
+
+            ${bam_format ? "samtools view -H ${sam_file} | samtools view -b - > ${bam_file}" : ""}
+
+            echo -e "0 + 0 in total (QC-passed reads + QC-failed reads)
+    0 + 0 secondary
+    0 + 0 supplementary
+    0 + 0 duplicates
+    0 + 0 mapped (0.00% : N/A)
+    0 + 0 paired in sequencing
+    0 + 0 read1
+    0 + 0 read2
+    0 + 0 properly paired (0.00% : N/A)
+    0 + 0 with itself and mate mapped
+    0 + 0 singletons (0.00% : N/A)
+    0 + 0 with mate mapped to a different chr
+    0 + 0 with mate mapped to a different chr (mapQ>=5)" > ${flagstat_file}
+
+            ${paf_output ? "touch ${paf_file}" : ""}
+            ${bam_format && unmapped_fq ? "touch ${prefix}_${genome}_unmapped_R1.fastq.gz ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+        fi
+
+        ${bam_format ? "rm -f ${sam_file}" : ""}
     fi
-
-    # 6. Remove sam
-    ${bam_format ? "rm -f ${sam_file}" : ""}
 
     # 7. Write versions
     minimap2_ver=\$(minimap2 --version 2>&1)
