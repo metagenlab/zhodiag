@@ -49,12 +49,14 @@ process MINIMAP2_ALIGN {
     def query = bam_input ? "-" : reads
     def target = reference ?: (bam_input ? error("BAM input requires reference") : reads)
 
+    def read1 = reads[0]
+    def read2 = reads.size() > 1 ? reads[1] : null
     """
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Check if reads are empty
-    if [[ $(zcat ${reads[0]} | wc -l) -eq 0 ]]; then
+    if [[ $(zcat ${read1} | wc -l) -eq 0 ]]; then
         echo "Input read file ${reads[0]} is empty. Skipping minimap2." >&2
 
         # Create empty outputs to avoid Nextflow errors
