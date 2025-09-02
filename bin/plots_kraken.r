@@ -9,6 +9,7 @@ filename <- args[1]
 contaminants <- args[2]
 # tax_level <- as.character(args[3])
 tax_levels <- unlist(strsplit(args[3], ",\\s*"))
+print(tax_levels)
 
 df <- read.table(filename, header = TRUE, sep = '\t')
 
