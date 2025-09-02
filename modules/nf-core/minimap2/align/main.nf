@@ -64,7 +64,7 @@ process MINIMAP2_ALIGN {
 
     if [[ \$line_count -eq 0 ]]; then
       echo "Read file is empty. Creating empty output files..."
-      touch empty_output.flagstat.txt
+      touch ${flagstat_file}
 
       # Write versions.yml even for empty output case
       minimap2_ver=\$(minimap2 --version 2>&1)
