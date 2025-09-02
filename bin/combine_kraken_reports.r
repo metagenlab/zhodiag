@@ -19,7 +19,7 @@ for(f in file_list){
 }
 df$sample = as.character(df$sample)
 dfg = left_join(df, metadata, by = "sample")
-colnames(dfg) = c("perc_reads", "rootReads", "totalCounts", 
+colnames(dfg) = c("perc_reads", "totalCounts", "directCounts", 
                     "minimizers", "distinctMinimizers", "rank",
                     "taxid", "taxonomy", "sample", "group")
 write.table(dfg, paste0(outfile_prefix),

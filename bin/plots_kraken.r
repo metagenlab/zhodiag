@@ -23,7 +23,7 @@ sum.domains <- df %>%
   )) %>%
   filter(!is.na(domain)) %>%
   group_by(sample, domain) %>%
-  summarise(nreads = sum(rootReads), .groups = "drop") %>%
+  summarise(nreads = sum(totalCounts), .groups = "drop") %>%
   pivot_wider(names_from = domain, values_from = nreads) %>%
   mutate(across(everything(), ~replace_na(., 0)))
 write.table(sum.domains, "summary_kingdoms.tsv",
@@ -31,8 +31,20 @@ write.table(sum.domains, "summary_kingdoms.tsv",
 
 # select rank
 selected_rank <- toupper(substr(tax_level, 1, 1))
-a <- df %>% filter(rank == selected_rank) %>% select(rootReads, distinctMinimizers, taxid, taxonomy, sample, group) %>%
-  mutate(totalCounts = rootReads)
+a <- df %>% filter(rank == selected_rank) %>% select(totalCounts, distinctMinimizers, taxid, taxonomy, sample, group)
+
+write.table(a, paste0("long_table_at_", tax_level, "level.tsv"),
+      row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
+# wide table
+wa <- a %>%
+  unite(sample_group, sample, group, sep = "_") %>%
+  pivot_wider(
+    names_from = sample_group,
+    values_from = c(totalCounts, distinctMinimizers),
+    values_fill = 0
+  )
+write.table(a, paste0("table_at_", tax_level, "level.tsv"),
+      row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
 
 ## heatmap all species
 # reorder by total reads per species across all samples
