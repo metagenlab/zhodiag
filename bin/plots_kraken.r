@@ -32,6 +32,7 @@ write.table(sum.domains, "summary_kingdoms.tsv",
 
 # select rank
 for(tax_level in tax_levels) {
+  print(paste0("Processing at ", tax_level, "level"))
   selected_rank <- toupper(substr(tax_level, 1, 1))
   a <- df %>% filter(rank == selected_rank) %>% select(totalCounts, distinctMinimizers, taxid, taxonomy, sample, group)
 
