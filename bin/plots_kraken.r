@@ -37,6 +37,7 @@ write.table(a, paste0("long_table_at_", tax_level, "_level.tsv"),
       row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
 # wide table
 watot <- a %>%
+  select(-distinctMinimizers) %>%
   unite(sample_group, sample, group, sep = "_") %>%
   pivot_wider(
     names_from = sample_group,
@@ -47,6 +48,7 @@ write.table(watot, paste0("table_at_", tax_level, "_level_totalCounts.tsv"),
       row.names = FALSE, col.names = TRUE, sep = '\t', ,quote = FALSE)
 
 wadis <- a %>%
+  select(-totalCounts) %>%
   unite(sample_group, sample, group, sep = "_") %>%
   pivot_wider(
     names_from = sample_group,
