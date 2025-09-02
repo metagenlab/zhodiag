@@ -13,7 +13,7 @@ process SAMTOOLS_VIEW {
     val cov
 
     output:
-    tuple val(meta), path("${prefix}_filtered.bam"),                                    emit: bam,              optional: true
+    tuple val(meta), path("${prefix}_filtered.bam"),   emit: bam                                 emit: bam,              optional: true
     path  "versions_samtools_view.yml",                                                      emit: versions
 
     when:
