@@ -84,24 +84,26 @@ for(tax_level in tax_levels) {
   plot_width  <- max(base_width,  n_samples * width_per_sample)
 
   pdf(paste0(tax_level, "Level_heatmap_totalCounts.pdf"), width = 10, height = 10)
-  ggplot(a  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+  p = ggplot(a  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  print(p)
   dev.off()
   print('totalcounts heatmap done')
 
   pdf(paste0(tax_level, "Level_heatmap_distinctMinimizers.pdf"), width = plot_width, height = plot_height)
-  ggplot(a %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
+  p = ggplot(a %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  print(p)
   dev.off()
 
   # heatmap by group
