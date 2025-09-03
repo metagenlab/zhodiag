@@ -83,7 +83,7 @@ for(tax_level in tax_levels) {
   plot_height <- max(base_height, n_species * height_per_species)
   plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-  pdf(paste0(tax_level, "_heatmap_totalCounts.pdf"), width = plot_width, height = plot_height)
+  pdf(paste0(tax_level, "Level_heatmap_totalCounts.pdf"), width = plot_width, height = plot_height)
   ggplot(a  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
     geom_tile() +
     geom_text(colour='white') +
@@ -93,7 +93,7 @@ for(tax_level in tax_levels) {
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
   dev.off()
 
-  pdf(paste0(tax_level, "_heatmap_distinctMinimizers.pdf"), width = plot_width, height = plot_height)
+  pdf(paste0(tax_level, "Level_heatmap_distinctMinimizers.pdf"), width = plot_width, height = plot_height)
   ggplot(a %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
     geom_tile() +
     geom_text(colour='white') +
@@ -106,7 +106,7 @@ for(tax_level in tax_levels) {
   # heatmap by group
   for(gr in setdiff(unique(a$group), 'control')){
     print(gr)
-    pdf(paste0(gr, "_group", tax_level, "_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
+    pdf(paste0(gr, "_", tax_level, "Level_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
     p = ggplot(a %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
           aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
       geom_tile() +
@@ -122,7 +122,7 @@ for(tax_level in tax_levels) {
   # total counts vs distinct minimizers for each sample
   for(s in unique(a$sample)){
     print(s)
-    pdf(paste0(s, "_", tax_level, "_totalCounts_vs_distinctMinimizers.pdf"), 
+    pdf(paste0(s, "_", tax_level, "Level_totalCounts_vs_distinctMinimizers.pdf"), 
     width = 10, height = 10)
     p = ggplot(a %>% filter(sample == s), 
           aes(x = log2(totalCounts+1), y = log2(distinctMinimizers+1), label = taxonomy)) +
@@ -154,7 +154,7 @@ for(tax_level in tax_levels) {
     plot_height <- max(base_height, n_species * height_per_species)
     plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-    pdf(paste0(tax_level, "_heatmap_totalCounts_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
+    pdf(paste0(tax_level, "Level_heatmap_totalCounts_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
     ggplot(b  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
       geom_tile() +
       geom_text(colour='white') +
@@ -164,7 +164,7 @@ for(tax_level in tax_levels) {
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
     dev.off()
 
-    pdf(paste0(tax_level, "_heatmap_distinctMinimizers_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
+    pdf(paste0(tax_level, "Level_heatmap_distinctMinimizers_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
     ggplot(b %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
       geom_tile() +
       geom_text(colour='white') +
@@ -177,7 +177,7 @@ for(tax_level in tax_levels) {
     # heatmap by group
     for(gr in setdiff(unique(a$group), 'control')){
       print(gr)
-      pdf(paste0(gr, "_group", tax_level, "_heatmap_totalCounts_contaminantsRemoved.pdf"), height = plot_height, width = plot_width)
+      pdf(paste0(gr, "_", tax_level, "Level_heatmap_totalCounts_contaminantsRemoved.pdf"), height = plot_height, width = plot_width)
       p = ggplot(b %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
             aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
         geom_tile() +
@@ -193,7 +193,7 @@ for(tax_level in tax_levels) {
     # total counts vs distinct minimizers for each sample
     for(s in unique(a$sample)){
       print(s)
-      pdf(paste0(s, "_", tax_level, "_totalCounts_vs_distinctMinimizers_contaminantsRemoved.pdf"), 
+      pdf(paste0(s, "_", tax_level, "Level_totalCounts_vs_distinctMinimizers_contaminantsRemoved.pdf"), 
       width = 10, height = 10)
       p = ggplot(b %>% filter(sample == s), 
             aes(x = log2(totalCounts+1), y = log2(distinctMinimizers+1), label = taxonomy)) +
