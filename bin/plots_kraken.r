@@ -83,7 +83,7 @@ for(tax_level in tax_levels) {
   plot_height <- max(base_height, n_species * height_per_species)
   plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-  pdf(paste0(tax_level, "Level_heatmap_totalCounts.pdf"), width = 10, height = 10)
+  pdf(paste0(tax_level, "Level_heatmap_totalCounts.pdf"), width = plot_width, height = plot_height)
   p = ggplot(a  %>% filter(totalCounts != 0), aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
     geom_tile() +
     geom_text(colour='white') +
@@ -93,7 +93,6 @@ for(tax_level in tax_levels) {
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
   print(p)
   dev.off()
-  print('totalcounts heatmap done')
 
   pdf(paste0(tax_level, "Level_heatmap_distinctMinimizers.pdf"), width = plot_width, height = plot_height)
   p = ggplot(a %>% filter(distinctMinimizers != 0), aes(x = factor(sample), y = taxonomy, fill = distinctMinimizers, label = distinctMinimizers)) +
