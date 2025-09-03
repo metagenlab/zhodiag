@@ -2,7 +2,7 @@
 
 
 ## Pipeline overview
-![Diagram in progress](misc/zhodiag_diagram.drawio.png)
+![Diagram in progress](misc/zhodiag_vertical.png)
 
 
 ## How to use:
