@@ -21,21 +21,23 @@ process SLIM_SAM2BAM {
     def output_file = "${prefix}.bam"
 
     """
-    # 1. Extract contigs with at least one alignment
-    samtools view -@ ${task.cpus-1} $input | cut -f3 | sort -u > ${prefix}_mapped_refs.txt
+    # 1. Stream slim SAM: only @SQ lines for mapped contigs + other headers + all alignments
+    (
+      # Contigs with mapped reads
+      samtools view -@ ${task.cpus-1} $input | cut -f3 | sort -u | \
+      xargs -I{} grep -E "^@SQ.*SN:{}\$" <(samtools view -H $input)
 
-    # 2. Build slim header (only mapped contigs)
-    samtools view -H $input | grep -E '^@SQ' | grep -Ff ${prefix}_mapped_refs.txt > ${prefix}_header.sam
-    samtools view -H $input | grep -v '^@SQ' >> ${prefix}_header.sam
+      # Other header lines
+      samtools view -H $input | grep -v '^@SQ'
 
-    # 3. Concatenate slim header + all alignments
-    samtools view -@ ${task.cpus-1} $input > ${prefix}_body.sam
-    cat ${prefix}_header.sam ${prefix}_body.sam > ${prefix}_mapped_slim.sam
+      # All alignments
+      samtools view -@ ${task.cpus-1} $input
+    ) > ${prefix}_mapped_slim.sam
 
-    # 4. Convert to BAM
-    samtools view -@ ${task.cpus-1} -b ${prefix}_mapped_slim.sam > ${output_file}
+    # 2. Convert slim SAM to BAM
+    samtools view -@ ${task.cpus-1} -b ${prefix}_mapped_slim.sam > ${bam_file}
 
-    # 5. Clean up intermediates
-    rm -f ${prefix}_mapped_refs.txt ${prefix}*.sam
+    # 3. Clean up slim SAM
+    rm -f ${prefix}_mapped_slim.sam
     """
 }
