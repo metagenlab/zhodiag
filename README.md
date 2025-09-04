@@ -7,7 +7,7 @@
 
 ## How to use:
 
-### Pre-requisites
+## :mag: Pre-requisites
 A conda environment with nextflow version 24.10.5 (other versions not tested.). You can find a working environment in asterix:
 
 ```
