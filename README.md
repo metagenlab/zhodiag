@@ -1,20 +1,20 @@
-# zhodiag: Ze shotgun metagenomics pipeline for diagnostics
+# :electron: zhodiag: Ze shotgun metagenomics pipeline for diagnostics
 
 
-## Pipeline overview
+## :dna: Pipeline overview
 ![Diagram in progress](misc/zhodiag_vertical_db_legend.png)
 
 
-## How to use:
+## :gear: How to use:
 
-## :mag: Pre-requisites
+## :package: Pre-requisites
 A conda environment with nextflow version 24.10.5 (other versions not tested.). You can find a working environment in asterix:
 
 ```
 conda activate vcs_nextflow_24.10.5
 ```
 
-### Usage
+### :rocket: Usage
 1. Clone the repo.
 2. Prepare input sample table. This is a comma-separated table with the following columns:
     `sample,fastq_1,fastq_2,group`. You can see an example in `data/example_groups.csv`
@@ -36,7 +36,7 @@ conda activate vcs_nextflow_24.10.5
 nextflow run main.nf -profile singularity --input data/example_groups.csv --outdir OUTPUT -resume
 ```
 
-## Output
+## :bar_chart: Output
 The output will be organised by software, for example:
 
 * fastqc: output of qc control step.
