@@ -1,13 +1,13 @@
-# :electron: zhodiag: Ze shotgun metagenomics pipeline for diagnostics
+# :microbe: zhodiag: Ze shotgun metagenomics pipeline for diagnostics
 
 
-## :dna: Pipeline overview
+## :mag: Pipeline overview
 ![Diagram in progress](misc/zhodiag_vertical_db_legend.png)
 
 
 ## :gear: How to use:
 
-## :package: Pre-requisites
+### :package: Pre-requisites
 A conda environment with nextflow version 24.10.5 (other versions not tested.). You can find a working environment in asterix:
 
 ```
