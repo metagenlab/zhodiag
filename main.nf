@@ -46,6 +46,7 @@ include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_MANUAL } from './modules/n
 // automatic mapping of candidates
 include { KRAKENTOOLS_EXTRACTKRAKENREADS as AUTOMATIC_CANDIDATES } from './modules/nf-core/krakentools/extractkrakenreads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_AUTO } from './modules/nf-core/minimap2/align/main'
+include { SLIM_SAM2BAM as SLIM_SAM2BAM_AUTO } from './modules/local/slim_sam2bam/main'                                                                                                                       
 include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_AUTO } from './modules/nf-core/samtools/sort/main'                                                                                                                       
 include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_AUTO } from './modules/nf-core/samtools/depth/main'
 include { SAMTOOLS_VIEW as MINIMAP_FILTER_AUTO } from './modules/local/samtools_view/main'
@@ -203,7 +204,7 @@ workflow {
             // minimap2 candidates
             map_candidates = MINIMAP_CANDIDATES_MANUAL(k2_extracted_reads.extracted_kraken2_reads,
                                             params.reference_fasta,
-                                            true,
+                                            false,
                                             false,
                                             false,
                                             false,
@@ -220,17 +221,18 @@ workflow {
             // minimap2 candidates
             map_candidates = MINIMAP_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
                                             params.reference_fasta,
-                                            true,
+                                            false,
                                             false,
                                             false,
                                             false,
                                             false)
             auto_candidate_mapping_logs = map_candidates.flagstat
-            map_candidates_filter = MINIMAP_FILTER_AUTO(map_candidates.bam,
+            bam_candidates = SLIM_SAM2BAM_AUTO(map_candidates.sam)
+            map_candidates_filter = MINIMAP_FILTER_AUTO(bam_candidates.bam,
                                                             params.mapq_cutoff,
                                                             params.coverage_cutoff)
-            candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.bam)
-            candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(candidate_sorted_bam.sorted_bam)
+            // candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.bam)
+            // candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(candidate_sorted_bam.sorted_bam)
         }
     }
 
