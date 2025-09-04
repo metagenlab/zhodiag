@@ -24,18 +24,18 @@ process SLIM_SAM2BAM {
     # 1. Stream slim SAM: only @SQ lines for mapped contigs + other headers + all alignments
     (
       # Contigs with mapped reads
-      samtools view -@ ${task.cpus-1} $input | cut -f3 | sort -u | \
+      samtools view -@ ${task.cpus} $input | cut -f3 | sort -u | \
       xargs -I{} grep -E "^@SQ.*SN:{}\$" <(samtools view -H $input)
 
       # Other header lines
       samtools view -H $input | grep -v '^@SQ'
 
       # All alignments
-      samtools view -@ ${task.cpus-1} $input
+      samtools view -@ ${task.cpus} $input
     ) > ${prefix}_mapped_slim.sam
 
     # 2. Convert slim SAM to BAM
-    samtools view -@ ${task.cpus-1} -b ${prefix}_mapped_slim.sam > ${bam_file}
+    samtools view -@ ${task.cpus} -b ${prefix}_mapped_slim.sam > ${output_file}
 
     # 3. Clean up slim SAM
     rm -f ${prefix}_mapped_slim.sam
