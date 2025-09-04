@@ -13,7 +13,7 @@ process SAMTOOLS_VIEW {
     val cov
 
     output:
-    tuple val(meta), path("*_filtered.bam"),  emit: bam
+    tuple val(meta), path("*_filtered.sam"),  emit: filtered
     path  "versions_samtools_view.yml",               emit: versions
 
     when:
@@ -22,7 +22,7 @@ process SAMTOOLS_VIEW {
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ''
-    def output_file = "${prefix}_filtered.bam"
+    def output_file = "${prefix}_filtered.sam"
 
     """
     samtools \\
