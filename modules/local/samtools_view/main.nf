@@ -33,7 +33,7 @@ process SAMTOOLS_VIEW {
         -h \\
         -o ${output_file} \\
         $input
-
+    
     cat <<-END_VERSIONS > versions_samtools_view.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')

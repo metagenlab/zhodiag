@@ -1,0 +1,23 @@
+name: taxonomizr_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  # Base R
+  - r-base=4.3
+
+  # Core R packages
+  - r-tidyverse
+  - r-ggplot2
+  - r-taxonomizr
+
+  # System dependencies for taxonomizr
+  - sqlite
+  - openjdk
+  - libsqlite
+  - libxml2
+
+  # Optional: utilities
+  - wget
+  - curl

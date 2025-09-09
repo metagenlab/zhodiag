@@ -1,5 +1,5 @@
 process SAMTOOLS_DEPTH {
-    tag "$meta1.id"
+    tag "$meta.id"
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
@@ -8,11 +8,12 @@ process SAMTOOLS_DEPTH {
         'biocontainers/samtools:1.21--h50ea8bc_0' }"
 
     input:
-    tuple val(meta1), path(bam)
+    tuple val(meta), path(input)
     // tuple val(meta2), path(intervals)
 
     output:
-    tuple val(meta1), path("*.tsv"), emit: depth
+    tuple val(meta), path("*depth.tsv"), emit: depth
+    tuple val(meta), path("*nonHuman.tsv"), emit: depth_nonHuman
     path "versions_samtoolsdepth.yml"           , emit: versions
 
     when:
@@ -20,7 +21,7 @@ process SAMTOOLS_DEPTH {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta1.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     // def positions = intervals ? "-b ${intervals}" : ""
     """
     # Note: --threads value represents *additional* CPUs to allocate (total CPUs = 1 + --threads).
@@ -29,7 +30,9 @@ process SAMTOOLS_DEPTH {
         --threads ${task.cpus-1} \\
         $args \\
         -o ${prefix}_depth.tsv \\
-        $bam
+        $input
+    
+    grep -v "|9606" "${prefix}_depth.tsv" > "${prefix}_depth_nonHuman.tsv"
 
     cat <<-END_VERSIONS > versions_samtoolsdepth.yml
     "${task.process}":

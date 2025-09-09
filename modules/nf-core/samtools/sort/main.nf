@@ -1,6 +1,6 @@
 process SAMTOOLS_SORT {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,11 +8,11 @@ process SAMTOOLS_SORT {
         'biocontainers/samtools:1.21--h50ea8bc_0' }"
 
     input:
-    tuple val(meta) , path(bam)
+    tuple val(meta) , path(input)
 
     output:
-    tuple val(meta), path("*.bam"),  emit: sorted_bam,  optional: true
-    tuple val(meta), path("*.bai"),  emit: index_bam,  optional: true
+    tuple val(meta), path("*_sorted.sam"),  emit: sorted
+    // tuple val(meta), path("*.bai"),  emit: index_bam,  optional: true
     path  "versions_samtools.yml",            emit: versions
 
     when:
@@ -25,13 +25,13 @@ process SAMTOOLS_SORT {
     samtools sort \\
         $args \\
         --threads $task.cpus \\
-        -o ${prefix}_sorted.bam \\
-        $bam
-    samtools index ${prefix}_sorted.bam
-
+        -o ${prefix}_sorted.sam \\
+        $input
+    
     cat <<-END_VERSIONS > versions_samtools.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
     END_VERSIONS
     """
 }
+    // samtools index ${prefix}_sorted.bam

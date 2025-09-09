@@ -50,6 +50,10 @@ include { SLIM_SAM2BAM as SLIM_SAM2BAM_AUTO } from './modules/local/slim_sam2bam
 include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_AUTO } from './modules/nf-core/samtools/sort/main'                                                                                                                       
 include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_AUTO } from './modules/nf-core/samtools/depth/main'
 include { SAMTOOLS_VIEW as MINIMAP_FILTER_AUTO } from './modules/local/samtools_view/main'
+include { SUMMARY_STATS_CANDIDATES as SUMMARY_STATS_CANDIDATES_AUTO } from './modules/local/summary_stats/main'
+include { SUMMARY_MAP_CANDIDATES as SUMMARY_MAP_CANDIDATES_AUTO } from './modules/local/summary_map/main'
+
+
     // --------------------------------------------- //
     // --------------------------------------------- //
     // -------------- WORKFLOW --------------------- //
@@ -230,9 +234,11 @@ workflow {
             map_candidates_filter = MINIMAP_FILTER_AUTO(map_candidates.sam,
                                                             params.mapq_cutoff,
                                                             params.coverage_cutoff)
-            candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(map_candidates_filter.filtered)
-            // bam_candidates = SLIM_SAM2BAM_AUTO(map_candidates.sam)
-            // candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.bam)
+            candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.filtered)
+            candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(candidate_sorted_bam.sorted)
+            // SLIM_SAM2BAM_AUTO(candidate_sorted_bam.sorted)
+            map_summary = SUMMARY_MAP_CANDIDATES_AUTO(candidate_sorted_bam.sorted)
+            SUMMARY_STATS_CANDIDATES_AUTO(candidates_depth.depth_nonHuman, map_summary.nonHuman)
         }
     }
 
