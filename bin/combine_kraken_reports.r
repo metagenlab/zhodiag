@@ -1,3 +1,4 @@
+set.seed(123)
 library(tidyverse)
 
 args <- commandArgs(trailingOnly = TRUE)
