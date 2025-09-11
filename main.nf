@@ -52,6 +52,7 @@ include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_AUTO } from './modules/nf-
 include { SAMTOOLS_VIEW as MINIMAP_FILTER_AUTO } from './modules/local/samtools_view/main'
 include { SUMMARY_STATS_CANDIDATES as SUMMARY_STATS_CANDIDATES_AUTO } from './modules/local/summary_stats/main'
 include { SUMMARY_MAP_CANDIDATES as SUMMARY_MAP_CANDIDATES_AUTO } from './modules/local/summary_map/main'
+include { ANALYSIS_COMBINED as ANALYSIS_COMBINED_AUTO } from './modules/local/analysis_combined/main'
 
 
     // --------------------------------------------- //
@@ -238,7 +239,30 @@ workflow {
             candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(candidate_sorted_bam.sorted)
             // SLIM_SAM2BAM_AUTO(candidate_sorted_bam.sorted)
             map_summary = SUMMARY_MAP_CANDIDATES_AUTO(candidate_sorted_bam.sorted)
-            SUMMARY_STATS_CANDIDATES_AUTO(candidates_depth.depth_nonHuman, map_summary.nonHuman)
+            // join depth stats and map stats before analysis
+            def depth_ch = candidates_depth.depth_nonHuman.map { meta, file ->
+                [ meta.id, [meta, file] ]
+            }
+            def map_ch = map_summary.nonHuman.map { meta, file ->
+                [ meta.id, [meta, file] ]
+            }
+            depth_ch.join(map_ch)
+                .map { id, a, b ->
+                    def (meta1, depth_file) = a
+                    def (meta2, map_file)  = b
+                    tuple(meta1, depth_file, map_file)
+                }
+                .set { summary_input }
+            analysis_samples = SUMMARY_STATS_CANDIDATES_AUTO(summary_input)
+            // join all samples
+            stats_accession_ch = analysis_samples.accession_table.map { it -> it[1] }
+            stats_taxid_ch = analysis_samples.taxid_table.map { it -> it[1] }
+            def metadata_file = file(params.input, checkExists: true)
+            Channel.fromPath(metadata_file).set { metadata_ch }
+            analysis_combined = ANALYSIS_COMBINED_AUTO(stats_accession_ch.collect(),
+                                                        stats_taxid_ch.collect(),
+                                                        metadata_ch)
+
         }
     }
 

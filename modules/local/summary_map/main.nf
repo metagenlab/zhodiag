@@ -1,5 +1,4 @@
 process SUMMARY_MAP_CANDIDATES {
-
     tag "$meta.id"
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -21,6 +20,6 @@ process SUMMARY_MAP_CANDIDATES {
     """
     samtools view -o ${prefix}_alignments.sam $input
     cut -f 3 ${prefix}_alignments.sam | sort | uniq -c > ${output}
-    grep -v "|9606" "${output}" > "${output_nonHuman}"
+    awk '{ split(\$2, a, "|"); if (a[2] != "9606") print \$1, \$2 }' OFS='\t' "${output}" > "${output_nonHuman}"
     """
 }

@@ -1,5 +1,0 @@
-sample,fastq_R1,fastq_R2,group
-101999248520,/scratch/hdd2/vcastelo/repos/zhodiag/data/101999248520_subsam2_R1.fastq.gz,/scratch/hdd2/vcastelo/repos/zhodiag/data/101999248520_subsam2_R2.fastq.gz,G1
-860451766212,/scratch/hdd2/vcastelo/repos/zhodiag/data/860451766212_subsam_R1.fastq.gz,/scratch/hdd2/vcastelo/repos/zhodiag/data/860451766212_subsam_R2.fastq.gz,G2
-101692594312,/scratch/hdd2/vcastelo/repos/zhodiag/data/101692594312_subsam_R1.fastq.gz,/scratch/hdd2/vcastelo/repos/zhodiag/data/101692594312_subsam_R2.fastq.gz,G2
-1020097988,/scratch/hdd2/vcastelo/repos/zhodiag/data/1020097988_subsam_R1.fastq.gz,/scratch/hdd2/vcastelo/repos/zhodiag/data/1020097988_subsam_R2.fastq.gz,control
