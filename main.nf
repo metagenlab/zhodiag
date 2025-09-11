@@ -46,8 +46,6 @@ include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_MANUAL } from './modules/n
 // automatic mapping of candidates
 include { KRAKENTOOLS_EXTRACTKRAKENREADS as AUTOMATIC_CANDIDATES } from './modules/nf-core/krakentools/extractkrakenreads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_AUTO } from './modules/nf-core/minimap2/align/main'
-include { SLIM_SAM2BAM as SLIM_SAM2BAM_AUTO } from './modules/local/slim_sam2bam/main'                                                                                                                       
-include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_AUTO } from './modules/nf-core/samtools/sort/main'                                                                                                                       
 include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_AUTO } from './modules/nf-core/samtools/depth/main'
 include { SAMTOOLS_VIEW as MINIMAP_FILTER_AUTO } from './modules/local/samtools_view/main'
 include { SUMMARY_STATS_CANDIDATES as SUMMARY_STATS_CANDIDATES_AUTO } from './modules/local/summary_stats/main'
