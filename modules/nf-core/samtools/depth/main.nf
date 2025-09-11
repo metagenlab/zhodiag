@@ -12,8 +12,8 @@ process SAMTOOLS_DEPTH {
     // tuple val(meta2), path(intervals)
 
     output:
-    // tuple val(meta), path("*depth.tsv"), emit: depth
-    tuple val(meta), path("*nonHuman.tsv"), emit: depth_nonHuman
+    tuple val(meta), path("*depth.tsv"), emit: depth
+    // tuple val(meta), path("*nonHuman.tsv"), emit: depth_nonHuman
     path "versions_samtoolsdepth.yml"           , emit: versions
 
     when:
@@ -23,7 +23,7 @@ process SAMTOOLS_DEPTH {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def output =  "${prefix}_depth.tsv"
-    def output_nonHuman = "${prefix}_depth_nonHuman.tsv"
+    // def output_nonHuman = "${prefix}_depth_nonHuman.tsv"
     // def positions = intervals ? "-b ${intervals}" : ""
     """
     # Note: --threads value represents *additional* CPUs to allocate (total CPUs = 1 + --threads).
@@ -32,9 +32,7 @@ process SAMTOOLS_DEPTH {
         --threads ${task.cpus-1} \\
         $args \\
         -o ${output} \\
-        $input
-    
-    awk -F'|' '\$2 !~ /^9606([^0-9]|\$)/' "${output}" > "${output_nonHuman}"
+        $input    
 
     cat <<-END_VERSIONS > versions_samtoolsdepth.yml
     "${task.process}":
@@ -42,3 +40,5 @@ process SAMTOOLS_DEPTH {
     END_VERSIONS
     """
 }
+
+    // awk -F'|' '\$2 !~ /^9606([^0-9]|\$)/' "${output}" > "${output_nonHuman}"

@@ -235,15 +235,16 @@ workflow {
             map_candidates_filter = MINIMAP_FILTER_AUTO(map_candidates.sam,
                                                             params.mapq_cutoff,
                                                             params.coverage_cutoff)
-            candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.filtered)
-            candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(candidate_sorted_bam.sorted)
+            auto_candidate_mapping_noHuman_logs = map_candidates_filter.flagstat
+            // candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.filtered)
+            candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(map_candidates_filter.filtered)
             // SLIM_SAM2BAM_AUTO(candidate_sorted_bam.sorted)
-            map_summary = SUMMARY_MAP_CANDIDATES_AUTO(candidate_sorted_bam.sorted)
+            map_summary = SUMMARY_MAP_CANDIDATES_AUTO(map_candidates_filter.filtered)
             // join depth stats and map stats before analysis
-            def depth_ch = candidates_depth.depth_nonHuman.map { meta, file ->
+            def depth_ch = candidates_depth.depth.map { meta, file ->
                 [ meta.id, [meta, file] ]
             }
-            def map_ch = map_summary.nonHuman.map { meta, file ->
+            def map_ch = map_summary.mapSummary.map { meta, file ->
                 [ meta.id, [meta, file] ]
             }
             depth_ch.join(map_ch)
@@ -306,6 +307,8 @@ workflow {
         } else if (params.candidate_mode == 'automatic') {
             collect_reports_input = collect_reports_input
                 .merge(auto_candidate_mapping_logs.map { it[1] } )
+            collect_reports_input = collect_reports_input
+                .merge(auto_candidate_mapping_noHuman_logs.map { it[1] } )              
         }
     }
 

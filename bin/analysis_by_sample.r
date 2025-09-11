@@ -58,7 +58,7 @@ df1 <- df1 %>%
 # Load mapping summary
 # ---------------------------
 print("Read map summary file")
-df2 <- data.table::fread(map_summary, header = FALSE, sep = '\t')
+df2 <- data.table::fread(map_summary, header = FALSE, sep = ' ')
 colnames(df2) <- c("mappedReads", "id")
 
 # Split id into accession and taxid

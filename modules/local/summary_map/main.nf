@@ -10,16 +10,16 @@ process SUMMARY_MAP_CANDIDATES {
     tuple val(meta), path(input)
 
     output:
-    tuple val(meta), path("*_summary_map_nonHuman.tsv"), emit: nonHuman
+    tuple val(meta), path("*_summary_map.tsv"), emit: mapSummary
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
     def output = "${prefix}_summary_map.tsv"
-    def output_nonHuman = "${prefix}_summary_map_nonHuman.tsv"
+    // def output_nonHuman = "${prefix}_summary_map_nonHuman.tsv"
 
     """
     samtools view -o ${prefix}_alignments.sam $input
     cut -f 3 ${prefix}_alignments.sam | sort | uniq -c > ${output}
-    awk '{ split(\$2, a, "|"); if (a[2] != "9606") print \$1, \$2 }' OFS='\t' "${output}" > "${output_nonHuman}"
     """
 }
+    // awk '{ split(\$2, a, "|"); if (a[2] != "9606") print \$1, \$2 }' OFS='\t' "${output}" > "${output_nonHuman}"
