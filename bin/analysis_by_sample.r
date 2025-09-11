@@ -46,14 +46,15 @@ if (!file.exists(dbFile)) {
 # Load input
 # ---------------------------
 print('Read depth file')
-df1 <- data.table::fread(filename, header = FALSE, sep = '\t')
-colnames(df1) <- c("id", "pos", "depth")
+# df1 <- data.table::fread(filename, header = FALSE, sep = '\t')
+# colnames(df1) <- c("id", "pos", "depth")
 
-# Split id into accession and taxid
-df1 <- df1 %>%
-  separate(col = id, into = c("accession", "taxid"),
-           sep = "\\|", remove = TRUE)
-
+# # Split id into accession and taxid
+# df1 <- df1 %>%
+#   separate(col = id, into = c("accession", "taxid"),
+#            sep = "\\|", remove = TRUE)
+summary_by_accession <- data.table::fread(filename, header = TRUE, sep = '\t')
+summary_by_accession$taxid <- as.integer(summary_by_accession$taxid)
 # ---------------------------
 # Load mapping summary
 # ---------------------------
@@ -65,23 +66,23 @@ colnames(df2) <- c("mappedReads", "id")
 df2 <- df2 %>%
   separate(col = id, into = c("accession", "taxid"),
            sep = "\\|", remove = TRUE)
-
+df2$taxid = as.integer(df2$taxid)
 # ---------------------------
 # Summaries by accession
 # ---------------------------
 print("Table by accession")
-summary_by_accession <- df1 %>%
-  group_by(accession) %>%
-  summarise(
-    taxid = first(taxid),
-    length = max(pos),
-    nBases_covered = sum(depth > 0),
-    fraction_covered = sum(depth > 0) / max(pos),
-    mean_depth = if (any(depth > 0)) mean(depth[depth > 0]) else 0,
-    median_depth = if (any(depth > 0)) median(depth[depth > 0]) else 0,
-    .groups = "drop"
-  ) %>%
-  arrange(desc(nBases_covered))
+# summary_by_accession <- df1 %>%
+#   group_by(accession) %>%
+#   summarise(
+#     taxid = first(taxid),
+#     length = max(pos),
+#     nBases_covered = sum(depth > 0),
+#     fraction_covered = sum(depth > 0) / max(pos),
+#     mean_depth = if (any(depth > 0)) mean(depth[depth > 0]) else 0,
+#     median_depth = if (any(depth > 0)) median(depth[depth > 0]) else 0,
+#     .groups = "drop"
+#   ) %>%
+#   arrange(desc(nBases_covered))
 
 # add map summary
 summary_by_accession <- left_join(summary_by_accession, df2, by = c('accession', 'taxid'))
@@ -142,7 +143,7 @@ summary_by_taxid <- summary_by_accession %>%
     nBases_covered = sum(nBases_covered),
     mean_cov = mean(fraction_covered),
     mean_depth = mean(mean_depth),
-    median_depth = median(median_depth),
+    # median_depth = median(median_depth),
     mappedReads = sum(mappedReads),
     .groups = "drop"
   ) %>%

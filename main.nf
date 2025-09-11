@@ -261,7 +261,6 @@ workflow {
             analysis_combined = ANALYSIS_COMBINED_AUTO(stats_accession_ch.collect(),
                                                         stats_taxid_ch.collect(),
                                                         metadata_ch)
-
         }
     }
 
