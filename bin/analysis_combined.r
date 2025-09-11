@@ -31,7 +31,8 @@ metadata$sample = as.character(metadata$sample)
 df = data.frame()
 
 for(f in file_list){
-    s = sub("_.*", "", f)
+    s = sub("_summary.*", "", f)
+    print(s)
     a = read.table(f, header = TRUE, sep = '\t')
     a = a %>% mutate(sample = s)
     df = rbind(df, a)

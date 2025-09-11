@@ -29,7 +29,7 @@ process KRAKEN2_KRAKEN2 {
     def conf = confidence
     def out_dir = "."
     def genome = db.getBaseName()
-    def prefix = task.ext.prefix ?: "${meta.id}_${genome}"
+    def prefix = task.ext.prefix ?: "${meta.id}_db_${genome}"
     def classified   = meta.single_end ? "${prefix}_classified.fastq"   : "${prefix}_classified_#.fastq"
     def unclassified = meta.single_end ? "${prefix}_unclassified.fastq" : "${prefix}_unclassified_#.fastq"
     def classified_option = save_output_fastqs ? "--classified-out ${classified}" : ""
