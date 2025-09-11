@@ -107,10 +107,11 @@ for(tax_level in tax_levels) {
   dev.off()
 
   # heatmap by group
-  for(gr in setdiff(unique(a$group), 'control')){
+  for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)]))){
     print(gr)
+    control_groups <- unique(a$group[grepl("^control", a$group)])
     pdf(paste0(gr, "_", tax_level, "Level_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
-    p = ggplot(a %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
+    p = ggplot(a %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, control_groups)), 
           aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
       geom_tile() +
       geom_text(colour='white') +
@@ -178,10 +179,11 @@ for(tax_level in tax_levels) {
     dev.off()
 
     # heatmap by group
-    for(gr in setdiff(unique(a$group), 'control')){
+    for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)]))){
       print(gr)
+      control_groups <- unique(a$group[grepl("^control", a$group)])
       pdf(paste0(gr, "_", tax_level, "Level_heatmap_totalCounts_contaminantsRemoved.pdf"), height = plot_height, width = plot_width)
-      p = ggplot(b %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, "control")), 
+      p = ggplot(b %>% filter(totalCounts != 0) %>% filter(group %in% c(gr, control_groups)), 
             aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
         geom_tile() +
         geom_text(colour='white') +
