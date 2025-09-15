@@ -8,8 +8,8 @@ process SUMMARY_STATS_CANDIDATES {
     tuple val(meta), path(depth_file), path(map_file)
 
     output:
-    tuple val(meta), path("*by_accession.tsv"), emit: accession_table
-    tuple val(meta), path("*by_taxid.tsv"), emit: taxid_table
+    tuple val(meta), path("*_summary_statistics_by_accession.tsv"), emit: accession_table
+    tuple val(meta), path("*_summary_statistics_by_taxid.tsv"), emit: taxid_table
     tuple val(meta), path("*.pdf")
 
     script:
