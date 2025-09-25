@@ -26,7 +26,7 @@ metadata = metadata %>% select(sample, group)
 metadata$sample = as.character(metadata$sample)
 
 # ---------------------------
-# COMBINED TABLES
+# COMBINE TABLES
 # ---------------------------
 df = data.frame()
 
@@ -50,25 +50,36 @@ write.table(dfg, paste0('combined_table_by_', level, '.tsv'),
 if(level == 'taxid') {
     ## by species
     # reorder by total
-    totals <- dfg %>%
-        group_by(species) %>%
-        summarise(totReads_species = sum(nBases_covered))
-    dfg <- dfg %>% left_join(totals, by = "species")
-    dfg$species <- factor(dfg$species, levels = totals$species[order(totals$totReads_species)])
+
+    dfg.hm <- dfg %>%
+    filter(!is.na(species)) %>%
+    filter(mappedReads > 1) %>%
+    group_by(species) %>%
+    mutate(totalReads = sum(mappedReads, na.rm = TRUE),
+            nBases_covered = sum(nBases_covered)) %>%
+    ungroup() %>%
+    mutate(species = reorder(species, totalReads))
+
+    # totals <- dfg %>%
+    #     group_by(species) %>%
+    #     summarise(totReads_species = sum(nBases_covered))
+    # dfg <- dfg %>% left_join(totals, by = "species")
+    # dfg$species <- factor(dfg$species, levels = totals$species[order(totals$totReads_species)])
 
     # plot size
-    n_species <- length(unique(dfg$species))
-    n_samples <- length(unique(dfg$sample))
+    n_species <- length(unique(dfg.hm$species))
+    n_samples <- length(unique(dfg.hm$sample))
     height_per_species <- 0.2  # inches per species
-    base_height <- 4           # minimal height in inches
-    width_per_sample <- 0.5    # inches per sample
-    base_width <- 8            # minimal width in inches
+    base_height <- 10           # minimal height in inches
+    width_per_sample <- 1    # inches per sample
+    base_width <- 10            # minimal width in inches
     plot_height <- max(base_height, n_species * height_per_species)
     plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-    # HETMAP SPECIES BY SAMPLE/GROUP: BASES COVERED
-    pdf(paste0('heatmap_nBasesCovered_by_', level, '.pdf'), height = plot_height, width = plot_width)
-    p = ggplot(dfg %>% filter(!is.na(species)), aes(x = sample, y = species, fill = nBases_covered, label = nBases_covered)) +
+    # HETMAP SPECIES: BASES COVERED and MAPPED READS
+    pdf(paste0('heatmap_by_', level, '_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
+    p = ggplot(dfg.hm, 
+    aes(x = sample, y = species, fill = nBases_covered, label = totalReads)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +
@@ -80,20 +91,29 @@ if(level == 'taxid') {
 
 
     ## by genus
-    dfgg <- dfg %>% group_by(sample, genus) %>%
-    summarise(nBases_covered = sum(nBases_covered),
-                group = first(group))
+    dfgg.hm <- dfg %>%
+    group_by(genus) %>%
+    mutate(totalReads = sum(mappedReads, na.rm = TRUE),
+            nBases_covered = sum(nBases_covered)) %>%
+    filter(!is.na(genus)) %>%
+    filter(totalReads > 1) %>%
+    ungroup() %>%
+    mutate(genus = reorder(genus, totalReads))
 
-    # reorder by total
-    totalsg <- dfgg %>%
-        group_by(genus) %>%
-        summarise(totReads_genus = sum(nBases_covered))
-    dfgg <- dfgg %>% left_join(totalsg, by = "genus")
-    dfgg$genus <- factor(dfgg$genus, levels = totalsg$genus[order(totalsg$totReads_genus)])
+    # dfgg <- dfg %>% group_by(sample, genus) %>%
+    # summarise(nBases_covered = sum(nBases_covered),
+    #             group = first(group))
+
+    # # reorder by total
+    # totalsg <- dfgg %>%
+    #     group_by(genus) %>%
+    #     summarise(totReads_genus = sum(nBases_covered))
+    # dfgg <- dfgg %>% left_join(totalsg, by = "genus")
+    # dfgg$genus <- factor(dfgg$genus, levels = totalsg$genus[order(totalsg$totReads_genus)])
 
     # plot size
-    n_species <- length(unique(dfg$genus))
-    n_samples <- length(unique(dfg$sample))
+    n_species <- length(unique(dfgg.hm$genus))
+    n_samples <- length(unique(dfgg.hm$sample))
     height_per_species <- 0.2  # inches per species
     base_height <- 4           # minimal height in inches
     width_per_sample <- 0.5    # inches per sample
@@ -103,7 +123,7 @@ if(level == 'taxid') {
 
     # HETMAP GENUS BY SAMPLE/GROUP: BASES COVERED
     pdf(paste0('heatmap_nBasesCovered_by_', level, '_genusLevel.pdf'), height = plot_height, width = plot_width)
-    p = ggplot(dfgg %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = nBases_covered, label = nBases_covered)) +
+    p = ggplot(dfgg.hm %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = nBases_covered, label = totalReads)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +

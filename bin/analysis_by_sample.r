@@ -55,6 +55,7 @@ print('Read depth file')
 #            sep = "\\|", remove = TRUE)
 summary_by_accession <- data.table::fread(filename, header = TRUE, sep = '\t')
 summary_by_accession$taxid <- as.integer(summary_by_accession$taxid)
+
 # ---------------------------
 # Load mapping summary
 # ---------------------------
@@ -90,6 +91,10 @@ summary_by_accession <- left_join(summary_by_accession, df2, by = c('accession',
 taxonomy_acc <- getTaxonomy(as.integer(summary_by_accession$taxid), dbFile)
 summary_by_accession <- cbind(summary_by_accession, taxonomy_acc)
 
+# add virus as kingdom
+summary_by_accession <- summary_by_accession %>%
+  mutate(domain = ifelse(is.na(domain) & taxid != 0 , "Viruses", domain))
+
 write.table(summary_by_accession,
             paste0(output_prefix, "_summary_statistics_by_accession.tsv"),
             col.names = TRUE, row.names = FALSE,
@@ -112,21 +117,21 @@ write.table(summary_by_accession,
 # print(p)
 # dev.off()
 
-# PLOT NREADS VS COVERED POSITIONS
-pdf(paste0(output_prefix, "_nMappedReads_vs_nBasesCovered_byAccession.pdf"), height = 10, width = 10)
-p = ggplot(summary_by_accession, 
-            aes(x = log2(mappedReads), y = nBases_covered, colour = fraction_covered, label = species)) +
-    geom_point(size = 2.5) +
-    geom_text_repel() +
-    scale_y_continuous(limits = c(0, NA)) +
-    scale_x_continuous(limits = c(0, NA)) +
-    theme_classic() +
-    labs(x = "log2(Mapped Reads)", y = "Bases covered", colour = "Fraction covered") +
-    theme(axis.title = element_text(size = 14),
-          axis.text = element_text(size = 14)) +
-    ggtitle(output_prefix) 
-print(p)
-dev.off()
+# # PLOT NREADS VS COVERED POSITIONS
+# pdf(paste0(output_prefix, "_nMappedReads_vs_nBasesCovered_byAccession.pdf"), height = 10, width = 10)
+# p = ggplot(summary_by_accession, 
+#             aes(x = log2(mappedReads), y = nBases_covered, colour = fraction_covered, label = species)) +
+#     geom_point(size = 2.5) +
+#     geom_text_repel() +
+#     scale_y_continuous(limits = c(0, NA)) +
+#     scale_x_continuous(limits = c(0, NA)) +
+#     theme_classic() +
+#     labs(x = "log2(Mapped Reads)", y = "Bases covered", colour = "Fraction covered") +
+#     theme(axis.title = element_text(size = 14),
+#           axis.text = element_text(size = 14)) +
+#     ggtitle(output_prefix) 
+# print(p)
+# dev.off()
 
 # ---------------------------
 # ---------------------------
@@ -151,6 +156,10 @@ summary_by_taxid <- summary_by_accession %>%
 
 taxonomy_tax <- getTaxonomy(as.integer(summary_by_taxid$taxid), dbFile)
 summary_by_taxid <- cbind(summary_by_taxid, taxonomy_tax)
+
+# add virus as kingdom
+summary_by_taxid <- summary_by_taxid %>%
+  mutate(domain = ifelse(is.na(domain) & taxid != 0 , "Viruses", domain))
 
 write.table(summary_by_taxid,
             paste0(output_prefix, "_summary_statistics_by_taxid.tsv"),
