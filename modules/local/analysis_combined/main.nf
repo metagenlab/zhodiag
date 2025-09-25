@@ -14,7 +14,7 @@ process ANALYSIS_COMBINED {
     output:
     path 'combined_table_by_accession.tsv'
     path 'combined_table_by_taxid.tsv'
-    path 'heatmap_nBasesCovered_by_taxid.pdf'
+    path 'heatmap_by_taxid_fillCoverage_labelMappedReads.pdf'
     path 'heatmap_nBasesCovered_by_taxid_genusLevel.pdf'
 
     script:
