@@ -51,14 +51,14 @@ if(level == 'taxid') {
     ## by species
     # reorder by total
 
-    dfg.hm <- dfg %>%
+  dfg.hm <- dfg %>%
+    group_by(sample, species) %>%
+    mutate(mappedReads = sum(mappedReads, na.rm = TRUE),
+          nBases_covered = sum(nBases_covered)) %>%
+    ungroup() %>%
     filter(!is.na(species)) %>%
     filter(mappedReads > 1) %>%
-    group_by(species) %>%
-    mutate(totalReads = sum(mappedReads, na.rm = TRUE),
-            nBases_covered = sum(nBases_covered)) %>%
-    ungroup() %>%
-    mutate(species = reorder(species, totalReads))
+    mutate(species = reorder(species, mappedReads))
 
     # totals <- dfg %>%
     #     group_by(species) %>%
@@ -92,13 +92,13 @@ if(level == 'taxid') {
 
     ## by genus
     dfgg.hm <- dfg %>%
-    group_by(genus) %>%
-    mutate(totalReads = sum(mappedReads, na.rm = TRUE),
+    group_by(sample, genus) %>%
+    mutate(mappedReads = sum(mappedReads, na.rm = TRUE),
             nBases_covered = sum(nBases_covered)) %>%
     filter(!is.na(genus)) %>%
-    filter(totalReads > 1) %>%
+    filter(mappedReads > 1) %>%
     ungroup() %>%
-    mutate(genus = reorder(genus, totalReads))
+    mutate(genus = reorder(genus, mappedReads))
 
     # dfgg <- dfg %>% group_by(sample, genus) %>%
     # summarise(nBases_covered = sum(nBases_covered),
@@ -123,7 +123,7 @@ if(level == 'taxid') {
 
     # HETMAP GENUS BY SAMPLE/GROUP: BASES COVERED
     pdf(paste0('heatmap_nBasesCovered_by_', level, '_genusLevel.pdf'), height = plot_height, width = plot_width)
-    p = ggplot(dfgg.hm %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = nBases_covered, label = totalReads)) +
+    p = ggplot(dfgg.hm %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = nBases_covered, label = mappedReads)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +
