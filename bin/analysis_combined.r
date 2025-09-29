@@ -146,7 +146,7 @@ if(level == 'taxid') {
     plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP GENUS BY SAMPLE/GROUP: BASES COVERED
-    pdf(paste0('heatmap_nBasesCovered_by_', level, '_genusLevel.pdf'), height = plot_height, width = plot_width)
+    pdf(paste0('heatmap_nBasesCovered_by_', level, '_genusLevel_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     p = ggplot(dfgg.hm %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = coverage, label = mappedReads)) +
     geom_tile() +
     geom_text(colour='black') +
@@ -201,7 +201,7 @@ if(level == 'taxid') {
   # EUKARYOTA
     euka <- dfg %>% filter(domain == "Eukaryota") %>%
     filter(!is.na(species)) %>%
-    filter(mappedReads > 1, nBases_covered > 151) %>%
+    filter(mappedReads > 2, nBases_covered > 151) %>%
     mutate(species = reorder(species, mappedReads)) %>%
     mutate(coverage = cut(
       nBases_covered,
@@ -240,7 +240,7 @@ if(level == 'taxid') {
   # EUKARYOTA
     bact <- dfg %>% filter(domain == "Bacteria") %>%
     filter(!is.na(species)) %>%
-    filter(mappedReads > 1, nBases_covered > 151) %>%
+    filter(mappedReads > 2, nBases_covered > 151) %>%
     mutate(species = reorder(species, mappedReads)) %>%
     mutate(coverage = cut(
       nBases_covered,
