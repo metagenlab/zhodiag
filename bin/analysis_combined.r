@@ -62,7 +62,7 @@ if(level == 'taxid') {
     # reorder by total
 
     dfg.hm <- dfg %>%
-      group_by(sample, species) %>%
+      group_by(sample, species, group) %>%
       summarise(
         mappedReads = sum(mappedReads, na.rm = TRUE),
         nBases_covered = sum(nBases_covered, na.rm = TRUE),
@@ -115,7 +115,7 @@ if(level == 'taxid') {
 
     ## GENUS
     dfgg.hm <-  dfg %>%
-      group_by(sample, genus) %>%
+      group_by(sample, genus, group) %>%
       summarise(
         mappedReads = sum(mappedReads, na.rm = TRUE),
         nBases_covered = sum(nBases_covered, na.rm = TRUE),
@@ -172,7 +172,7 @@ if(level == 'taxid') {
 
   # VIRUS
     virus <- dfg %>% filter(domain == "Viruses") %>%
-      group_by(sample, species) %>%
+      group_by(sample, species, group) %>%
       summarise(
         mappedReads = sum(mappedReads, na.rm = TRUE),
         nBases_covered = sum(nBases_covered, na.rm = TRUE),
@@ -219,7 +219,7 @@ if(level == 'taxid') {
 
   # EUKARYOTA
     euka <-  dfg %>% filter(domain == "Eukaryota") %>%
-      group_by(sample, species) %>%
+      group_by(sample, species, group) %>%
       summarise(
         mappedReads = sum(mappedReads, na.rm = TRUE),
         nBases_covered = sum(nBases_covered, na.rm = TRUE),
@@ -266,7 +266,7 @@ if(level == 'taxid') {
 
   # EUKARYOTA
     bact <-   dfg %>% filter(domain == "Bacteria") %>%
-      group_by(sample, species) %>%
+      group_by(sample, species, group) %>%
       summarise(
         mappedReads = sum(mappedReads, na.rm = TRUE),
         nBases_covered = sum(nBases_covered, na.rm = TRUE),
