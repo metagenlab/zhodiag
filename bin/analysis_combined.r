@@ -61,20 +61,26 @@ if(level == 'taxid') {
     ## by species
     # reorder by total
 
-  dfg.hm <- dfg %>%
-    group_by(sample, species) %>%
-    mutate(mappedReads = sum(mappedReads, na.rm = TRUE),
-          nBases_covered = sum(nBases_covered)) %>%
-    ungroup() %>%
-    filter(!is.na(species)) %>%
-    filter(mappedReads > 1, nBases_covered > 151) %>%
-    mutate(species = reorder(species, mappedReads)) %>%
-    mutate(coverage = cut(
-      nBases_covered,
-      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
-      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
-      right = FALSE
-    ))
+    dfg.hm <- dfg %>%
+      group_by(sample, species) %>%
+      summarise(
+        mappedReads = sum(mappedReads, na.rm = TRUE),
+        nBases_covered = sum(nBases_covered, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      filter(!is.na(species)) %>%
+      filter(mappedReads > 1, nBases_covered > 151) %>%
+      group_by(species) %>%
+      mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
+      ungroup() %>%
+      mutate(species = reorder(species, total_reads)) %>%
+      mutate(coverage = cut(
+        nBases_covered,
+        breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+        labels = c("0–300", "300–500", "500–1000", "1000–2000",
+                  "2000-5000", "5000-10000", "10000+"),
+        right = FALSE
+      ))
 
     # totals <- dfg %>%
     #     group_by(species) %>%
@@ -107,22 +113,27 @@ if(level == 'taxid') {
     dev.off()
 
 
-    ## by genus
-    dfgg.hm <- dfg %>%
-    group_by(sample, genus) %>%
-    mutate(mappedReads = sum(mappedReads, na.rm = TRUE),
-            nBases_covered = sum(nBases_covered)) %>%
-    filter(!is.na(genus)) %>%
-    filter(mappedReads > 1, nBases_covered > 151) %>%
-    ungroup() %>%
-    mutate(genus = reorder(genus, mappedReads)) %>%
-    mutate(coverage = cut(
-      nBases_covered,
-      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
-      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
-      right = FALSE
-    ))
-
+    ## GENUS
+    dfgg.hm <-  dfg %>%
+      group_by(sample, genus) %>%
+      summarise(
+        mappedReads = sum(mappedReads, na.rm = TRUE),
+        nBases_covered = sum(nBases_covered, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      filter(!is.na(genus)) %>%
+      filter(mappedReads > 1, nBases_covered > 151) %>%
+      group_by(genus) %>%
+      mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
+      ungroup() %>%
+      mutate(genus = reorder(genus, total_reads)) %>%
+      mutate(coverage = cut(
+        nBases_covered,
+        breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+        labels = c("0–300", "300–500", "500–1000", "1000–2000",
+                  "2000-5000", "5000-10000", "10000+"),
+        right = FALSE
+      ))
 
     # dfgg <- dfg %>% group_by(sample, genus) %>%
     # summarise(nBases_covered = sum(nBases_covered),
@@ -161,18 +172,26 @@ if(level == 'taxid') {
 
   # VIRUS
     virus <- dfg %>% filter(domain == "Viruses") %>%
-    filter(!is.na(species)) %>%
-    filter(mappedReads > 1, nBases_covered > 151) %>%
-    mutate(species = reorder(species, mappedReads)) %>%
-    mutate(coverage = cut(
-      nBases_covered,
-      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
-      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
-      right = FALSE
-    ))
-
-
-
+      group_by(sample, species) %>%
+      summarise(
+        mappedReads = sum(mappedReads, na.rm = TRUE),
+        nBases_covered = sum(nBases_covered, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      filter(!is.na(species)) %>%
+      filter(mappedReads > 1, nBases_covered > 151) %>%
+      group_by(species) %>%
+      mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
+      ungroup() %>%
+      mutate(species = reorder(species, total_reads)) %>%
+      mutate(coverage = cut(
+        nBases_covered,
+        breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+        labels = c("0–300", "300–500", "500–1000", "1000–2000",
+                  "2000-5000", "5000-10000", "10000+"),
+        right = FALSE
+      ))
+      
     # plot size
     n_species <- length(unique(virus$species))
     n_samples <- length(unique(virus$sample))
@@ -199,19 +218,27 @@ if(level == 'taxid') {
 
 
   # EUKARYOTA
-    euka <- dfg %>% filter(domain == "Eukaryota") %>%
-    filter(!is.na(species)) %>%
-    filter(mappedReads > 2, nBases_covered > 151) %>%
-    mutate(species = reorder(species, mappedReads)) %>%
-    mutate(coverage = cut(
-      nBases_covered,
-      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
-      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
-      right = FALSE
-    ))
-
-
-
+    euka <-  dfg %>% filter(domain == "Eukaryota") %>%
+      group_by(sample, species) %>%
+      summarise(
+        mappedReads = sum(mappedReads, na.rm = TRUE),
+        nBases_covered = sum(nBases_covered, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      filter(!is.na(species)) %>%
+      filter(mappedReads > 2, nBases_covered > 151) %>%
+      group_by(species) %>%
+      mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
+      ungroup() %>%
+      mutate(species = reorder(species, total_reads)) %>%
+      mutate(coverage = cut(
+        nBases_covered,
+        breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+        labels = c("0–300", "300–500", "500–1000", "1000–2000",
+                  "2000-5000", "5000-10000", "10000+"),
+        right = FALSE
+      ))
+    
     # plot size
     n_species <- length(unique(euka$species))
     n_samples <- length(unique(euka$sample))
@@ -238,18 +265,26 @@ if(level == 'taxid') {
 
 
   # EUKARYOTA
-    bact <- dfg %>% filter(domain == "Bacteria") %>%
-    filter(!is.na(species)) %>%
-    filter(mappedReads > 2, nBases_covered > 151) %>%
-    mutate(species = reorder(species, mappedReads)) %>%
-    mutate(coverage = cut(
-      nBases_covered,
-      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
-      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
-      right = FALSE
-    ))
-
-
+    bact <-   dfg %>% filter(domain == "Bacteria") %>%
+      group_by(sample, species) %>%
+      summarise(
+        mappedReads = sum(mappedReads, na.rm = TRUE),
+        nBases_covered = sum(nBases_covered, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      filter(!is.na(species)) %>%
+      filter(mappedReads > 2, nBases_covered > 151) %>%
+      group_by(species) %>%
+      mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
+      ungroup() %>%
+      mutate(species = reorder(species, total_reads)) %>%
+      mutate(coverage = cut(
+        nBases_covered,
+        breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+        labels = c("0–300", "300–500", "500–1000", "1000–2000",
+                  "2000-5000", "5000-10000", "10000+"),
+        right = FALSE
+      ))
 
     # plot size
     n_species <- length(unique(bact$species))
