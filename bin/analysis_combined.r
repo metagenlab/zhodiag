@@ -95,7 +95,7 @@ if(level == 'taxid') {
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_by_', level, '_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     p = ggplot(dfg.hm, 
-    aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
+    aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
     geom_tile() +
     geom_text(colour='white') +
     scale_fill_manual(values = cov_colors) +
@@ -147,7 +147,7 @@ if(level == 'taxid') {
 
     # HETMAP GENUS BY SAMPLE/GROUP: BASES COVERED
     pdf(paste0('heatmap_nBasesCovered_by_', level, '_genusLevel.pdf'), height = plot_height, width = plot_width)
-    p = ggplot(dfgg.hm %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = nBases_covered, label = mappedReads)) +
+    p = ggplot(dfgg.hm %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = coverage, label = mappedReads)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +
@@ -185,7 +185,7 @@ if(level == 'taxid') {
 
 
     pdf(paste0('heatmap_VIRUSES_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
-    v.plot = ggplot(virus , aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
+    v.plot = ggplot(virus , aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
     geom_tile() +
     geom_text(colour = 'white') +
     facet_grid(~group, scales = 'free_x', space = 'free') +
@@ -224,7 +224,7 @@ if(level == 'taxid') {
 
 
     pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
-    e.plot = ggplot(euka , aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
+    e.plot = ggplot(euka , aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
     geom_tile() +
     geom_text(colour = 'white') +
     facet_grid(~group, scales = 'free_x', space = 'free') +
@@ -263,7 +263,7 @@ if(level == 'taxid') {
 
 
     pdf(paste0('heatmap_BACTERIA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
-    b.plot = ggplot(bact , aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
+    b.plot = ggplot(bact , aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
     geom_tile() +
     geom_text(colour = 'white') +
     facet_grid(~group, scales = 'free_x', space = 'free') +
