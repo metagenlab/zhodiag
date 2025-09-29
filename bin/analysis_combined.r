@@ -97,7 +97,7 @@ if(level == 'taxid') {
     p = ggplot(dfg.hm, 
     aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
     geom_tile() +
-    geom_text(colour='white') +
+    geom_text(colour='black') +
     scale_fill_manual(values = cov_colors) +
     labs(x = '', y = '') +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
@@ -149,7 +149,7 @@ if(level == 'taxid') {
     pdf(paste0('heatmap_nBasesCovered_by_', level, '_genusLevel.pdf'), height = plot_height, width = plot_width)
     p = ggplot(dfgg.hm %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = coverage, label = mappedReads)) +
     geom_tile() +
-    geom_text(colour='white') +
+    geom_text(colour='black') +
     labs(x = '', y = '') +
     scale_fill_manual(values = cov_colors) +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
@@ -187,7 +187,7 @@ if(level == 'taxid') {
     pdf(paste0('heatmap_VIRUSES_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     v.plot = ggplot(virus , aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
     geom_tile() +
-    geom_text(colour = 'white') +
+    geom_text(colour = 'black') +
     facet_grid(~group, scales = 'free_x', space = 'free') +
     labs(x = '', y = '') +
     theme_classic() +
@@ -226,7 +226,7 @@ if(level == 'taxid') {
     pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     e.plot = ggplot(euka , aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
     geom_tile() +
-    geom_text(colour = 'white') +
+    geom_text(colour = 'black') +
     facet_grid(~group, scales = 'free_x', space = 'free') +
     labs(x = '', y = '') +
     scale_fill_manual(values = cov_colors) +
@@ -265,7 +265,7 @@ if(level == 'taxid') {
     pdf(paste0('heatmap_BACTERIA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     b.plot = ggplot(bact , aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
     geom_tile() +
-    geom_text(colour = 'white') +
+    geom_text(colour = 'black') +
     facet_grid(~group, scales = 'free_x', space = 'free') +
     labs(x = '', y = '') +
     scale_fill_manual(values = cov_colors) +
