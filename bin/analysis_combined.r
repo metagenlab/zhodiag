@@ -47,6 +47,16 @@ write.table(dfg, paste0('combined_table_by_', level, '.tsv'),
 # ---------------------------
 # PLOTS FROM TAXID TABLE
 # ---------------------------
+cov_colors <- c(
+  "0–300"      = "#f7fbff",
+  "300–500"    = "#deebf7",
+  "500–1000"   = "#c6dbef",
+  "1000–2000"  = "#9ecae1",
+  "2000-5000"  = "#6baed6",
+  "5000-10000" = "#3182bd",
+  "10000+"     = "#08519c"
+)
+
 if(level == 'taxid') {
     ## by species
     # reorder by total
@@ -58,7 +68,13 @@ if(level == 'taxid') {
     ungroup() %>%
     filter(!is.na(species)) %>%
     filter(mappedReads > 1, nBases_covered > 151) %>%
-    mutate(species = reorder(species, mappedReads))
+    mutate(species = reorder(species, mappedReads)) %>%
+    mutate(coverage = cut(
+      nBases_covered,
+      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
+      right = FALSE
+    ))
 
     # totals <- dfg %>%
     #     group_by(species) %>%
@@ -82,6 +98,7 @@ if(level == 'taxid') {
     aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
     geom_tile() +
     geom_text(colour='white') +
+    scale_fill_manual(values = cov_colors) +
     labs(x = '', y = '') +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
     theme_classic() +
@@ -98,7 +115,14 @@ if(level == 'taxid') {
     filter(!is.na(genus)) %>%
     filter(mappedReads > 1, nBases_covered > 151) %>%
     ungroup() %>%
-    mutate(genus = reorder(genus, mappedReads))
+    mutate(genus = reorder(genus, mappedReads)) %>%
+    mutate(coverage = cut(
+      nBases_covered,
+      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
+      right = FALSE
+    ))
+
 
     # dfgg <- dfg %>% group_by(sample, genus) %>%
     # summarise(nBases_covered = sum(nBases_covered),
@@ -127,6 +151,7 @@ if(level == 'taxid') {
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +
+    scale_fill_manual(values = cov_colors) +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
@@ -138,7 +163,14 @@ if(level == 'taxid') {
     virus <- dfg %>% filter(domain == "Viruses") %>%
     filter(!is.na(species)) %>%
     filter(mappedReads > 1, nBases_covered > 151) %>%
-    mutate(species = reorder(species, mappedReads))
+    mutate(species = reorder(species, mappedReads)) %>%
+    mutate(coverage = cut(
+      nBases_covered,
+      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
+      right = FALSE
+    ))
+
 
 
     # plot size
@@ -159,6 +191,7 @@ if(level == 'taxid') {
     facet_grid(~group, scales = 'free_x', space = 'free') +
     labs(x = '', y = '') +
     theme_classic() +
+    scale_fill_manual(values = cov_colors) +
     theme(axis.text.y = element_text(size =12),
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
     print(v.plot)
@@ -169,7 +202,14 @@ if(level == 'taxid') {
     euka <- dfg %>% filter(domain == "Eukaryota") %>%
     filter(!is.na(species)) %>%
     filter(mappedReads > 1, nBases_covered > 151) %>%
-    mutate(species = reorder(species, mappedReads))
+    mutate(species = reorder(species, mappedReads)) %>%
+    mutate(coverage = cut(
+      nBases_covered,
+      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
+      right = FALSE
+    ))
+
 
 
     # plot size
@@ -189,6 +229,7 @@ if(level == 'taxid') {
     geom_text(colour = 'white') +
     facet_grid(~group, scales = 'free_x', space = 'free') +
     labs(x = '', y = '') +
+    scale_fill_manual(values = cov_colors) +
     theme_classic() +
     theme(axis.text.y = element_text(size =12),
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
@@ -200,7 +241,14 @@ if(level == 'taxid') {
     bact <- dfg %>% filter(domain == "Bacteria") %>%
     filter(!is.na(species)) %>%
     filter(mappedReads > 1, nBases_covered > 151) %>%
-    mutate(species = reorder(species, mappedReads))
+    mutate(species = reorder(species, mappedReads)) %>%
+    mutate(coverage = cut(
+      nBases_covered,
+      breaks = c(0, 300, 500, 1000, 2000, 5000, 10000, Inf),
+      labels = c("0–300", "300–500", "500–1000", "1000–2000", "2000-5000", "5000-10000", "10000+"),
+      right = FALSE
+    ))
+
 
 
     # plot size
@@ -220,6 +268,7 @@ if(level == 'taxid') {
     geom_text(colour = 'white') +
     facet_grid(~group, scales = 'free_x', space = 'free') +
     labs(x = '', y = '') +
+    scale_fill_manual(values = cov_colors) +
     theme_classic() +
     theme(axis.text.y = element_text(size =12),
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
