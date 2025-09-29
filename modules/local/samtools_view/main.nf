@@ -24,14 +24,14 @@ process SAMTOOLS_VIEW {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ''
     def output_file = "${prefix}_filtered_sorted.bam"
-    def output_flagstat = "${prefix}_filtered_noHuman.flagtat.txt"
+    def output_flagstat = "${prefix}_filtered_noHuman.flagstat.tsv"
 
     """
     # filter SAM by quality (= 0 & >mapq) and remove human hits. Output alignments only in sam
     samtools view --threads ${task.cpus-1} $args $input \\
     | awk 'BEGIN{OFS="\\t"} 
             !/^@/ { 
-                if (\$5 == 0 || \$5 > $quality) {
+                if (\$5 > $quality) {
                     split(\$3, a, "|"); 
                     if (a[2] != 9606) print 
                 } 
@@ -53,7 +53,7 @@ process SAMTOOLS_VIEW {
     samtools index ${output_file}
 
     # flagstat final file
-    samtools flagstat ${output_file} > ${output_flagstat}
+    samtools flagstat -@ ${task.cpus-1} ${output_file} -O tsv > ${output_flagstat}
 
     # remove intermediates
     rm -f ${prefix}_header.sam ${prefix}_alignments.sam ${prefix}_mapped_refs.txt
