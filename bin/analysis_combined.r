@@ -214,7 +214,7 @@ if(level == 'taxid') {
     plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 
-    pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
+    pdf(paste0('heatmap_BACTERIA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     b.plot = ggplot(bact , aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
     geom_tile() +
     geom_text(colour = 'white') +
