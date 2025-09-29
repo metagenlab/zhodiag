@@ -14,8 +14,8 @@ process ANALYSIS_COMBINED {
     output:
     path 'combined_table_by_accession.tsv'
     path 'combined_table_by_taxid.tsv'
-    path 'heatmap_by_taxid_fillCoverage_labelMappedReads.pdf'
-    path 'heatmap_nBasesCovered_by_taxid_genusLevel.pdf'
+    path '*.pdf'
+    // path 'heatmap_nBasesCovered_by_taxid_genusLevel.pdf'
 
     script:
     def analysis_script = workflow.projectDir.resolve("bin/analysis_combined.r")
