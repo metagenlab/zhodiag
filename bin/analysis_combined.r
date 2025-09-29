@@ -57,7 +57,7 @@ if(level == 'taxid') {
           nBases_covered = sum(nBases_covered)) %>%
     ungroup() %>%
     filter(!is.na(species)) %>%
-    filter(mappedReads > 1) %>%
+    filter(mappedReads > 1, nBases_covered > 151) %>%
     mutate(species = reorder(species, mappedReads))
 
     # totals <- dfg %>%
@@ -96,7 +96,7 @@ if(level == 'taxid') {
     mutate(mappedReads = sum(mappedReads, na.rm = TRUE),
             nBases_covered = sum(nBases_covered)) %>%
     filter(!is.na(genus)) %>%
-    filter(mappedReads > 1) %>%
+    filter(mappedReads > 1, nBases_covered > 151) %>%
     ungroup() %>%
     mutate(genus = reorder(genus, mappedReads))
 
@@ -137,7 +137,7 @@ if(level == 'taxid') {
   # VIRUS
     virus <- dfg %>% filter(domain == "Viruses") %>%
     filter(!is.na(species)) %>%
-    filter(mappedReads > 1) %>%
+    filter(mappedReads > 1, nBases_covered > 151) %>%
     mutate(species = reorder(species, mappedReads))
 
 
@@ -168,7 +168,7 @@ if(level == 'taxid') {
   # EUKARYOTA
     euka <- dfg %>% filter(domain == "Eukaryota") %>%
     filter(!is.na(species)) %>%
-    filter(mappedReads > 1) %>%
+    filter(mappedReads > 1, nBases_covered > 151) %>%
     mutate(species = reorder(species, mappedReads))
 
 
@@ -199,7 +199,7 @@ if(level == 'taxid') {
   # EUKARYOTA
     bact <- dfg %>% filter(domain == "Bacteria") %>%
     filter(!is.na(species)) %>%
-    filter(mappedReads > 1) %>%
+    filter(mappedReads > 1, nBases_covered > 151) %>%
     mutate(species = reorder(species, mappedReads))
 
 
