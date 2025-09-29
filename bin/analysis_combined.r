@@ -79,7 +79,7 @@ if(level == 'taxid') {
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_by_', level, '_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     p = ggplot(dfg.hm, 
-    aes(x = sample, y = species, fill = nBases_covered, label = totalReads)) +
+    aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +
