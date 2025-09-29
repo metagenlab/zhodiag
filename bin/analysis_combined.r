@@ -133,4 +133,96 @@ if(level == 'taxid') {
     print(p)
     dev.off()
 
+
+  # VIRUS
+    virus <- dfg %>% filter(domain == "Viruses") %>%
+    filter(!is.na(species)) %>%
+    filter(mappedReads > 1) %>%
+    mutate(species = reorder(species, mappedReads))
+
+
+    # plot size
+    n_species <- length(unique(virus$species))
+    n_samples <- length(unique(virus$sample))
+    height_per_species <- 0.2  # inches per species
+    base_height <- 4           # minimal height in inches
+    width_per_sample <- 0.5    # inches per sample
+    base_width <- 8            # minimal width in inches
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
+
+
+    pdf(paste0('heatmap_VIRUSES_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
+    v.plot = ggplot(virus , aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
+    geom_tile() +
+    geom_text(colour = 'white') +
+    facet_grid(~group, scales = 'free_x', space = 'free') +
+    labs(x = '', y = '') +
+    theme_classic() +
+    theme(axis.text.y = element_text(size =12),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(v.plot)
+    dev.off()
+
+
+  # EUKARYOTA
+    euka <- dfg %>% filter(domain == "Eukaryota") %>%
+    filter(!is.na(species)) %>%
+    filter(mappedReads > 1) %>%
+    mutate(species = reorder(species, mappedReads))
+
+
+    # plot size
+    n_species <- length(unique(euka$species))
+    n_samples <- length(unique(euka$sample))
+    height_per_species <- 0.2  # inches per species
+    base_height <- 4           # minimal height in inches
+    width_per_sample <- 0.5    # inches per sample
+    base_width <- 8            # minimal width in inches
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
+
+
+    pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
+    e.plot = ggplot(euka , aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
+    geom_tile() +
+    geom_text(colour = 'white') +
+    facet_grid(~group, scales = 'free_x', space = 'free') +
+    labs(x = '', y = '') +
+    theme_classic() +
+    theme(axis.text.y = element_text(size =12),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(e.plot)
+    dev.off()
+
+
+  # EUKARYOTA
+    bact <- dfg %>% filter(domain == "Bacteria") %>%
+    filter(!is.na(species)) %>%
+    filter(mappedReads > 1) %>%
+    mutate(species = reorder(species, mappedReads))
+
+
+    # plot size
+    n_species <- length(unique(bact$species))
+    n_samples <- length(unique(bact$sample))
+    height_per_species <- 0.2  # inches per species
+    base_height <- 4           # minimal height in inches
+    width_per_sample <- 0.5    # inches per sample
+    base_width <- 8            # minimal width in inches
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
+
+
+    pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
+    b.plot = ggplot(bact , aes(x = sample, y = species, fill = nBases_covered, label = mappedReads)) +
+    geom_tile() +
+    geom_text(colour = 'white') +
+    facet_grid(~group, scales = 'free_x', space = 'free') +
+    labs(x = '', y = '') +
+    theme_classic() +
+    theme(axis.text.y = element_text(size =12),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(b.plot)
+    dev.off()
 }
