@@ -56,6 +56,12 @@ cov_colors <- c(
   "5000-10000" = "#3182bd",
   "10000+"     = "#08519c"
 )
+height_per_species <- 0.2  # inches per species
+base_height <- 10           # minimal height in inches
+width_per_sample <- 1    # inches per sample
+base_width <- 10            # minimal width in inches
+plot_height <- max(base_height, n_species * height_per_species)
+plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 if(level == 'taxid') {
     ## by species
@@ -91,12 +97,6 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(dfg.hm$species))
     n_samples <- length(unique(dfg.hm$sample))
-    height_per_species <- 0.2  # inches per species
-    base_height <- 10           # minimal height in inches
-    width_per_sample <- 1    # inches per sample
-    base_width <- 10            # minimal width in inches
-    plot_height <- max(base_height, n_species * height_per_species)
-    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_by_', level, '_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
@@ -112,6 +112,31 @@ if(level == 'taxid') {
     print(p)
     dev.off()
 
+    # filter taxids detected only in control
+    df.filt <- dfg.hm  %>%
+      group_by(taxid) %>% 
+      filter(
+        any(mappedReads > 0 & group != "control")
+      ) %>%
+      ungroup()
+
+    # plot size
+    n_species <- length(unique(df.filt$species))
+    n_samples <- length(unique(df.filt$sample))
+
+    # HETMAP SPECIES: BASES COVERED and MAPPED READS
+    pdf(paste0('heatmap_by_', level, '_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
+    p = ggplot(df.filt, 
+    aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
+    geom_tile() +
+    geom_text(colour='black') +
+    scale_fill_manual(values = cov_colors) +
+    labs(x = '', y = '') +
+    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(p)
+    dev.off()
 
     ## GENUS
     dfgg.hm <-  dfg %>%
@@ -149,20 +174,40 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(dfgg.hm$genus))
     n_samples <- length(unique(dfgg.hm$sample))
-    height_per_species <- 0.2  # inches per species
-    base_height <- 4           # minimal height in inches
-    width_per_sample <- 0.5    # inches per sample
-    base_width <- 8            # minimal width in inches
-    plot_height <- max(base_height, n_species * height_per_species)
-    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP GENUS BY SAMPLE/GROUP: BASES COVERED
     pdf(paste0('heatmap_nBasesCovered_by_', level, '_genusLevel_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
-    p = ggplot(dfgg.hm %>% filter(!is.na(genus)), aes(x = sample, y = genus, fill = coverage, label = mappedReads)) +
+    p = ggplot(dfgg.hm , aes(x = sample, y = genus, fill = coverage, label = mappedReads)) +
     geom_tile() +
     geom_text(colour='black') +
     labs(x = '', y = '') +
     scale_fill_manual(values = cov_colors) +
+    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(p)
+    dev.off()
+
+    # filter taxids detected only in control
+    df.filt.g <- dfgg.hm  %>%
+      group_by(taxid) %>% 
+      filter(
+        any(mappedReads > 0 & group != "control")
+      ) %>%
+      ungroup()
+
+    # plot size
+    n_species <- length(unique(df.filt.g$species))
+    n_samples <- length(unique(df.filt.g$sample))
+
+    # HETMAP SPECIES: BASES COVERED and MAPPED READS
+    pdf(paste0('heatmap_by_', level, '_genusLevel_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
+    p = ggplot(df.filt.g, 
+    aes(x = sample, y = genus, fill = coverage, label = mappedReads)) +
+    geom_tile() +
+    geom_text(colour='black') +
+    scale_fill_manual(values = cov_colors) +
+    labs(x = '', y = '') +
     facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
@@ -195,12 +240,6 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(virus$species))
     n_samples <- length(unique(virus$sample))
-    height_per_species <- 0.2  # inches per species
-    base_height <- 4           # minimal height in inches
-    width_per_sample <- 0.5    # inches per sample
-    base_width <- 8            # minimal width in inches
-    plot_height <- max(base_height, n_species * height_per_species)
-    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 
     pdf(paste0('heatmap_VIRUSES_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
@@ -214,6 +253,32 @@ if(level == 'taxid') {
     theme(axis.text.y = element_text(size =12),
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
     print(v.plot)
+    dev.off()
+
+    # filter taxids detected only in control
+    df.filt.v <- virus  %>%
+      group_by(taxid) %>% 
+      filter(
+        any(mappedReads > 0 & group != "control")
+      ) %>%
+      ungroup()
+
+    # plot size
+    n_species <- length(unique(df.filt.v$species))
+    n_samples <- length(unique(df.filt.v$sample))
+
+    # HETMAP SPECIES: BASES COVERED and MAPPED READS
+    pdf(paste0('heatmap_VIRUSES_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
+    p = ggplot(df.filt.v, 
+    aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
+    geom_tile() +
+    geom_text(colour='black') +
+    scale_fill_manual(values = cov_colors) +
+    labs(x = '', y = '') +
+    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(p)
     dev.off()
 
 
@@ -242,12 +307,6 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(euka$species))
     n_samples <- length(unique(euka$sample))
-    height_per_species <- 0.2  # inches per species
-    base_height <- 4           # minimal height in inches
-    width_per_sample <- 0.5    # inches per sample
-    base_width <- 8            # minimal width in inches
-    plot_height <- max(base_height, n_species * height_per_species)
-    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 
     pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
@@ -263,8 +322,35 @@ if(level == 'taxid') {
     print(e.plot)
     dev.off()
 
+    # filter taxids detected only in control
+    df.filt.e <- euka  %>%
+      group_by(taxid) %>% 
+      filter(
+        any(mappedReads > 0 & group != "control")
+      ) %>%
+      ungroup()
 
-  # EUKARYOTA
+    # plot size
+    n_species <- length(unique(df.filt.e$species))
+    n_samples <- length(unique(df.filt.e$sample))
+
+    # HETMAP SPECIES: BASES COVERED and MAPPED READS
+    pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
+    p = ggplot(df.filt.e, 
+    aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
+    geom_tile() +
+    geom_text(colour='black') +
+    scale_fill_manual(values = cov_colors) +
+    labs(x = '', y = '') +
+    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(p)
+    dev.off()
+
+
+
+  # BACTERIA
     bact <-   dfg %>% filter(domain == "Bacteria") %>%
       group_by(sample, species, group) %>%
       summarise(
@@ -289,13 +375,6 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(bact$species))
     n_samples <- length(unique(bact$sample))
-    height_per_species <- 0.2  # inches per species
-    base_height <- 4           # minimal height in inches
-    width_per_sample <- 0.5    # inches per sample
-    base_width <- 8            # minimal width in inches
-    plot_height <- max(base_height, n_species * height_per_species)
-    plot_width  <- max(base_width,  n_samples * width_per_sample)
-
 
     pdf(paste0('heatmap_BACTERIA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     b.plot = ggplot(bact , aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
@@ -309,4 +388,32 @@ if(level == 'taxid') {
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
     print(b.plot)
     dev.off()
+
+    # filter taxids detected only in control
+    df.filt.b <- bact  %>%
+      group_by(taxid) %>% 
+      filter(
+        any(mappedReads > 0 & group != "control")
+      ) %>%
+      ungroup()
+
+    # plot size
+    n_species <- length(unique(df.filt.b$species))
+    n_samples <- length(unique(df.filt.b$sample))
+
+    # HETMAP SPECIES: BASES COVERED and MAPPED READS
+    pdf(paste0('heatmap_BACTERIA_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
+    p = ggplot(df.filt.b, 
+    aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
+    geom_tile() +
+    geom_text(colour='black') +
+    scale_fill_manual(values = cov_colors) +
+    labs(x = '', y = '') +
+    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(p)
+    dev.off()
+
+
 }
