@@ -97,6 +97,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(dfg.hm$species))
     n_samples <- length(unique(dfg.hm$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_by_', level, '_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
@@ -123,6 +125,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(df.filt$species))
     n_samples <- length(unique(df.filt$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_by_', level, '_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
@@ -174,6 +178,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(dfgg.hm$genus))
     n_samples <- length(unique(dfgg.hm$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP GENUS BY SAMPLE/GROUP: BASES COVERED
     pdf(paste0('heatmap_nBasesCovered_by_', level, '_genusLevel_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
@@ -199,6 +205,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(df.filt.g$species))
     n_samples <- length(unique(df.filt.g$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_by_', level, '_genusLevel_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
@@ -240,6 +248,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(virus$species))
     n_samples <- length(unique(virus$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 
     pdf(paste0('heatmap_VIRUSES_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
@@ -266,6 +276,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(df.filt.v$species))
     n_samples <- length(unique(df.filt.v$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_VIRUSES_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
@@ -307,6 +319,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(euka$species))
     n_samples <- length(unique(euka$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 
     pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
@@ -333,6 +347,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(df.filt.e$species))
     n_samples <- length(unique(df.filt.e$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_EUKARYOTA_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
@@ -375,6 +391,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(bact$species))
     n_samples <- length(unique(bact$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     pdf(paste0('heatmap_BACTERIA_fillCoverage_labelMappedReads.pdf'), height = plot_height, width = plot_width)
     b.plot = ggplot(bact , aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
@@ -400,6 +418,8 @@ if(level == 'taxid') {
     # plot size
     n_species <- length(unique(df.filt.b$species))
     n_samples <- length(unique(df.filt.b$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
 
     # HETMAP SPECIES: BASES COVERED and MAPPED READS
     pdf(paste0('heatmap_BACTERIA_fillCoverage_labelMappedReads_filtered.pdf'), height = plot_height, width = plot_width)
