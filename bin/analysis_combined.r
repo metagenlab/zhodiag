@@ -73,7 +73,7 @@ if(level == 'taxid') {
         .groups = "drop"
       ) %>%
       filter(!is.na(species)) %>%
-      filter(mappedReads > 1, nBases_covered > 151) %>%
+      # filter(mappedReads > 1, nBases_covered > 151) %>%
       group_by(species) %>%
       mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
       ungroup() %>%
@@ -149,7 +149,7 @@ if(level == 'taxid') {
         .groups = "drop"
       ) %>%
       filter(!is.na(genus)) %>%
-      filter(mappedReads > 1, nBases_covered > 151) %>%
+      # filter(mappedReads > 1, nBases_covered > 151) %>%
       group_by(genus) %>%
       mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
       ungroup() %>%
@@ -230,7 +230,7 @@ if(level == 'taxid') {
         .groups = "drop"
       ) %>%
       filter(!is.na(species)) %>%
-      filter(mappedReads > 1, nBases_covered > 151) %>%
+      # filter(mappedReads > 1, nBases_covered > 151) %>%
       group_by(species) %>%
       mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
       ungroup() %>%
@@ -301,7 +301,7 @@ if(level == 'taxid') {
         .groups = "drop"
       ) %>%
       filter(!is.na(species)) %>%
-      filter(mappedReads > 2, nBases_covered > 151) %>%
+      # filter(mappedReads > 2, nBases_covered > 151) %>%
       group_by(species) %>%
       mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
       ungroup() %>%
@@ -373,7 +373,7 @@ if(level == 'taxid') {
         .groups = "drop"
       ) %>%
       filter(!is.na(species)) %>%
-      filter(mappedReads > 2, nBases_covered > 151) %>%
+      # filter(mappedReads > 2, nBases_covered > 151) %>%
       group_by(species) %>%
       mutate(total_reads = sum(mappedReads, na.rm = TRUE)) %>%
       ungroup() %>%
