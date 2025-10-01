@@ -114,7 +114,7 @@ if(level == 'taxid') {
 
     # filter taxids detected only in control
     df.filt <- dfg.hm  %>%
-      group_by(taxid) %>% 
+      group_by(species) %>% 
       filter(
         any(mappedReads > 0 & group != "control")
       ) %>%
@@ -194,7 +194,7 @@ if(level == 'taxid') {
 
     # filter taxids detected only in control
     df.filt.g <- dfgg.hm  %>%
-      group_by(taxid) %>% 
+      group_by(genus) %>% 
       filter(
         any(mappedReads > 0 & group != "control")
       ) %>%
@@ -265,7 +265,7 @@ if(level == 'taxid') {
 
     # filter taxids detected only in control
     df.filt.v <- virus  %>%
-      group_by(taxid) %>% 
+      group_by(species) %>% 
       filter(
         any(mappedReads > 0 & group != "control")
       ) %>%
@@ -336,7 +336,7 @@ if(level == 'taxid') {
 
     # filter taxids detected only in control
     df.filt.e <- euka  %>%
-      group_by(taxid) %>% 
+      group_by(species) %>% 
       filter(
         any(mappedReads > 0 & group != "control")
       ) %>%
@@ -407,7 +407,7 @@ if(level == 'taxid') {
 
     # filter taxids detected only in control
     df.filt.b <- bact  %>%
-      group_by(taxid) %>% 
+      group_by(species) %>% 
       filter(
         any(mappedReads > 0 & group != "control")
       ) %>%
