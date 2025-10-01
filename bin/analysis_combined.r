@@ -60,8 +60,6 @@ height_per_species <- 0.2  # inches per species
 base_height <- 10           # minimal height in inches
 width_per_sample <- 1    # inches per sample
 base_width <- 10            # minimal width in inches
-plot_height <- max(base_height, n_species * height_per_species)
-plot_width  <- max(base_width,  n_samples * width_per_sample)
 
 if(level == 'taxid') {
     ## by species
