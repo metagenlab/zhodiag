@@ -1,3 +1,4 @@
+set.seed(123)
 library(ggplot2)
 library(tidyverse)
 library(ggrepel)
@@ -65,7 +66,7 @@ dev.off()
 # heatmap by group
 for(gr in setdiff(unique(b$group), "control")){
   print(gr)
-  pdf(paste0(gr, "_", tax_level, "_group_heatmap.pdf"), width = plot_width, height = plot_height)
+  pdf(paste0(gr, "_group", tax_level, "_heatmap.pdf"), width = plot_width, height = plot_height)
   p = ggplot(b %>%  filter(!is.na(name)) %>% filter(group %in% c("control", gr)),
          aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
     geom_tile() +
@@ -122,7 +123,7 @@ if (contaminants != "") {
     # heatmap by group
     for(gr in setdiff(unique(b$group), "control")){
     print(gr)
-    pdf(paste0(gr, "_", tax_level, "_group_heatmap_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
+    pdf(paste0(gr, "_group", tax_level, "_heatmap_contaminantsRemoved.pdf"), width = plot_width, height = plot_height)
     p = ggplot(bc %>%  filter(!is.na(name)) %>% filter(group %in% c("control", gr)),
             aes(x = factor(sample), y = name, fill = log2(counts), label = counts)) +
         geom_tile() +

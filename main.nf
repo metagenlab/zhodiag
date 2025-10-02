@@ -1,20 +1,23 @@
 #!/usr/bin/env nextflow
 
 include { samplesheetToList } from 'plugin/nf-schema'
+// qc
 include { MULTIQC } from './modules/nf-core/multiqc/main'
 include { MULTIQC_COLLECT_REPORTS } from './modules/local/multiqc/main'
-
 include { FASTQC } from './modules/nf-core/fastqc/main'
+// trimming
 include { TRIMMOMATIC } from './modules/nf-core/trimmomatic/main'
 include { BBMAP_BBDUK } from './modules/nf-core/bbmap/bbduk/main'
 include { FASTP } from './modules/nf-core/fastp/main'
 
+// host removal
 include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
 // include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'
 include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
 // include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/align/main'
 
+// minimap2
 include { MINIMAP2_ALIGN as MINIMAP2_ALL } from './modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_SORT as MINIMAP2_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
 include { SAMTOOLS_DEPTH as MINIMAP2_DEPTH} from './modules/nf-core/samtools/depth/main'
@@ -23,22 +26,31 @@ include { MINIMAP2_CONCAT_PAFS } from './modules/local/concat_pafs/main'
 include { MINIMAP2_TAXONOMY } from './modules/local/minimap2_taxonomy/main'
 include { PLOTS_MINIMAP2 } from './modules/local/plots_minimap2/main'
 
+//  kraken2
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'
 include { KRAKEN2_COMBINE_REPORTS } from './modules/local/kraken2_combineReports/main'
 include { PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
+include { KRAKEN2_TAXONOMY } from './modules/local/kraken2_taxonomy/main'
 
 // include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
-
 // include { KRONA_PLOTS } from './modules/nf-core/krona/ktimporttext/main'
 
-
+// mash
 include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'
 include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'
-
-include { KRAKENTOOLS_EXTRACTKRAKENREADS } from './modules/nf-core/krakentools/extractkrakenreads/main'
-include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES } from './modules/nf-core/minimap2/align/main'
-include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
-include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH} from './modules/nf-core/samtools/depth/main'
+// manual mapping of candidates
+include { KRAKENTOOLS_EXTRACTKRAKENREADS as MANUAL_CANDIDATES } from './modules/nf-core/krakentools/extractkrakenreads/main'
+include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_MANUAL } from './modules/nf-core/minimap2/align/main'
+include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_MANUAL } from './modules/nf-core/samtools/sort/main'                                                                                                                       
+include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_MANUAL } from './modules/nf-core/samtools/depth/main'
+// automatic mapping of candidates
+include { KRAKENTOOLS_EXTRACTKRAKENREADS as AUTOMATIC_CANDIDATES } from './modules/nf-core/krakentools/extractkrakenreads/main'
+include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_AUTO } from './modules/nf-core/minimap2/align/main'
+include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_AUTO } from './modules/nf-core/samtools/depth/main'
+include { SAMTOOLS_VIEW as MINIMAP_FILTER_AUTO } from './modules/local/samtools_view/main'
+include { SUMMARY_STATS_CANDIDATES as SUMMARY_STATS_CANDIDATES_AUTO } from './modules/local/summary_stats/main'
+include { SUMMARY_MAP_CANDIDATES as SUMMARY_MAP_CANDIDATES_AUTO } from './modules/local/summary_map/main'
+include { ANALYSIS_COMBINED as ANALYSIS_COMBINED_AUTO } from './modules/local/analysis_combined/main'
 
 
     // --------------------------------------------- //
@@ -165,9 +177,11 @@ workflow {
         kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
         // kraken_report_taxonomy = KRAKEN2_TAXONOMY(kraken_reports_combined.combine_long)
         contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
-        PLOTS_KRAKEN2(kraken_reports_combined.combine_long,
+        results_kraken = PLOTS_KRAKEN2(kraken_reports_combined.combine_long,
                         contaminants_ch, 
                         params.taxonomy_level)
+        KRAKEN2_TAXONOMY(results_kraken.counts, 
+                            results_kraken.minimizers)
     }
 
     // --------------------------------------------- //
@@ -184,21 +198,70 @@ workflow {
     // --- Minimap2 selected candidates ---
     // --------------------------------------------- //
     if (params.minimap2_candidates) {
-    // extract reads from kraken
-        k2_extracted_reads = KRAKENTOOLS_EXTRACTKRAKENREADS(params.candidates,
-                                    kraken.classified_reads_assignment,
-                                    kraken.classified_reads_fastq,
-                                    kraken.report)
-        // minimap2 candidates
-        map_candidates = MINIMAP_CANDIDATES(k2_extracted_reads.extracted_kraken2_reads,
-                                           params.reference_fasta,
-                                           true,
-                                           false,
-                                           false,
-                                           false,
-                                           true)
-        candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT(map_candidates.bam)
-        CANDIDATES_SAMTOOLS_DEPTH(candidate_sorted_bam.sorted_bam)
+        if (params.candidate_mode == 'manual') {
+            // extract reads from taxid of interest from kraken
+            k2_extracted_reads = MANUAL_CANDIDATES(params.candidates,
+                                        kraken.classified_reads_assignment,
+                                        kraken.classified_reads_fastq,
+                                        kraken.report)
+            // minimap2 candidates
+            map_candidates = MINIMAP_CANDIDATES_MANUAL(k2_extracted_reads.extracted_kraken2_reads,
+                                            params.reference_fasta,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            true)
+            manual_candidate_mapping_logs = map_candidates.flagstat
+            candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_MANUAL(map_candidates.bam)
+            CANDIDATES_SAMTOOLS_DEPTH_MANUAL(candidate_sorted_bam.sorted_bam)
+        } else if (params.candidate_mode == 'automatic') {
+            // extract all reads except human from kraken
+            k2_extracted_reads = AUTOMATIC_CANDIDATES("9606",
+                                        kraken.classified_reads_assignment,
+                                        kraken.classified_reads_fastq,
+                                        kraken.report)
+            // minimap2 candidates
+            map_candidates = MINIMAP_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
+                                            params.reference_fasta,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false)
+            auto_candidate_mapping_logs = map_candidates.flagstat
+            map_candidates_filter = MINIMAP_FILTER_AUTO(map_candidates.sam,
+                                                            params.mapq_cutoff,
+                                                            params.coverage_cutoff)
+            auto_candidate_mapping_noHuman_logs = map_candidates_filter.flagstat
+            // candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.filtered)
+            candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(map_candidates_filter.filtered)
+            // SLIM_SAM2BAM_AUTO(candidate_sorted_bam.sorted)
+            map_summary = SUMMARY_MAP_CANDIDATES_AUTO(map_candidates_filter.filtered)
+            // join depth stats and map stats before analysis
+            def depth_ch = candidates_depth.depth.map { meta, file ->
+                [ meta.id, [meta, file] ]
+            }
+            def map_ch = map_summary.mapSummary.map { meta, file ->
+                [ meta.id, [meta, file] ]
+            }
+            depth_ch.join(map_ch)
+                .map { id, a, b ->
+                    def (meta1, depth_file) = a
+                    def (meta2, map_file)  = b
+                    tuple(meta1, depth_file, map_file)
+                }
+                .set { summary_input }
+            analysis_samples = SUMMARY_STATS_CANDIDATES_AUTO(summary_input)
+            // join all samples
+            stats_accession_ch = analysis_samples.accession_table.map { it -> it[1] }
+            stats_taxid_ch = analysis_samples.taxid_table.map { it -> it[1] }
+            def metadata_file = file(params.input, checkExists: true)
+            Channel.fromPath(metadata_file).set { metadata_ch }
+            analysis_combined = ANALYSIS_COMBINED_AUTO(stats_accession_ch.collect(),
+                                                        stats_taxid_ch.collect(),
+                                                        metadata_ch)
+        }
     }
 
     // --------------------------------------------- //
@@ -233,6 +296,20 @@ workflow {
         collect_reports_input = collect_reports_input
             .merge(kraken_logs.map { it[1] } )
     }
+
+    if (params.minimap2_candidates) {
+        if (params.candidate_mode == 'manual') {
+            collect_reports_input = collect_reports_input
+                .merge(manual_candidate_mapping_logs.map { it[1] } )
+        } else if (params.candidate_mode == 'automatic') {
+            collect_reports_input = collect_reports_input
+                .merge(auto_candidate_mapping_logs.map { it[1] } )
+            collect_reports_input = collect_reports_input
+                .merge(auto_candidate_mapping_noHuman_logs.map { it[1] } )              
+        }
+    }
+
+
     multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input.collect())
 
         //     kraken_logs.map { it[1] },
