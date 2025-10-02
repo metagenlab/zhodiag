@@ -15,7 +15,7 @@ process SAMTOOLS_VIEW {
     output:
     tuple val(meta), path("*_filtered_sorted.bam"),  emit: filtered
     tuple val(meta), path("*_filtered_sorted.bam.bai"),  emit: index
-    tuple val(meta), path("*.flagstat.txt")         , optional: true, emit: flagstat
+    tuple val(meta), path("*_filtered_noHuman.flagstat.txt")         , optional: true, emit: flagstat
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,7 +24,7 @@ process SAMTOOLS_VIEW {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ''
     def output_file = "${prefix}_filtered_sorted.bam"
-    def output_flagstat = "${prefix}_filtered_noHuman.flagstat.tsv"
+    def output_flagstat = "${prefix}_filtered_noHuman.flagstat.txt"
 
     """
     # filter SAM by quality (= 0 & >mapq) and remove human hits. Output alignments only in sam
@@ -53,7 +53,7 @@ process SAMTOOLS_VIEW {
     samtools index ${output_file}
 
     # flagstat final file
-    samtools flagstat -@ ${task.cpus-1} ${output_file} -O tsv > ${output_flagstat}
+    samtools flagstat -@ ${task.cpus-1} ${output_file} > ${output_flagstat}
 
     # remove intermediates
     rm -f ${prefix}_header.sam ${prefix}_alignments.sam ${prefix}_mapped_refs.txt
