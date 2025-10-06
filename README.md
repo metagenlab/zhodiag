@@ -1,13 +1,13 @@
-# :microbe: zhodiag: Ze shotgun metagenomics pipeline for diagnostics
+# :milky_way: zhodiag: Ze shotgun metagenomics pipeline for diagnostics
 
 
-## :mag: Pipeline overview
+## :telescope: Pipeline overview
 ![Diagram in progress](misc/zhodiag_vertical_db_legend.png)
 
 
-## :gear: How to use:
+## :microscope: How to use:
 
-### :package: Pre-requisites
+### :stars: Pre-requisites
 A conda environment with nextflow version 24.10.5 (other versions not tested.). You can find a working environment in asterix:
 
 ```
@@ -36,7 +36,7 @@ conda activate vcs_nextflow_24.10.5
 nextflow run main.nf -profile singularity --input data/example_groups.csv --outdir OUTPUT -resume
 ```
 
-## :bar_chart: Output
+## :fireworks: Output
 The output will be organised by software, for example:
 
 * fastqc: output of qc control step.
