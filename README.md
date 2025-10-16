@@ -17,7 +17,7 @@ conda activate vcs_nextflow_24.10.5
 ### :rocket: Usage
 1. Clone the repo.
 2. Prepare input sample table. This is a comma-separated table with the following columns:
-    `sample,fastq_R1,fastq_R2,group`. You can see an example in `data/example_groups.csv`
+    `sample,fastq_R1,fastq_R2,group`. You can see an example in `data/samples.csv`
 
 * sample: sample name. This will prefix all files.
 * fastq_R1 and fastq_R2: full path to R1 and R2 reads.
