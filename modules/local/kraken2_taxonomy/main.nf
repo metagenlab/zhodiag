@@ -13,7 +13,7 @@ process KRAKEN2_TAXONOMY {
     path '*_full_taxonomy.tsv'
 
     script:
-    def kraken_taxonomy_script = workflow.projectDir.resolve("kraken2taxonomy.py")
+    def kraken_taxonomy_script = workflow.projectDir.resolve("bin/kraken2taxonomy.py")
 
     def count_cmds = kraken2_counts.collect { f -> "python3 $kraken_taxonomy_script -i ${f.getName()}" }.join('\n')
     def minimizer_cmds = kraken2_minimizers.collect { f -> "python3 $kraken_taxonomy_script -i ${f.getName()}" }.join('\n')
