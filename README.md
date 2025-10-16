@@ -20,7 +20,7 @@ conda activate vcs_nextflow_24.10.5
     `sample,fastq_R1,fastq_R2,group`. You can see an example in `data/example_groups.csv`
 
 * sample: sample name. This will prefix all files.
-* fastq_1 and fastq_2: full path to R1 and R2 reads.
+* fastq_R1 and fastq_R2: full path to R1 and R2 reads.
 * group: variable used for faceting in output plots. For control samples, use "control" as group.
 
 3. Edit `nextflow.config` with parameters of choice. 
