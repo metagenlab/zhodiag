@@ -14,7 +14,7 @@ include { FASTP } from './modules/nf-core/fastp/main'
 include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
 // include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'
 include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
-// include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'
+include { BOWTIE2_ALIGN  as BOWTIE2HOST } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/align/main'
 
 // minimap2
@@ -105,24 +105,31 @@ workflow {
     // --------------------------------------------- //
     // --- Host removal ---
     // --------------------------------------------- //
-    if (params.host_removal_tool == 'bbmap') {
+    if (params.mapper == 'bbmap') {
         host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
         unmapped = host_map.unmapped
         mapping_logs = host_map.stats
-    } else if (params.host_removal_tool == 'minimap2') {
+    } else if (params.mapper == 'minimap2') {
         host_map = MINIMAP2HOST(trimmed.reads,
                                 params.host_minimap2_index,
                                 true, false, false, true, false)
         unmapped = host_map.unmapped
         mapping_logs = host_map.flagstat
+    } else if (params.mapper == 'bowtie2') {
+        host_map = BOWTIE2HOST(trimmed.reads,
+                                 params.host_bowtie2_index,
+                                 params.host_fasta,
+                                 true, false)
+        unmapped = host_map.fastq
+        mapping_logs = host_map.log
     } else {
-        error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
+        error("Unsupported aligner. Options are 'bbmap', 'bowtie2' and 'minimap2'.")
     }
 
     // --------------------------------------------- //
     // ---------- MINIMAP2 on all kingdoms ---------
     // --------------------------------------------- //
-    if (params.run_minimap2) {
+    if (params.run_mapping) {
         map = MINIMAP2_ALL(unmapped,
                             params.reference_fasta,
                             true, false, false, false, true)
@@ -197,7 +204,7 @@ workflow {
     // --------------------------------------------- //
     // --- Minimap2 selected candidates ---
     // --------------------------------------------- //
-    if (params.minimap2_candidates) {
+    if (params.mapping_candidates) {
         if (params.candidate_mode == 'manual') {
             // extract reads from taxid of interest from kraken
             k2_extracted_reads = MANUAL_CANDIDATES(params.candidates,
@@ -287,7 +294,7 @@ workflow {
             mapping_logs.map { it[1] }
         )
 
-    if (params.run_minimap2) {
+    if (params.run_mapping) {
         collect_reports_input = collect_reports_input
             .merge(minimap_log.map { it[1] } )
     }
@@ -297,7 +304,7 @@ workflow {
             .merge(kraken_logs.map { it[1] } )
     }
 
-    if (params.minimap2_candidates) {
+    if (params.mapping_candidates) {
         if (params.candidate_mode == 'manual') {
             collect_reports_input = collect_reports_input
                 .merge(manual_candidate_mapping_logs.map { it[1] } )
