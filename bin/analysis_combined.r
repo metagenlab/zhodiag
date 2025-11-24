@@ -4,6 +4,7 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(ggplot2)
   library(ggrepel)
+  library(data.table)
 })
 
 # ---------------------------
@@ -21,7 +22,7 @@ file_list <- args[3:length(args)]
 # ---------------------------
 #  METADATA
 # ---------------------------
-metadata = read.table(meta, header = TRUE, sep =',')
+metadata <- fread(meta)
 metadata = metadata %>% select(sample, group)
 metadata$sample = as.character(metadata$sample)
 

@@ -1,12 +1,13 @@
 set.seed(123)
 library(tidyverse)
+library(data.table)
 
 args <- commandArgs(trailingOnly = TRUE)
 meta <- args[1]
 outfile_prefix <- args[2]
 file_list <- args[3:length(args)]
 
-metadata = read.table(meta, header = TRUE, sep =',')
+metadata <- fread(meta)
 metadata = metadata %>% select(sample, group)
 metadata$sample = as.character(metadata$sample)
 
