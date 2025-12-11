@@ -50,6 +50,8 @@ process BOWTIE2_ALIGN {
     def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"
     def reference = fasta && extension=="cram"  ? "--reference ${fasta}" : ""
     if (!fasta && extension=="cram") error "Fasta reference is required for CRAM output"
+    def rawName = (index instanceof String) ? new File(index).getName() : (index.getFileName() ? index.getFileName().toString() : index.toString())
+    def genome = rawName.replaceFirst(/(\.fna|\.fa|\.fasta)?(\.gz)?$/, '')
 
     // INDEX=`find -L ./ -name "*.rev.1.bt2" | sed "s/\\.rev.1.bt2\$//"`
     // [ -z "\$INDEX" ] && INDEX=`find -L ./ -name "*.rev.1.bt2l" | sed "s/\\.rev.1.bt2l\$//"`
@@ -62,7 +64,7 @@ process BOWTIE2_ALIGN {
         --threads $task.cpus \\
         $unaligned \\
         $args \\
-        2>| >(tee ${prefix}.bowtie2.log >&2) \\
+        2>| >(tee ${prefix}_${genome}.bowtie2.log >&2) \\
         | samtools $samtools_command $args2 --threads $task.cpus ${reference} -o ${prefix}.${extension} -
 
     if [ -f ${prefix}.unmapped.fastq.1.gz ]; then

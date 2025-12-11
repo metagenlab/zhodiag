@@ -31,7 +31,7 @@ process SAMTOOLS_VIEW {
     samtools view --threads ${task.cpus-1} $args $input \\
     | awk 'BEGIN{OFS="\\t"} 
             !/^@/ { 
-                if ((\$5 == 0 || \$5 > $quality) && length(\$10) >= $cov*150 ) {
+                if ((\$5 == 0 || \$5 > $quality) && length(\$10) >= $cov ) {
                     split(\$3, a, "|"); 
                     if (a[2] != 9606) print 
                 } 
