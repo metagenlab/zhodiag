@@ -20,6 +20,16 @@
             "git_sha": "f06465ff69516528b0178b2a2a5f6b1d4287faa9",
             "installed_by": ["modules"]
           },
+          "bowtie/align": {
+            "branch": "master",
+            "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
+            "installed_by": ["modules"]
+          },
+          "bowtie2/align": {
+            "branch": "master",
+            "git_sha": "ecf739de71e6abe5690616b48a9cba924170e8f6",
+            "installed_by": ["modules"]
+          },
           "fastp": {
             "branch": "master",
             "git_sha": "8864afe586537bf562eac7b83349c26207f3cb4d",

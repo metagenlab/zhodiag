@@ -14,7 +14,7 @@ include { FASTP } from './modules/nf-core/fastp/main'
 include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
 // include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'
 include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
-// include { BOWTIE2_ALIGN } from './modules/nf-core/bowtie2/align/main'
+include { BOWTIE2_ALIGN  as BOWTIE2HOST } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/align/main'
 
 // minimap2
@@ -44,14 +44,16 @@ include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_MANUAL } from './modules/nf-core/
 include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_MANUAL } from './modules/nf-core/samtools/sort/main'                                                                                                                       
 include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_MANUAL } from './modules/nf-core/samtools/depth/main'
 // automatic mapping of candidates
-include { KRAKENTOOLS_EXTRACTKRAKENREADS as AUTOMATIC_CANDIDATES } from './modules/nf-core/krakentools/extractkrakenreads/main'
+include { EXTRACT_NONHUMAN_READS as AUTOMATIC_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
+// include { KRAKENTOOLS_EXTRACTKRAKENREADS as AUTOMATIC_CANDIDATES } from './modules/nf-core/krakentools/extractkrakenreads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_AUTO } from './modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_AUTO } from './modules/nf-core/samtools/depth/main'
-include { SAMTOOLS_VIEW as MINIMAP_FILTER_AUTO } from './modules/local/samtools_view/main'
+include { SAMTOOLS_VIEW as MAP_FILTER_AUTO } from './modules/local/samtools_view/main'
 include { SUMMARY_STATS_CANDIDATES as SUMMARY_STATS_CANDIDATES_AUTO } from './modules/local/summary_stats/main'
 include { SUMMARY_MAP_CANDIDATES as SUMMARY_MAP_CANDIDATES_AUTO } from './modules/local/summary_map/main'
 include { ANALYSIS_COMBINED as ANALYSIS_COMBINED_AUTO } from './modules/local/analysis_combined/main'
 
+include { BOWTIE2_ALIGN  as BOWTIE_CANDIDATES_AUTO } from './modules/nf-core/bowtie2/align/main'
 
     // --------------------------------------------- //
     // --------------------------------------------- //
@@ -105,24 +107,31 @@ workflow {
     // --------------------------------------------- //
     // --- Host removal ---
     // --------------------------------------------- //
-    if (params.host_removal_tool == 'bbmap') {
+    if (params.mapper == 'bbmap') {
         host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
         unmapped = host_map.unmapped
         mapping_logs = host_map.stats
-    } else if (params.host_removal_tool == 'minimap2') {
+    } else if (params.mapper == 'minimap2') {
         host_map = MINIMAP2HOST(trimmed.reads,
                                 params.host_minimap2_index,
                                 true, false, false, true, false)
         unmapped = host_map.unmapped
         mapping_logs = host_map.flagstat
+    } else if (params.mapper == 'bowtie2') {
+        host_map = BOWTIE2HOST(trimmed.reads,
+                                 params.host_bowtie2_index,
+                                 params.host_fasta,
+                                 true, false)
+        unmapped = host_map.fastq
+        mapping_logs = host_map.log
     } else {
-        error("Unsupported aligner. Options are 'bbmap' and 'minimap2'.")
+        error("Unsupported aligner. Options are 'bbmap', 'bowtie2' and 'minimap2'.")
     }
 
     // --------------------------------------------- //
     // ---------- MINIMAP2 on all kingdoms ---------
     // --------------------------------------------- //
-    if (params.run_minimap2) {
+    if (params.run_mapping) {
         map = MINIMAP2_ALL(unmapped,
                             params.reference_fasta,
                             true, false, false, false, true)
@@ -195,9 +204,9 @@ workflow {
     }
 
     // --------------------------------------------- //
-    // --- Minimap2 selected candidates ---
+    // --- Mapping classified reads or selected candidates ---
     // --------------------------------------------- //
-    if (params.minimap2_candidates) {
+    if (params.mapping_candidates) {
         if (params.candidate_mode == 'manual') {
             // extract reads from taxid of interest from kraken
             k2_extracted_reads = MANUAL_CANDIDATES(params.candidates,
@@ -217,20 +226,26 @@ workflow {
             CANDIDATES_SAMTOOLS_DEPTH_MANUAL(candidate_sorted_bam.sorted_bam)
         } else if (params.candidate_mode == 'automatic') {
             // extract all reads except human from kraken
-            k2_extracted_reads = AUTOMATIC_CANDIDATES("9606",
-                                        kraken.classified_reads_assignment,
-                                        kraken.classified_reads_fastq,
-                                        kraken.report)
-            // minimap2 candidates
-            map_candidates = MINIMAP_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
-                                            params.reference_fasta,
-                                            false,
-                                            false,
-                                            false,
-                                            false,
-                                            false)
-            auto_candidate_mapping_logs = map_candidates.flagstat
-            map_candidates_filter = MINIMAP_FILTER_AUTO(map_candidates.sam,
+            k2_extracted_reads = AUTOMATIC_CANDIDATES(
+                                        kraken.classified_reads_fastq)
+            if (params.mapper == 'minimap2') {
+                // minimap2 candidates
+                map_candidates = MINIMAP_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
+                                                params.reference_fasta,
+                                                false,
+                                                false,
+                                                false,
+                                                false,
+                                                false)
+                auto_candidate_mapping_logs = map_candidates.flagstat
+            } else if (params.mapper == 'bowtie2') {
+                map_candidates = BOWTIE_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
+                                                        params.bowtie2_index,
+                                                        params.reference_fasta,
+                                                        false, true)
+                auto_candidate_mapping_logs = map_candidates.log
+            }
+            map_candidates_filter = MAP_FILTER_AUTO(map_candidates.sam,
                                                             params.mapq_cutoff,
                                                             params.coverage_cutoff)
             auto_candidate_mapping_noHuman_logs = map_candidates_filter.flagstat
@@ -287,7 +302,7 @@ workflow {
             mapping_logs.map { it[1] }
         )
 
-    if (params.run_minimap2) {
+    if (params.run_mapping) {
         collect_reports_input = collect_reports_input
             .merge(minimap_log.map { it[1] } )
     }
@@ -297,7 +312,7 @@ workflow {
             .merge(kraken_logs.map { it[1] } )
     }
 
-    if (params.minimap2_candidates) {
+    if (params.mapping_candidates) {
         if (params.candidate_mode == 'manual') {
             collect_reports_input = collect_reports_input
                 .merge(manual_candidate_mapping_logs.map { it[1] } )

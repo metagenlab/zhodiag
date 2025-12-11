@@ -106,7 +106,9 @@ EOF
 
       ${paf_output ? "paftools.js sam2paf ${sam_file} > ${paf_file}" : ""}
 
-      ${bam_format && unmapped_fq ? "samtools fastq -f 4 -@ ${task.cpus-1} ${bam_file} -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
+      ${bam_format && unmapped_fq ? """
+      samtools view -b -f 1 -F 2 -F 256 ${bam_file} | samtools fastq -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz /dev/stdin
+      """ : ""}
 
     else
       echo "No mapped reads. Creating empty outputs..." >&2
