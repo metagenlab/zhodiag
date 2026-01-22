@@ -43,7 +43,7 @@ for(tax_level in tax_levels) {
   #        * exclude human, bradys and others
    a <- df %>% filter(rank == tax_level) %>% select(reads, taxReads, kmers, dup, cov, taxID, taxName, sample, group) %>%
         filter(reads > min_reads) %>%
-        filter(taxName != c('Homo sapiens', 'synthetic construct'),
+        filter(!taxName %in% c("Homo sapiens", "synthetic construct"),
         !startsWith(taxName, "Bradyrhizobium"))
 
   write.table(a, paste0("long_table_at_", tax_level, "_level.tsv"),
