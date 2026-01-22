@@ -37,9 +37,14 @@ tax_levels <- 'species'
 for(tax_level in tax_levels) {
   print(paste0("Processing at ", tax_level, " level"))
 
-  # table at TAX_LEVEL, filtering to have at least 2 reads.
+  # table at TAX_LEVEL, 
+  # FILTERS: 
+  #        * have at least "min_reads" reads
+  #        * exclude human, bradys and others
    a <- df %>% filter(rank == tax_level) %>% select(reads, taxReads, kmers, dup, cov, taxID, taxName, sample, group) %>%
-        filter(reads > min_reads) 
+        filter(reads > min_reads) %>%
+        filter(taxName != c('Homo sapiens', 'synthetic construct'),
+        !startsWith(taxName, "Bradyrhizobium"))
 
   write.table(a, paste0("long_table_at_", tax_level, "_level.tsv"),
         row.names = FALSE, col.names = TRUE, sep = '\t', quote = FALSE)
