@@ -17,7 +17,7 @@ include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
 include { BOWTIE2_ALIGN  as BOWTIE2HOST } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/align/main'
 
-// minimap2
+// mapping
 include { MINIMAP2_ALIGN as MINIMAP2_ALL } from './modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_SORT as MINIMAP2_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
 include { SAMTOOLS_DEPTH as MINIMAP2_DEPTH} from './modules/nf-core/samtools/depth/main'
@@ -32,6 +32,11 @@ include { KRAKEN2_COMBINE_REPORTS } from './modules/local/kraken2_combineReports
 include { PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
 include { KRAKEN2_TAXONOMY } from './modules/local/kraken2_taxonomy/main'
 
+// krakenuniq
+include { KRAKENUNIQ_PRELOADEDKRAKENUNIQ } from './modules/nf-core/krakenuniq/preloadedkrakenuniq/main'                                                                                     
+include { KRAKENUNIQ_COMBINE_REPORTS } from './modules/local/krakenuniq_combineReports/main'
+include { PLOTS_KRAKENUNIQ } from './modules/local/plots_krakenuniq/main'
+
 // include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
 // include { KRONA_PLOTS } from './modules/nf-core/krona/ktimporttext/main'
 
@@ -39,13 +44,12 @@ include { KRAKEN2_TAXONOMY } from './modules/local/kraken2_taxonomy/main'
 include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'
 include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'
 // manual mapping of candidates
-include { KRAKENTOOLS_EXTRACTKRAKENREADS as MANUAL_CANDIDATES } from './modules/nf-core/krakentools/extractkrakenreads/main'
+include { EXTRACT_NONHUMAN_READS as MANUAL_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_MANUAL } from './modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_MANUAL } from './modules/nf-core/samtools/sort/main'                                                                                                                       
 include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_MANUAL } from './modules/nf-core/samtools/depth/main'
 // automatic mapping of candidates
 include { EXTRACT_NONHUMAN_READS as AUTOMATIC_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
-// include { KRAKENTOOLS_EXTRACTKRAKENREADS as AUTOMATIC_CANDIDATES } from './modules/nf-core/krakentools/extractkrakenreads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_AUTO } from './modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_AUTO } from './modules/nf-core/samtools/depth/main'
 include { SAMTOOLS_VIEW as MAP_FILTER_AUTO } from './modules/local/samtools_view/main'
@@ -194,6 +198,36 @@ workflow {
     }
 
     // --------------------------------------------- //
+    // --- Taxonomic classification with KrakenUniq ---
+    // --------------------------------------------- //
+    if (params.run_krakenuniq) {
+        unmapped_for_krakenuniq = unmapped.map { meta, reads ->
+            tuple(
+                meta,
+                reads,
+                [ meta.id ]   // add prefixes for krakenuniq module...
+            )
+        }
+        krakenuniq = KRAKENUNIQ_PRELOADEDKRAKENUNIQ(unmapped_for_krakenuniq,
+                                                    'fastq',
+                                                    params.krakenuniq_db,
+                                                    true, true, true)
+    }
+        // collect log for multiqc
+        // need a module to modify report to be readable by multiqc....
+        krakenuniq_logs = krakenuniq.report
+
+        // combine sample reports into one
+        ku_reports_ch = krakenuniq.report.map { it -> it[1] }
+        def ku_metadata_file = file(params.input, checkExists: true)
+        Channel.fromPath(ku_metadata_file).set { ku_metadata_ch }
+        krakenuniq_reports_combined = KRAKENUNIQ_COMBINE_REPORTS(ku_reports_ch.collect(), ku_metadata_ch)
+
+        // plot
+        results_krakenuniq = PLOTS_KRAKENUNIQ(krakenuniq_reports_combined.combine_long,
+                                                params.min_reads)
+
+    // --------------------------------------------- //
     // --- Mash screen ---
     // --------------------------------------------- //
     if (params.run_mash) {
@@ -208,11 +242,9 @@ workflow {
     // --------------------------------------------- //
     if (params.mapping_candidates) {
         if (params.candidate_mode == 'manual') {
-            // extract reads from taxid of interest from kraken
-            k2_extracted_reads = MANUAL_CANDIDATES(params.candidates,
-                                        kraken.classified_reads_assignment,
-                                        kraken.classified_reads_fastq,
-                                        kraken.report)
+            // extract reads from taxid of interest from kraken !!!!! NEEDS UPDATING CODE !!!!
+            k2_extracted_reads = MANUAL_CANDIDATES(
+                                        kraken.classified_reads_fastq)
             // minimap2 candidates
             map_candidates = MINIMAP_CANDIDATES_MANUAL(k2_extracted_reads.extracted_kraken2_reads,
                                             params.reference_fasta,
@@ -310,6 +342,11 @@ workflow {
     if (params.run_kraken2) {
         collect_reports_input = collect_reports_input
             .merge(kraken_logs.map { it[1] } )
+    }
+
+    if (params.run_krakenuniq) {
+        collect_reports_input = collect_reports_input
+            .merge(krakenuniq_logs.map { it[1] } )
     }
 
     if (params.mapping_candidates) {
