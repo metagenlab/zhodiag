@@ -37,12 +37,6 @@ include { KRAKENUNIQ_PRELOADEDKRAKENUNIQ } from './modules/nf-core/krakenuniq/pr
 include { KRAKENUNIQ_COMBINE_REPORTS } from './modules/local/krakenuniq_combineReports/main'
 include { PLOTS_KRAKENUNIQ } from './modules/local/plots_krakenuniq/main'
 
-// include { KRONA_KREPORT2KRONA} from './modules/nf-core/krakentools/kreport2krona/main'
-// include { KRONA_PLOTS } from './modules/nf-core/krona/ktimporttext/main'
-
-// mash
-include { MASH_SCREEN } from './modules/nf-core/mash/screen/main'
-include { MASH_SKETCH } from './modules/nf-core/mash/sketch/main'
 // manual mapping of candidates
 include { EXTRACT_NONHUMAN_READS as MANUAL_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_MANUAL } from './modules/nf-core/minimap2/align/main'
@@ -58,6 +52,9 @@ include { SUMMARY_MAP_CANDIDATES as SUMMARY_MAP_CANDIDATES_AUTO } from './module
 include { ANALYSIS_COMBINED as ANALYSIS_COMBINED_AUTO } from './modules/local/analysis_combined/main'
 
 include { BOWTIE2_ALIGN  as BOWTIE_CANDIDATES_AUTO } from './modules/nf-core/bowtie2/align/main'
+
+
+include { CUSTOM_STAT_REPORT } from './modules/local/custom_stat_report/main'
 
     // --------------------------------------------- //
     // --------------------------------------------- //
@@ -228,16 +225,6 @@ workflow {
                                                 params.min_reads)
 
     // --------------------------------------------- //
-    // --- Mash screen ---
-    // --------------------------------------------- //
-    if (params.run_mash) {
-        mash_db_name = params.mash_screen_db.tokenize('/').last()
-        mash_db_name_ch = Channel.value(mash_db_name)
-
-        MASH_SCREEN(unmapped, params.mash_screen_db, mash_db_name_ch)
-    }
-
-    // --------------------------------------------- //
     // --- Mapping classified reads or selected candidates ---
     // --------------------------------------------- //
     if (params.mapping_candidates) {
@@ -314,18 +301,6 @@ workflow {
     // --------------------------------------------- //
     // --- MultiQC ---
     // --------------------------------------------- //
-    // collect_reports_input = fastqc.html
-    //     .map { it[1] }
-    //     .merge(
-    //         fastqc.zip.map { it[1] },
-    //         trim_logs.map { it[1] },
-    //         mapping_logs.map { it[1] },
-    //         kraken_logs.map { it[1] },
-    //         minimap_log.map { it[1] }
-    //     )
-    //     .collect()
-
-
     collect_reports_input = fastqc.html
         .map { it[1] }
         .merge(
@@ -364,22 +339,20 @@ workflow {
 
     multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input.collect())
 
-        //     kraken_logs.map { it[1] },
-        //     minimap_log.map { it[1] }
-        // )
-        // .collect()
+    multiqc = MULTIQC(multiqc_input)
 
-    // def report_channels = [
-    //     fastqc.html.map { it[1] },
-    //     fastqc.zip.map { it[1] },
-    //     trim_logs.map { it[1] },
-    //     mapping_logs.map { it[1] }
-    //     ]
+    // --------------------------------------------- //
+    // --- Custom Stat Report ---
+    // --------------------------------------------- //
+    krakenuniq_ch = params.run_krakenuniq ? krakenuniq_reports_combined.combine_long : []
+    kraken2_ch = params.run_kraken2 ? kraken_reports_combined.combine_long : []
 
-    // collect_reports_input = Channel
-    //     .merge(*report_channels)
-    //     .collect()
-
-
-    MULTIQC(multiqc_input)
+    CUSTOM_STAT_REPORT(multiqc.data,
+                        params.trim_tool,
+                        params.mapper,
+                        params.run_krakenuniq,
+                        krakenuniq_ch,
+                        params.run_kraken2,
+                        kraken2_ch
+                        )
 }
