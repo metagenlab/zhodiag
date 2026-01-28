@@ -68,10 +68,10 @@ if (trim_tool == "fastp") {
             header = TRUE, sep = '\t'
         )
         kraken2 = k2_data %>% group_by(sample) %>%
-            summarise(ClassifiedReads = sum(directCounts[taxonomy != "unclassified"]),
-                UnclassifiedReads = sum(directCounts[taxonomy == "unclassified"]),
-                HumanReads = sum(directCounts[taxonomy == "Homo sapiens"]),
-                nonHumanReads = sum(directCounts[!taxonomy %in% c("unclassified", "Homo sapiens")])
+            summarise(kraken2_ClassifiedReads = sum(directCounts[taxonomy != "unclassified"]),
+                kraken2_UnclassifiedReads = sum(directCounts[taxonomy == "unclassified"]),
+                kraken2_HumanReads = sum(directCounts[taxonomy == "Homo sapiens"]),
+                kraken2_nonHumanReads = sum(directCounts[!taxonomy %in% c("unclassified", "Homo sapiens")])
                 ) %>%
             rename(Sample = sample)
         stats = left_join(stats, kraken2, by = "Sample")
@@ -90,14 +90,14 @@ stat.plot <- stats %>% pivot_longer(cols = -Sample)
 stat.plot$name <- factor(stat.plot$name, levels = colnames(stats))
 p = ggplot(stat.plot, aes(x = name, y = value, fill = name)) +
   geom_bar(stat = 'identity') +
-  facet_grid(.~Sample) +
+  facet_wrap(facets = "Sample") +
   theme_bw() +
   labs(x = '', y = 'Number of reads', fill = '') +
   theme(axis.text.x = element_blank()) +
   scale_fill_viridis_d()
 
-n_samples = length(colnames(stats))
-plot_width = n_samples * 4
-pdf("stats_report.pdf", width = plot_width, height = 6)
+# n_samples = length(colnames(stats))
+# plot_width = n_samples * 4
+pdf("stats_report.pdf")
 print(p)
 dev.off()
