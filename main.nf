@@ -186,12 +186,11 @@ workflow {
         Channel.fromPath(metadata_file).set { metadata_ch }
         kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
         // kraken_report_taxonomy = KRAKEN2_TAXONOMY(kraken_reports_combined.combine_long)
-        contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
+        // contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
         results_kraken = PLOTS_KRAKEN2(kraken_reports_combined.combine_long,
-                        contaminants_ch, 
-                        params.taxonomy_level)
-        KRAKEN2_TAXONOMY(results_kraken.counts, 
-                            results_kraken.minimizers)
+                        params.min_reads)
+        // KRAKEN2_TAXONOMY(results_kraken.counts, 
+        //                     results_kraken.minimizers)
     }
 
     // --------------------------------------------- //
@@ -209,7 +208,6 @@ workflow {
                                                     'fastq',
                                                     params.krakenuniq_db,
                                                     true, true, true)
-    }
         // collect log for multiqc
         // need a module to modify report to be readable by multiqc....
         krakenuniq_logs = krakenuniq.report
@@ -223,7 +221,7 @@ workflow {
         // plot
         results_krakenuniq = PLOTS_KRAKENUNIQ(krakenuniq_reports_combined.combine_long,
                                                 params.min_reads)
-
+    }
     // --------------------------------------------- //
     // --- Mapping classified reads or selected candidates ---
     // --------------------------------------------- //
@@ -271,6 +269,9 @@ workflow {
                                                     false, true)
             auto_candidate_mapping_logs = map_candidates.log
         }
+
+
+
         map_candidates_filter = MAP_FILTER_AUTO(map_candidates.sam,
                                                         params.mapq_cutoff,
                                                         params.coverage_cutoff)
@@ -351,13 +352,20 @@ workflow {
     // --------------------------------------------- //
     // --- Custom Stat Report ---
     // --------------------------------------------- //
-    krakenuniq_ch = params.run_krakenuniq ? krakenuniq_reports_combined.combine_long : []
-    kraken2_ch = params.run_kraken2 ? kraken_reports_combined.combine_long : []
+    krakenuniq_report_ch = params.run_krakenuniq ? krakenuniq_reports_combined.combine_long : []
+    krakenuniq_kingdoms_ch = params.run_krakenuniq ? results_krakenuniq.kingdoms : []
+    krakenuniq_removal_ch = params.run_krakenuniq ? results_krakenuniq.removedReadsFromPlots : []
+
+    kraken2_report_ch = params.run_kraken2 ? kraken_reports_combined.combine_long : []
+    kraken2_kingdoms_ch = params.run_kraken2 ? results_kraken.kingdoms : []
+    kraken2_removal_ch = params.run_kraken2 ? results_kraken.removedReadsFromPlots : []
 
     if (params.mapper == "bowtie2") {
         host_name = params.host_bowtie2_index
     } else if (params.mapper == 'minimap2') {
         host_name = params.host_minimap2_index
+    } else if (params.mapper == 'bbmap') {
+        host_name = params.host_bbmap_index
     }
 
     CUSTOM_STAT_REPORT(multiqc.data,
@@ -365,9 +373,13 @@ workflow {
                         params.mapper,
                         host_name,
                         params.run_krakenuniq,
-                        krakenuniq_ch,
+                        krakenuniq_report_ch,
+                        krakenuniq_kingdoms_ch,
+                        krakenuniq_removal_ch,
                         params.run_kraken2,
-                        kraken2_ch,
+                        kraken2_report_ch,
+                        kraken2_kingdoms_ch,
+                        kraken2_removal_ch,
                         params.map_classified
                         )
 }

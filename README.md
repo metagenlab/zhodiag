@@ -2,6 +2,9 @@
 
 
 ## :telescope: Pipeline overview
+
+Diagram is not up-to-date
+
 ![Diagram in progress](misc/zhodiag_vertical_db_legend.png)
 
 
@@ -23,11 +26,14 @@ conda activate vcs_nextflow_24.10.5
 * fastq_R1 and fastq_R2: full path to R1 and R2 reads.
 * group: variable used for faceting in output plots. For control samples, use "control" as group.
 
-3. Edit `nextflow.config` with parameters of choice. 
+3. Edit `nextflow.config` with parameters of choice. Follow the recomended tools for full functionality (other tools not fully implemented yet)
 
-* you can choose between minimap2 and bowtie2 for mapping steps (option mapper).
-* You can optionally run taxonomy classification with kraken2/mash and/or direct mapping by turning on/off (true/false) the corresponding processes.
-* Minimap2 uses a reference fasta or mmi index of your choice. Kraken2 used a db of your choice. Bowtie2 requires the reference index and fasta.
+* Recommended trimmer is fastp (option `trim_tool`).
+* Recommended mapper is bowtie2 (option `mapper`). Bowtie2 requires the reference index and fasta. 
+* You can optionally run taxonomy classification with kraken2/krakenuniq by turning on/off (true/false) the corresponding processes. 
+* Currently, kraken2 is running with our fulldb, whereas krakenuniq runs with the premade MicrobialDB.
+* After taxonomy assignation, the classified reads can be extracted (option `map_classified` true). You need to choose which classified reads to extract (kraken2 or krakenuniq, depending on which classifier you used, option `which_classified`)
+
 
 4. Run (with -resume if re-launching):
 
@@ -40,10 +46,11 @@ The output will be organised by software, for example:
 
 * fastqc: output of qc control step.
 * fastp: output of trimming step, including cleaned-reads fastq files and log files.
-* minimap2/bowtie2: output of all mapping steps. The "host" subdirectory contains output files after removing human-mapping reads. The rest of the folder contains output of mapping to the provided reference fasta. All mapping steps include flagstat log files and bam files.
+* bowtie2: output of all mapping steps (host, and optionally, post-classification mapping).
 * kraken2: output of kraken2 classification, including output and report files.
-* mash: output of classification with mash.
-* plots_and_tables: includes summary tables derived from kraken2 and minimap2 processes, as well as relevant result plots. The tables are the input to generate all plots and can be used to manually genereate any downstream plot of interest.
+* krakenuniq: output of krakenuniq classification, including output and report files.
+* plots_and_tables: includes summary tables derived from kraken2, krakenuniq and post-classification mapping processes, as well as relevant result plots. 
+A stats_report table is also generated, containing relevant statistics on number of reads mapped, classified, and filtered at each step.
 * pipeline_info: nextflow run logs.
 
 

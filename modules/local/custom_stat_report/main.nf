@@ -11,8 +11,12 @@ process CUSTOM_STAT_REPORT {
     path(host_fasta)
     val krakenuniq
     path krakenuniq_report
+    path krakenuniq_kingdoms
+    path krakenuniq_removal
     val kraken2
     path kraken2_report
+    path kraken2_kingdoms
+    path kraken2_removal
     val map_classified
 
     output:
@@ -30,9 +34,13 @@ process CUSTOM_STAT_REPORT {
             $mapper \
             $host_name \
             $krakenuniq \
-            ${krakenuniq ? krakenuniq_report : ''} \
+            ${krakenuniq ? krakenuniq_report : 'NA'} \
+            ${krakenuniq ? krakenuniq_kingdoms : 'NA'} \
+            ${krakenuniq ? krakenuniq_removal : 'NA'} \
             $kraken2 \
-            ${kraken2 ? kraken2_report : ''} \
+            ${kraken2 ? kraken2_report : 'NA'} \
+            ${kraken2 ? kraken2_kingdoms : 'NA'} \
+            ${kraken2 ? kraken2_removal : 'NA'} \
             $map_classified
     """
 
