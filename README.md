@@ -3,9 +3,7 @@
 
 ## :telescope: Pipeline overview
 
-Diagram is not up-to-date
-
-![Diagram in progress](misc/pipeline.png)
+![Pipeline overview](misc/pipeline.png)
 
 
 ## :microscope: How to use:
