@@ -5,12 +5,13 @@ process PLOTS_KRAKEN2 {
 
     input:
     path count_table
-    val contaminants
-    val tax_level
+    val min_reads
 
     output:
-    path 'table_at*totalCounts.tsv',           emit: counts
-    path 'table_at*distinctMinimizers.tsv',    emit: minimizers
+    // path 'table_at*totalCounts.tsv',           emit: counts
+    // path 'table_at*distinctMinimizers.tsv',    emit: minimizers
+    path 'kraken2_summary_kingdoms.tsv',               emit: kingdoms
+    path 'kraken2_removedReadsFromPlots.tsv',          emit: removedReadsFromPlots
     path '*.tsv'
     path '*.pdf'
 
@@ -18,6 +19,6 @@ process PLOTS_KRAKEN2 {
     def plot_heatmap_script = workflow.projectDir.resolve("bin/plots_kraken.r")
 
     """
-    Rscript $plot_heatmap_script $count_table "$contaminants" "$tax_level"
+    Rscript $plot_heatmap_script $count_table $min_reads
     """
 }
