@@ -11,9 +11,9 @@ include { BBMAP_BBDUK } from './modules/nf-core/bbmap/bbduk/main'
 include { FASTP } from './modules/nf-core/fastp/main'
 
 // host removal
-include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
+//include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
 // include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'
-include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
+//include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
 include { BOWTIE2_ALIGN  as BOWTIE2HOST } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/align/main'
 
