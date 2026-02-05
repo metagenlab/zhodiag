@@ -18,18 +18,18 @@ conda activate vcs_nextflow_24.10.5
 ### :rocket: Usage
 1. Clone the repo.
 2. Prepare input sample table. This is a comma-separated table with the following columns:
-    `sample,fastq_R1,fastq_R2,group`. You can see an example in `data/samples.csv`
+    `sample,fastq_R1,fastq_R2,group`. You can see an example in `data/simdata1.tsv`
 
-* sample: sample name. This will prefix all files.
+* sample: sample name. Unique. This will prefix all output files.
 * fastq_R1 and fastq_R2: full path to R1 and R2 reads.
-* group: variable used for faceting in output plots. For control samples, use "control" as group.
+* group: variable used for faceting in output plots. *For control samples, use "control" as group*.
 
 3. Edit `nextflow.config` with parameters of choice. Follow the recomended tools for full functionality (other tools not fully implemented yet)
 
 * Recommended trimmer is fastp (option `trim_tool`).
-* Recommended mapper is bowtie2 (option `mapper`). Bowtie2 requires the reference index and fasta. 
-* You can optionally run taxonomy classification with kraken2/krakenuniq by turning on/off (true/false) the corresponding processes. 
-* Currently, kraken2 is running with our fulldb, whereas krakenuniq runs with the premade MicrobialDB.
+* Recommended mapper is bowtie2 (option `mapper`). Bowtie2 requires the reference index (option `host_bowtie2_index`) and reference fasta (option `host_fasta`). 
+* You can optionally run taxonomy classification with kraken2 and/or krakenuniq by turning on/off (true/false) the corresponding processes. 
+* Currently, kraken2 is running with our fulldb, whereas krakenuniq runs with the pre-made [MicrobialDB](https://benlangmead.github.io/aws-indexes/k2).
 * After taxonomy assignation, the classified reads can be extracted (option `map_classified` true). You need to choose which classified reads to extract (kraken2 or krakenuniq, depending on which classifier you used, option `which_classified`)
 
 
