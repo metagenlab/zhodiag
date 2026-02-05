@@ -5,7 +5,7 @@
 
 Diagram is not up-to-date
 
-![Diagram in progress](misc/zhodiag_vertical_db_legend.png)
+![Diagram in progress](misc/pipeline.png)
 
 
 ## :microscope: How to use:
