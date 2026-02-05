@@ -66,15 +66,6 @@ process MINIMAP2_ALIGN {
       echo "Read file is empty. Creating empty output files..."
       touch ${flagstat_file}
 
-      # Write versions.yml even for empty output case
-      minimap2_ver=\$(minimap2 --version 2>&1)
-      samtools_ver=\$(samtools --version | head -n1 | sed 's/^.*samtools //')
-
-      cat <<EOF > versions.yml
-MINIMAP_HOST:
-    minimap2: \$minimap2_ver
-    samtools: \$samtools_ver
-EOF
 
       exit 0
     fi
@@ -96,42 +87,16 @@ EOF
           > ${sam_file}
     } 2> ${log_file}
 
-    # Check for @SQ lines in SAM header (i.e., mapped reads)
-    if grep -q '^@SQ' ${sam_file}; then
-      echo "Mapped reads detected. Continuing with SAM processing..." >&2
+    ${bam_format ? "samtools view -@ ${task.cpus-1} -b ${sam_file} > ${bam_file}" : ""}
 
-      ${bam_format ? "samtools view -@ ${task.cpus-1} -b ${sam_file} > ${bam_file}" : ""}
+    samtools flagstat ${bam_format ? bam_file : sam_file} > ${flagstat_file}
 
-      samtools flagstat ${bam_format ? bam_file : sam_file} > ${flagstat_file}
+    ${paf_output ? "paftools.js sam2paf ${sam_file} > ${paf_file}" : ""}
 
-      ${paf_output ? "paftools.js sam2paf ${sam_file} > ${paf_file}" : ""}
+    ${bam_format && unmapped_fq ? """
+    samtools view -b -f 1 -F 2 -F 256 ${bam_file} | samtools fastq -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz /dev/stdin
+    """ : ""}
 
-      ${bam_format && unmapped_fq ? """
-      samtools view -b -f 1 -F 2 -F 256 ${bam_file} | samtools fastq -1 ${prefix}_${genome}_unmapped_R1.fastq.gz -2 ${prefix}_${genome}_unmapped_R2.fastq.gz /dev/stdin
-      """ : ""}
-
-    else
-      echo "No mapped reads. Creating empty outputs..." >&2
-
-      ${bam_format ? "samtools view -H ${sam_file} | samtools view -b - > ${bam_file}" : ""}
-
-      echo -e "0 + 0 in total (QC-passed reads + QC-failed reads)
-0 + 0 secondary
-0 + 0 supplementary
-0 + 0 duplicates
-0 + 0 mapped (0.00% : N/A)
-0 + 0 paired in sequencing
-0 + 0 read1
-0 + 0 read2
-0 + 0 properly paired (0.00% : N/A)
-0 + 0 with itself and mate mapped
-0 + 0 singletons (0.00% : N/A)
-0 + 0 with mate mapped to a different chr
-0 + 0 with mate mapped to a different chr (mapQ>=5)" > ${flagstat_file}
-
-      ${paf_output ? "touch ${paf_file}" : ""}
-      ${bam_format && unmapped_fq ? "touch ${prefix}_${genome}_unmapped_R1.fastq.gz ${prefix}_${genome}_unmapped_R2.fastq.gz" : ""}
-    fi
 
     ${bam_format ? "rm -f ${sam_file}" : ""}
 
@@ -140,9 +105,8 @@ EOF
     samtools_ver=\$(samtools --version | head -n1 | sed 's/^.*samtools //')
 
     cat <<EOF > versions.yml
-MINIMAP_HOST:
     minimap2: \$minimap2_ver
     samtools: \$samtools_ver
-EOF
+    EOF
     """
 }

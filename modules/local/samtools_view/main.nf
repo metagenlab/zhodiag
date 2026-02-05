@@ -28,7 +28,7 @@ process SAMTOOLS_VIEW {
 
     """
     # filter SAM by quality (= 0 & >mapq) and remove human hits. Output alignments only in sam
-    samtools view --threads ${task.cpus-1} $args $input \\
+    samtools view --threads ${task.cpus-1} -F 4 $args $input \\
     | awk 'BEGIN{OFS="\\t"} 
             !/^@/ { 
                 if ((\$5 == 0 || \$5 > $quality) && length(\$10) >= $cov ) {

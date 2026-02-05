@@ -12,6 +12,8 @@ process PLOTS_KRAKENUNIQ {
     output:
     // path 'table_at*totalCounts.tsv',           emit: counts
     // path 'table_at*distinctMinimizers.tsv',    emit: minimizers
+    path 'krakenuniq_summary_kingdoms.tsv',                  emit: kingdoms
+    path 'krakenuniq_removedReadsFromPlots.tsv',             emit: removedReadsFromPlots
     path '*.tsv'
     path '*.pdf'
 
