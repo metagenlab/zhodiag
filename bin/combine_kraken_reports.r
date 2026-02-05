@@ -15,15 +15,17 @@ df = data.frame()
 
 for(f in file_list){
     s = sub("_db.*", "", f)
-    a = read.table(f, header = FALSE, sep = '\t', strip.white = TRUE, fill = TRUE)
-    a = a %>% mutate(sample = s)
-    df = rbind(df, a)
+    a = fread(f, header = FALSE, sep = '\t', strip.white = TRUE, fill = TRUE)
+    b = a %>% mutate(sample = s)
+    df = bind_rows(df, b)
 }
 df$sample = as.character(df$sample)
 dfg = left_join(df, metadata, by = "sample")
 colnames(dfg) = c("perc_reads", "totalCounts", "directCounts", 
                     "minimizers", "distinctMinimizers", "rank",
                     "taxid", "taxonomy", "sample", "group")
+dfg = dfg %>% mutate(taxonomy = gsub("#", "", taxonomy))
+
 write.table(dfg, paste0(outfile_prefix),
             col.names = TRUE, row.names = FALSE,
             sep = '\t', quote = FALSE)

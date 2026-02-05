@@ -1,4 +1,3 @@
-set.seed(123)
 library(tidyverse)
 library(data.table)
 
@@ -14,16 +13,17 @@ metadata$sample = as.character(metadata$sample)
 df = data.frame()
 
 for(f in file_list){
-    s = sub(".krakenuniq.report.*", "", f)
-    a = read.table(f, header = TRUE, sep = '\t', strip.white = TRUE, fill = TRUE, skip = 0)
-    a = a %>% mutate(sample = s)
-    df = rbind(df, a)
+    print(f)
+    s = sub("\\.krakenuniq\\.report.*", "", f)
+    print(s)
+    a = fread(f, header = TRUE, sep = '\t', strip.white = TRUE, fill = TRUE, skip = "taxReads")
+    b = a %>% mutate(sample = s)
+    df = bind_rows(df, b)
 }
 df$sample = as.character(df$sample)
 dfg = left_join(df, metadata, by = "sample")
-# colnames(dfg) = c("perc_reads", "totalCounts", "directCounts", 
-#                     "minimizers", "distinctMinimizers", "rank",
-#                     "taxid", "taxonomy", "sample", "group")
+dfg = dfg %>% mutate(taxName = gsub("#", "", taxName))
+
 write.table(dfg, paste0(outfile_prefix),
             col.names = TRUE, row.names = FALSE,
             sep = '\t', quote = FALSE)
