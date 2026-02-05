@@ -7,7 +7,7 @@ include { MULTIQC_COLLECT_REPORTS } from './modules/local/multiqc/main'
 include { FASTQC } from './modules/nf-core/fastqc/main'
 // trimming
 include { TRIMMOMATIC } from './modules/nf-core/trimmomatic/main'
-include { BBMAP_BBDUK } from './modules/nf-core/bbmap/bbduk/main'
+//include { BBMAP_BBDUK } from './modules/nf-core/bbmap/bbduk/main'
 include { FASTP } from './modules/nf-core/fastp/main'
 
 // host removal
