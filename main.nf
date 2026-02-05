@@ -38,10 +38,10 @@ include { KRAKENUNIQ_COMBINE_REPORTS } from './modules/local/krakenuniq_combineR
 include { PLOTS_KRAKENUNIQ } from './modules/local/plots_krakenuniq/main'
 
 // manual mapping of candidates
-include { EXTRACT_NONHUMAN_READS as MANUAL_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
-include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_MANUAL } from './modules/nf-core/minimap2/align/main'
-include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_MANUAL } from './modules/nf-core/samtools/sort/main'                                                                                                                       
-include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_MANUAL } from './modules/nf-core/samtools/depth/main'
+// include { EXTRACT_NONHUMAN_READS as MANUAL_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
+// include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_MANUAL } from './modules/nf-core/minimap2/align/main'
+// include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_MANUAL } from './modules/nf-core/samtools/sort/main'                                                                                                                       
+// include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_MANUAL } from './modules/nf-core/samtools/depth/main'
 // automatic mapping of candidates
 include { EXTRACT_NONHUMAN_READS as AUTOMATIC_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
 include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_AUTO } from './modules/nf-core/minimap2/align/main'
