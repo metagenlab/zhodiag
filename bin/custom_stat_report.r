@@ -115,6 +115,7 @@ if (run_krakenuniq) {
             krakenuniq_nonHumanReads = sum(taxReads[!taxName %in% c("unclassified", "Homo sapiens")])
             ) %>%
         rename(Sample = sample)
+    krakenuniq$sample <- as.character(krakenuniq)
     stats = left_join(stats, krakenuniq, by = "Sample")
 
     ku_kingdoms <- read.table(
@@ -130,6 +131,7 @@ if (run_krakenuniq) {
                     krakenuniq_Fungi, krakenuniq_removedReadsFromPlots,
                     krakenuniq_beforeTaxa, krakenuniq_afterTaxa) %>%
             rename(Sample = sample)
+    ku_extra$Sample <- as.character(ku_extra$Sample)
     stats = left_join(stats, ku_extra, by = "Sample")
 
 }
@@ -147,6 +149,7 @@ if (run_kraken2) {
             kraken2_nonHumanReads = sum(directCounts[!taxonomy %in% c("unclassified", "Homo sapiens")])
             ) %>%
         rename(Sample = sample)
+    kraken$Sample <- as.character(kraken$Sample)
     stats = left_join(stats, kraken2, by = "Sample")
 
     k2_kingdoms = read.table(
@@ -162,6 +165,7 @@ if (run_kraken2) {
             kraken2_Fungi, kraken2_removedReadsFromPlots,
             kraken2_beforeTaxa, kraken2_afterTaxa) %>%
             rename(Sample = sample)
+    k2_extra$Sample <- as.character(k2_extra$Sample)
     stats = left_join(stats, k2_extra, by = 'Sample')
 
 }
