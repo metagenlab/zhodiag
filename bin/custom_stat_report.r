@@ -76,8 +76,9 @@ if (mapper == "bowtie2") {
         header = TRUE, sep = '\t'
     )
     map_data <- map_data[grepl(host, map_data$Sample), ] # this is to select the host map stats from this file; because if running mapping vs full db, this is added to this file too
+                  
     map_data = map_data %>%
-                mutate(Sample = stats$Sample, # helps clean the samplename column, but not the best practice,,,
+                mutate(Sample = sub(paste0("_", host), "", Sample),
                         bowtie2_HostReads = PE.mapped.uniquely,
                         bowtie2_nonHostReads = PE.mapped.discordantly.uniquely + PE.one.mate.mapped.uniquely + PE.one.mate.multimapped + PE.neither.mate.aligned
                 ) %>%
@@ -93,7 +94,7 @@ if (mapper == "minimap2") {
     )
     map_data <- map_data[grepl(host, map_data$Sample), ] # this is to select the host map stats from this file; because if running mapping vs full db, this is added to this file too
     map_data = map_data %>%
-                mutate(Sample = stats$Sample,
+                mutate(Sample = sub(paste0("_", host), "", Sample),
                         minimap2_HostReads = (Mapped * 1000000)/2) %>%
                 select(Sample, minimap2_HostReads)
     stats = left_join(stats, map_data, by = "Sample") %>%
@@ -181,7 +182,7 @@ if (run_mapClassified) {
             header = TRUE, sep = '\t'
         )
         map_data = map_data %>%
-                    mutate(Sample = stats$Sample,
+                    mutate(Sample = stats$Sample, ### FIX THIS, BAD PRACTICE ##
                             bowtie2_nonHumanFullDbMappedReads = Total.Reads * 1000000) %>%
                     select(Sample, bowtie2_nonHumanFullDbMappedReads)
         stats = left_join(stats, map_data, by = "Sample")
