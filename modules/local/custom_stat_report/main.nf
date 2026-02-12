@@ -6,7 +6,6 @@ process CUSTOM_STAT_REPORT {
     input:
     // path(samples)
     path(multiqc_data)
-    val trim_tool
     val mapper
     path(host_fasta)
     val krakenuniq
@@ -30,7 +29,6 @@ process CUSTOM_STAT_REPORT {
     """
     Rscript $custom_report_script \
             $multiqc_data \
-            $trim_tool \
             $mapper \
             $host_name \
             $krakenuniq \

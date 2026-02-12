@@ -6,23 +6,21 @@ library(scales)
 args <- commandArgs(trailingOnly = TRUE)
 # multiqc
 multiqc_data <- args[1]
-# trim
-trim_tool <- args[2]
 # map
-mapper <- args[3]
-host <- args[4]
+mapper <- args[2]
+host <- args[3]
 # krakenuniq
-run_krakenuniq <- tolower(args[5]) == "true"
-krakenuniq_report <- if (run_krakenuniq) args[6] else NULL
-krakenuniq_kingdom <- if (run_krakenuniq) args[7] else NULL
-krakenuniq_removal <- if (run_krakenuniq) args[8] else NULL
+run_krakenuniq <- tolower(args[4]) == "true"
+krakenuniq_report <- if (run_krakenuniq) args[5] else NULL
+krakenuniq_kingdom <- if (run_krakenuniq) args[6] else NULL
+krakenuniq_removal <- if (run_krakenuniq) args[7] else NULL
 # kraken2
-run_kraken2 <- tolower(args[9]) == "true"
-kraken2_report <- if (run_kraken2) args[10] else NULL
-kraken2_kingdom <- if (run_kraken2) args[11] else NULL
-kraken2_removal <- if (run_kraken2) args[12] else NULL
+run_kraken2 <- tolower(args[8]) == "true"
+kraken2_report <- if (run_kraken2) args[9] else NULL
+kraken2_kingdom <- if (run_kraken2) args[10] else NULL
+kraken2_removal <- if (run_kraken2) args[11] else NULL
 # map post-classification
-run_mapClassified <- tolower(args[13]) == "true"
+run_mapClassified <- tolower(args[12]) == "true"
 
 # colors
 stat.colors <- c(
@@ -54,19 +52,16 @@ stat.colors <- c(
 
 
 ## TRIM STATS ##
-if (trim_tool == "fastp") {
-    print("Trim tool is fastp")
-    trim_data <- read.table(
-        file.path(multiqc_data, "fastp_filtered_reads_plot.txt"),
-        header = TRUE, sep = '\t'
-    )
-    stats = trim_data %>% 
-            column_to_rownames("Sample") %>%
-            mutate(InitialReads = rowSums(across(where(is.numeric))) / 2,
-                    fastp_PassedFilter = Passed.Filter / 2) %>%
-            select(InitialReads, fastp_PassedFilter) %>%
-            rownames_to_column("Sample")
-}
+trim_data <- read.table(
+    file.path(multiqc_data, "fastp_filtered_reads_plot.txt"),
+    header = TRUE, sep = '\t'
+)
+stats = trim_data %>% 
+        column_to_rownames("Sample") %>%
+        mutate(InitialReads = rowSums(across(where(is.numeric))) / 2,
+                fastp_PassedFilter = Passed.Filter / 2) %>%
+        select(InitialReads, fastp_PassedFilter) %>%
+        rownames_to_column("Sample")
 
 ## HOST STATS ##
 if (mapper == "bowtie2") {
