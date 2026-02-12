@@ -26,17 +26,16 @@ conda activate vcs_nextflow_24.10.5
 
 3. Edit `nextflow.config` with parameters of choice. Follow the recomended tools for full functionality (other tools not fully implemented yet)
 
-* Recommended trimmer is fastp (option `trim_tool`).
 * Recommended mapper is bowtie2 (option `mapper`). Bowtie2 requires the reference index (option `host_bowtie2_index`) and reference fasta (option `host_fasta`). 
 * You can optionally run taxonomy classification with kraken2 and/or krakenuniq by turning on/off (true/false) the corresponding processes. 
 * Currently, kraken2 is running with our fulldb, whereas krakenuniq runs with the pre-made [MicrobialDB](https://benlangmead.github.io/aws-indexes/k2).
-* After taxonomy assignation, the classified reads can be extracted (option `map_classified` true). You need to choose which classified reads to extract (kraken2 or krakenuniq, depending on which classifier you used, option `which_classified`)
+* After taxonomy assignation, the non-human-classified reads can be extracted and mapped (option `map_classified` true). You need to choose which classified reads to extract (kraken2 or krakenuniq, depending on which classifier you used, option `which_classified`)
 
 
 4. Run (with -resume if re-launching):
 
 ```
-nextflow run main.nf -profile singularity --input data/example_groups.csv --outdir OUTPUT -resume
+nextflow run main.nf -profile singularity --input data/simdata1.tsv --outdir OUTPUT -resume
 ```
 
 ## :fireworks: Output
