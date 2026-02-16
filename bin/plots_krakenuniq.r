@@ -8,7 +8,7 @@ filename <- args[1]
 min_reads <- as.numeric(args[2])
 print(paste0("Taxa with less than ", min_reads, "were removed from plots"))
 
-df <- read.table(filename, header = TRUE, sep = '\t', comment.char="")
+df <- read.table(filename, header = TRUE, sep = '\t', quote = "", comment.char="")
 
 # wide table of reads per sample and species
 w.df <- df %>% filter(rank == 'species') %>% 
