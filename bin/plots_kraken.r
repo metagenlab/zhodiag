@@ -9,7 +9,7 @@ min_reads <- as.numeric(args[2])
 # contaminants <- args[2]
 # tax_levels <- strsplit(args[3], ",\\s*")[[1]]
 
-df <- read.table(filename, header = TRUE, sep = '\t', comment.char="")
+df <- read.table(filename, header = TRUE, sep = '\t', quote = "", comment.char="")
 
 # wide table of reads per sample and species
 w.df <- df %>% filter(rank == 'S') %>% 
