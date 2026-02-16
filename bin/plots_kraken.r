@@ -6,10 +6,15 @@ library(ggrepel)
 args <- commandArgs(trailingOnly = TRUE)
 filename <- args[1]
 min_reads <- as.numeric(args[2])
-# contaminants <- args[2]
-# tax_levels <- strsplit(args[3], ",\\s*")[[1]]
+contaminants <- args[3]
 
 df <- read.table(filename, header = TRUE, sep = '\t', quote = "", comment.char="")
+contams <- read.table(contaminants, header = FALSE, sep = '\t')
+colnames(contams) <- c('contaminant', 'code')
+print("The following taxa were removed: ")
+contams
+write.table(contams, "removed_contaminants.tsv",
+          quote = FALSE, col.names = TRUE, row.names = FALSE, sep = '\t')
 
 # wide table of reads per sample and species
 w.df <- df %>% filter(rank == 'S') %>% 
@@ -54,10 +59,16 @@ bef.reads <- a.hsRem %>%
     summarise(beforeReads = sum(totalCounts),
               kraken2_beforeTaxa = n() + 1) # add 1 for human
 
+sp.filter = contams %>% filter(code == 'species') %>% pull(contaminant)
+gn.filter = contams %>% filter(code == 'genus') %>% pull(contaminant)
+tax.filter = contams %>% filter(code == 'taxid') %>% pull(contaminant)
+
 a.filt1 <- a.hsRem %>% filter(rank == 'S') %>% 
     select(totalCounts, distinctMinimizers, taxid, taxonomy, sample, group) %>%
     filter(totalCounts > min_reads) %>%
-    filter(!startsWith(taxonomy, "Bradyrhizobium"))
+    filter(!taxonomy %in% sp.filter,
+            !Reduce(`|`, lapply(gn.filter, function(g) startsWith(taxonomy, g))),
+            !taxid %in% tax.filter)
 
 a <- a.filt1 %>%
   group_by(taxonomy) %>%
@@ -139,7 +150,19 @@ dev.off()
 for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)]))){
   print(gr)
   control_groups <- unique(a$group[grepl("^control", a$group)])
-  dtp <- a %>% filter(group %in% c(gr, control_groups))
+  dtpm <- a %>% filter(group %in% c(gr, control_groups))
+
+  # filter taxa only in control vs each group
+  dtp <- dtpm %>%
+  group_by(taxonomy) %>%
+  mutate(
+    control_reads = sum(totalCounts[group == "control"]),
+    other_reads   = sum(totalCounts[group != "control"])
+  ) %>%
+  ungroup() %>%
+  filter(!(control_reads > 0 & other_reads == 0)) %>%
+  select(-control_reads, -other_reads)
+
   # plot size
   n_species <- length(unique(dtp$taxonomy))
   n_samples <- length(unique(dtp$sample))

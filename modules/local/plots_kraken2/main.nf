@@ -6,6 +6,7 @@ process PLOTS_KRAKEN2 {
     input:
     path count_table
     val min_reads
+    path contaminants
 
     output:
     // path 'table_at*totalCounts.tsv',           emit: counts
@@ -19,6 +20,6 @@ process PLOTS_KRAKEN2 {
     def plot_heatmap_script = workflow.projectDir.resolve("bin/plots_kraken.r")
 
     """
-    Rscript $plot_heatmap_script $count_table $min_reads
+    Rscript $plot_heatmap_script $count_table $min_reads $contaminants
     """
 }
