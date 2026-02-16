@@ -54,11 +54,10 @@ bef.reads <- a.hsRem %>%
     summarise(beforeReads = sum(totalCounts),
               kraken2_beforeTaxa = n() + 1) # add 1 for human
 
-a.filt1 <- a.hsRem %>% filter(rank == 'species') %>% 
-    select(reads, taxReads, kmers, dup, cov, taxID, taxName, sample, group) %>%
-    filter(reads > min_reads) %>%
-    filter(!taxName %in% c("synthetic construct"),
-    !startsWith(taxName, "Bradyrhizobium"))
+a.filt1 <- a.hsRem %>% filter(rank == 'S') %>% 
+    select(totalCounts, distinctMinimizers, taxid, taxonomy, sample, group) %>%
+    filter(totalCounts > min_reads) %>%
+    filter(!startsWith(taxonomy, "Bradyrhizobium"))
 
 a <- a.filt1 %>%
   group_by(taxName) %>%
