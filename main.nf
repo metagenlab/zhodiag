@@ -188,7 +188,8 @@ workflow {
         // kraken_report_taxonomy = KRAKEN2_TAXONOMY(kraken_reports_combined.combine_long)
         // contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
         results_kraken = PLOTS_KRAKEN2(kraken_reports_combined.combine_long,
-                        params.min_reads)
+                        params.min_reads,
+                        params.contaminants)
         // KRAKEN2_TAXONOMY(results_kraken.counts, 
         //                     results_kraken.minimizers)
     }
@@ -220,7 +221,8 @@ workflow {
 
         // plot
         results_krakenuniq = PLOTS_KRAKENUNIQ(krakenuniq_reports_combined.combine_long,
-                                                params.min_reads)
+                                                params.min_reads,
+                                                params.contaminants)
     }
     // --------------------------------------------- //
     // --- Mapping classified reads or selected candidates ---
