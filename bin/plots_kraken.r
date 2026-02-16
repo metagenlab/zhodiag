@@ -54,17 +54,16 @@ bef.reads <- a.hsRem %>%
     summarise(beforeReads = sum(totalCounts),
               kraken2_beforeTaxa = n() + 1) # add 1 for human
 
-a.filt1 <- a.hsRem %>% filter(rank == 'species') %>% 
-    select(reads, taxReads, kmers, dup, cov, taxID, taxName, sample, group) %>%
-    filter(reads > min_reads) %>%
-    filter(!taxName %in% c("synthetic construct"),
-    !startsWith(taxName, "Bradyrhizobium"))
+a.filt1 <- a.hsRem %>% filter(rank == 'S') %>% 
+    select(totalCounts, distinctMinimizers, taxid, taxonomy, sample, group) %>%
+    filter(totalCounts > min_reads) %>%
+    filter(!startsWith(taxonomy, "Bradyrhizobium"))
 
 a <- a.filt1 %>%
-  group_by(taxName) %>%
+  group_by(taxonomy) %>%
   mutate(
-    control_reads = sum(reads[group == "control"]),
-    other_reads   = sum(reads[group != "control"])
+    control_reads = sum(totalCounts[group == "control"]),
+    other_reads   = sum(totalCounts[group != "control"])
   ) %>%
   ungroup() %>%
   filter(!(control_reads > 0 & other_reads == 0)) %>%
@@ -142,7 +141,7 @@ for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)])))
   control_groups <- unique(a$group[grepl("^control", a$group)])
   dtp <- a %>% filter(group %in% c(gr, control_groups))
   # plot size
-  n_species <- length(unique(dtp$taxName))
+  n_species <- length(unique(dtp$taxonomy))
   n_samples <- length(unique(dtp$sample))
   plot_height <- max(base_height, n_species * height_per_species)
   plot_width  <- max(base_width,  n_samples * width_per_sample)
