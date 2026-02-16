@@ -54,11 +54,21 @@ bef.reads <- a.hsRem %>%
     summarise(beforeReads = sum(reads),
               krakenuniq_beforeTaxa = n() + 1) # add 1 for human
 
-a <- a.hsRem %>% filter(rank == 'species') %>% 
+a.filt1 <- a.hsRem %>% filter(rank == 'species') %>% 
     select(reads, taxReads, kmers, dup, cov, taxID, taxName, sample, group) %>%
     filter(reads > min_reads) %>%
     filter(!taxName %in% c("synthetic construct"),
     !startsWith(taxName, "Bradyrhizobium"))
+
+a <- a.filt1 %>%
+  group_by(taxName) %>%
+  mutate(
+    control_reads = sum(reads[group == "control"]),
+    other_reads   = sum(reads[group != "control"])
+  ) %>%
+  ungroup() %>%
+  filter(!(control_reads > 0 & other_reads == 0)) %>%
+  select(-control_reads, -other_reads)
 # write.table(a, paste0("long_table_at_species_level.tsv"),
 #         row.names = FALSE, col.names = TRUE, sep = '\t', quote = FALSE)
 
@@ -93,12 +103,13 @@ a <- a %>% left_join(totals, by = "taxName")
 a$taxName <- factor(a$taxName, levels = totals$taxName[order(totals$totReads_species)])
 
 # plot size
-n_species <- length(unique(a$taxName))
-n_samples <- length(unique(a$sample))
 height_per_species <- 0.2  # inches per species
 base_height <- 4           # minimal height in inches
 width_per_sample <- 0.5    # inches per sample
 base_width <- 8            # minimal width in inches
+
+n_species <- length(unique(a$taxName))
+n_samples <- length(unique(a$sample))
 plot_height <- max(base_height, n_species * height_per_species)
 plot_width  <- max(base_width,  n_samples * width_per_sample)
 
@@ -117,8 +128,15 @@ dev.off()
 for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)]))){
   print(gr)
   control_groups <- unique(a$group[grepl("^control", a$group)])
+  dtp <- a %>% filter(group %in% c(gr, control_groups))
+  # plot size
+  n_species <- length(unique(dtp$taxName))
+  n_samples <- length(unique(dtp$sample))
+  plot_height <- max(base_height, n_species * height_per_species)
+  plot_width  <- max(base_width,  n_samples * width_per_sample)
+  
   pdf(paste0(gr, "_heatmap_reads_fillByCoverage.pdf"), height = plot_height, width = plot_width)
-  p = ggplot(a %>% filter(reads != 0) %>% filter(group %in% c(gr, control_groups)), 
+  p = ggplot(dtp, 
         aes(x = factor(sample), y = taxName, fill = cov, label = reads)) +
     geom_tile() +
     geom_text(colour='white') +
