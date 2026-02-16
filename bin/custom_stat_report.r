@@ -107,7 +107,7 @@ if (run_krakenuniq) {
     print("Taxonomy with krakenuniq")
     ku_data <- read.table(
         krakenuniq_report,
-        header = TRUE, sep = '\t'
+        header = TRUE, sep = '\t', quote = "", comment.char=""
     )
     krakenuniq = ku_data %>% group_by(sample) %>%
         summarise(krakenuniq_ClassifiedReads = sum(taxReads[taxName != "unclassified"]),
@@ -141,7 +141,7 @@ if (run_kraken2) {
     print("Taxonomy with kraken2")
     k2_data = read.table(
         kraken2_report,
-        header = TRUE, sep = '\t'
+        header = TRUE, sep = '\t', quote = "", comment.char=""
     )
     kraken2 = k2_data %>% group_by(sample) %>%
         summarise(kraken2_ClassifiedReads = sum(directCounts[taxonomy != "unclassified"]),
