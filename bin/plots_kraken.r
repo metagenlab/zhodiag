@@ -60,10 +60,10 @@ a.filt1 <- a.hsRem %>% filter(rank == 'S') %>%
     filter(!startsWith(taxonomy, "Bradyrhizobium"))
 
 a <- a.filt1 %>%
-  group_by(taxName) %>%
+  group_by(taxonomy) %>%
   mutate(
-    control_reads = sum(reads[group == "control"]),
-    other_reads   = sum(reads[group != "control"])
+    control_reads = sum(totalCounts[group == "control"]),
+    other_reads   = sum(totalCounts[group != "control"])
   ) %>%
   ungroup() %>%
   filter(!(control_reads > 0 & other_reads == 0)) %>%
