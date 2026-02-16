@@ -141,7 +141,7 @@ for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)])))
   control_groups <- unique(a$group[grepl("^control", a$group)])
   dtp <- a %>% filter(group %in% c(gr, control_groups))
   # plot size
-  n_species <- length(unique(dtp$taxName))
+  n_species <- length(unique(dtp$taxonomy))
   n_samples <- length(unique(dtp$sample))
   plot_height <- max(base_height, n_species * height_per_species)
   plot_width  <- max(base_width,  n_samples * width_per_sample)
