@@ -6,15 +6,20 @@ library(ggrepel)
 args <- commandArgs(trailingOnly = TRUE)
 filename <- args[1]
 min_reads <- as.numeric(args[2])
-contaminants <- args[3]
+contaminants <- if (length(args) >= 3 && nzchar(args[3])) args[3] else NULL
+
+print(paste0("Taxa with less than ", min_reads, " reads were removed from plots"))
 
 df <- read.table(filename, header = TRUE, sep = '\t', quote = "", comment.char="")
-contams <- read.table(contaminants, header = FALSE, sep = '\t')
-colnames(contams) <- c('contaminant', 'code')
-print("The following taxa were removed: ")
-contams
-write.table(contams, "removed_contaminants.tsv",
-          quote = FALSE, col.names = TRUE, row.names = FALSE, sep = '\t')
+
+if (!is.null(contaminants)) {
+  contams <- read.table(contaminants, header = FALSE, sep = '\t')
+  colnames(contams) <- c('contaminant', 'code')
+  print("The following taxa were removed: ")
+  contams
+  write.table(contams, "removed_contaminants.tsv",
+            quote = FALSE, col.names = TRUE, row.names = FALSE, sep = '\t')
+}
 
 # wide table of reads per sample and species
 w.df <- df %>% filter(rank == 'S') %>% 
@@ -52,23 +57,28 @@ a.hsRem <- df %>%
 
 # FILTERS: 
 #        * have at least "min_reads" reads
-#        * exclude bradys (and others ?) manual removal here; a nextflow.config param contaminants still not implemented
+#        * exclude taxa specified in params.contaminants file
+#        * only detected in control group
 bef.reads <- a.hsRem %>% 
     filter(rank == 'S') %>%
     group_by(sample) %>%
     summarise(beforeReads = sum(totalCounts),
               kraken2_beforeTaxa = n() + 1) # add 1 for human
 
-sp.filter = contams %>% filter(code == 'species') %>% pull(contaminant)
-gn.filter = contams %>% filter(code == 'genus') %>% pull(contaminant)
-tax.filter = contams %>% filter(code == 'taxid') %>% pull(contaminant)
-
 a.filt1 <- a.hsRem %>% filter(rank == 'S') %>% 
     select(totalCounts, distinctMinimizers, taxid, taxonomy, sample, group) %>%
-    filter(totalCounts > min_reads) %>%
-    filter(!taxonomy %in% sp.filter,
-            !Reduce(`|`, lapply(gn.filter, function(g) startsWith(taxonomy, g))),
-            !taxid %in% tax.filter)
+    filter(totalCounts > min_reads)
+
+if (!is.null(contaminants)) {
+  sp.filter = contams %>% filter(code == 'species') %>% pull(contaminant)
+  gn.filter = contams %>% filter(code == 'genus') %>% pull(contaminant)
+  tax.filter = contams %>% filter(code == 'taxid') %>% pull(contaminant)
+
+  a.filt1 <- a.filt1 %>% 
+      filter(!taxonomy %in% sp.filter,
+              !Reduce(`|`, lapply(gn.filter, function(g) startsWith(taxonomy, g))),
+              !taxid %in% tax.filter)
+}
 
 a <- a.filt1 %>%
   group_by(taxonomy) %>%
