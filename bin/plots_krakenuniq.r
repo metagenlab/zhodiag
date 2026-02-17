@@ -152,7 +152,7 @@ for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)])))
   control_groups <- unique(a$group[grepl("^control", a$group)])
   dtpm <- a %>% filter(group %in% c(gr, control_groups))
 
-  # filter taxa only in control vs each group
+  # filter out taxa only in control vs group
   dtp <- dtpm %>%
   group_by(taxName) %>%
   mutate(
@@ -162,6 +162,13 @@ for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)])))
   ungroup() %>%
   filter(!(control_reads > 0 & other_reads == 0)) %>%
   select(-control_reads, -other_reads)
+
+  # reorder by total reads per species across all samples
+  totals.gr <- dtp %>%
+    group_by(taxName) %>%
+    summarise(totReads_species = sum(reads))
+  dtp <- dtp %>% left_join(totals.gr, by = "taxName")
+  dtp$taxName <- factor(dtp$taxName, levels = totals.gr$taxName[order(totals.gr$totReads_species)])
 
   # plot size
   n_species <- length(unique(dtp$taxName))
