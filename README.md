@@ -26,10 +26,9 @@ conda activate vcs_nextflow_24.10.5
 
 3. Edit `nextflow.config` with parameters of choice. Follow the recomended tools for full functionality (other tools not fully implemented yet)
 
-* Recommended trimmer is fastp (option `trim_tool`).
 * Recommended mapper is bowtie2 (option `mapper`). Bowtie2 requires the reference index (option `host_bowtie2_index`) and reference fasta (option `host_fasta`). 
 * You can optionally run taxonomy classification with kraken2 and/or krakenuniq by turning on/off (true/false) the corresponding processes. 
-* Currently, kraken2 is running with our fulldb, whereas krakenuniq runs with the pre-made [MicrobialDB](https://benlangmead.github.io/aws-indexes/k2).
+* Currently, kraken2 can run with our custom fulldb or with a downloaded db, whereas krakenuniq runs only with the downloaded [MicrobialDB](https://benlangmead.github.io/aws-indexes/k2) (we couldn't compile our custom db into a krakenuniq index).
 * After taxonomy assignation, the classified reads can be extracted (option `map_classified` true). You need to choose which classified reads to extract (kraken2 or krakenuniq, depending on which classifier you used, option `which_classified`)
 * You can prepare a table file containing known contaminants that you want removed from plots (eg. Bradyrhyzobiums, Cutibacterium acnes, etc). The file is a header-less tsv and has two columns: first column is the taxonomy. This can be a species name, a genus name, or a taxID. The second column species whether is a "species", a "genus", or a "taxid". The species named exactly as writen in the file will be removed. All species starting by the genus as writen in the file will be removed. Taxa specified by the taxID will also be removed. You can pass this file with the parameter `contaminants`. See an example file in `data/contaminants.tsv`.
 
