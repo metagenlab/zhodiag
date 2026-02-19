@@ -36,7 +36,7 @@ conda activate vcs_nextflow_24.10.5
 4. Run (with -resume if re-launching):
 
 ```
-nextflow run main.nf -profile singularity --input data/example_groups.csv --outdir OUTPUT -resume
+nextflow run main.nf -profile singularity --input data/simdata1.tsv -resume
 ```
 
 ## :fireworks: Output
