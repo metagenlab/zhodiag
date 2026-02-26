@@ -26,21 +26,15 @@ conda activate vcs_nextflow_24.10.5
 
 3. Edit `nextflow.config` with parameters of choice. Follow the recomended tools for full functionality (other tools not fully implemented yet)
 
-* Recommended mapper is bowtie2 (option `mapper`). Bowtie2 requires the reference index (option `host_bowtie2_index`) and reference fasta (option `host_fasta`). 
-* You can optionally run taxonomy classification with kraken2 and/or krakenuniq by turning on/off (true/false) the corresponding processes. 
-* Currently, kraken2 is running with our fulldb, whereas krakenuniq runs with the pre-made [MicrobialDB](https://benlangmead.github.io/aws-indexes/k2).
-<<<<<<< HEAD
-* After taxonomy assignation, the non-human-classified reads can be extracted and mapped (option `map_classified` true). You need to choose which classified reads to extract (kraken2 or krakenuniq, depending on which classifier you used, option `which_classified`)
-=======
-* After taxonomy assignation, the classified reads can be extracted (option `map_classified` true). You need to choose which classified reads to extract (kraken2 or krakenuniq, depending on which classifier you used, option `which_classified`)
+* You can optionally run a host-removal step before taxonomy classification (option `host_removal`). Otherwise, human reads will be detected by the classifier.
+* You can optionally run taxonomy classification with kraken2 and/or krakenuniq and/or by mapping, by turning on/off (true/false) the corresponding processes. 
+* Currently, kraken2 can run with our custom fulldb or with a downloaded db. Krakenuniq runs only with the downloaded [MicrobialDB](https://benlangmead.github.io/aws-indexes/k2) (we couldn't compile our custom db into a krakenuniq index). Classification by mapping is run with our custom full db, or you can create a different bowtie2 index.
 * You can prepare a table file containing known contaminants that you want removed from plots (eg. Bradyrhyzobiums, Cutibacterium acnes, etc). The file is a header-less tsv and has two columns: first column is the taxonomy. This can be a species name, a genus name, or a taxID. The second column species whether is a "species", a "genus", or a "taxid". The species named exactly as writen in the file will be removed. All species starting by the genus as writen in the file will be removed. Taxa specified by the taxID will also be removed. You can pass this file with the parameter `contaminants`. See an example file in `data/contaminants.tsv`.
->>>>>>> 43e7d143c600835569a93cd16dfa93a73798d32c
-
 
 4. Run (with -resume if re-launching):
 
 ```
-nextflow run main.nf -profile singularity --input data/simdata1.tsv --outdir OUTPUT -resume
+nextflow run main.nf -profile singularity --input data/simdata1.tsv -resume
 ```
 
 ## :fireworks: Output
@@ -48,7 +42,7 @@ The output will be organised by software, for example:
 
 * fastqc: output of qc control step.
 * fastp: output of trimming step, including cleaned-reads fastq files and log files.
-* bowtie2: output of all mapping steps (host, and optionally, post-classification mapping).
+* bowtie2: output of all mapping steps (host, mapping-based classification).
 * kraken2: output of kraken2 classification, including output and report files.
 * krakenuniq: output of krakenuniq classification, including output and report files.
 * plots_and_tables: includes summary tables derived from kraken2, krakenuniq and post-classification mapping processes, as well as relevant result plots. 

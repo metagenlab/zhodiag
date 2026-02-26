@@ -1,4 +1,4 @@
-process SAMTOOLS_VIEW {
+process FILTER_SAM2BAM {
     tag "$meta.id"
     label 'process_high'
 

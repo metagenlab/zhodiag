@@ -34,17 +34,6 @@ process BOWTIE2_ALIGN {
     def args2 = task.ext.args2 ?: ""
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    def unaligned = ""
-    def reads_args = ""
-    if (meta.single_end) {
-        unaligned = save_unaligned ? "--un-gz ${prefix}.unmapped.fastq.gz" : ""
-        reads_args = "-U ${reads}"
-    } else {
-        unaligned = save_unaligned ? "--un-conc-gz ${prefix}.unmapped.fastq.gz" : ""
-        reads_args = "-1 ${reads[0]} -2 ${reads[1]}"
-    }
-
-    def samtools_command = sort_bam ? 'sort' : 'view'
     def extension_pattern = /(--output-fmt|-O)+\s+(\S+)/
     def extension_matcher =  (args2 =~ extension_pattern)
     def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"
@@ -52,6 +41,17 @@ process BOWTIE2_ALIGN {
     if (!fasta && extension=="cram") error "Fasta reference is required for CRAM output"
     def rawName = (index instanceof String) ? new File(index).getName() : (index.getFileName() ? index.getFileName().toString() : index.toString())
     def genome = rawName.replaceFirst(/(\.fna|\.fa|\.fasta)?(\.gz)?$/, '')
+    def samtools_command = sort_bam ? "| samtools sort $args2 --threads ${task.cpus} -o ${prefix}.${extension} -" : "> ${prefix}.sam"
+
+    def unaligned = ""
+    def reads_args = ""
+    if (meta.single_end) {
+        unaligned = save_unaligned ? "--un-gz ${prefix}.${genome}.unmapped.fastq.gz" : ""
+        reads_args = "-U ${reads}"
+    } else {
+        unaligned = save_unaligned ? "--un-conc-gz ${prefix}.${genome}.unmapped.fastq.gz" : ""
+        reads_args = "-1 ${reads[0]} -2 ${reads[1]}"
+    }
 
     // INDEX=`find -L ./ -name "*.rev.1.bt2" | sed "s/\\.rev.1.bt2\$//"`
     // [ -z "\$INDEX" ] && INDEX=`find -L ./ -name "*.rev.1.bt2l" | sed "s/\\.rev.1.bt2l\$//"`
@@ -65,14 +65,14 @@ process BOWTIE2_ALIGN {
         $unaligned \\
         $args \\
         2>| >(tee ${prefix}_${genome}.bowtie2.log >&2) \\
-        | samtools $samtools_command $args2 --threads $task.cpus ${reference} -o ${prefix}.${extension} -
+        $samtools_command
 
-    if [ -f ${prefix}.unmapped.fastq.1.gz ]; then
-        mv ${prefix}.unmapped.fastq.1.gz ${prefix}.unmapped_1.fastq.gz
+    if [ -f ${prefix}.${genome}.unmapped.fastq.1.gz ]; then
+        mv ${prefix}.${genome}.unmapped.fastq.1.gz ${prefix}.${genome}.unmapped_1.fastq.gz
     fi
 
-    if [ -f ${prefix}.unmapped.fastq.2.gz ]; then
-        mv ${prefix}.unmapped.fastq.2.gz ${prefix}.unmapped_2.fastq.gz
+    if [ -f ${prefix}.${genome}.unmapped.fastq.2.gz ]; then
+        mv ${prefix}.${genome}.unmapped.fastq.2.gz ${prefix}.${genome}.unmapped_2.fastq.gz
     fi
 
     cat <<-END_VERSIONS > versions.yml

@@ -1,4 +1,4 @@
-process CUSTOM_STAT_REPORT {
+process FINAL_STAT_REPORT {
 
     tag "Statistics Report"
     container 'docker://lbwang/rocker-genome:latest'
@@ -6,8 +6,8 @@ process CUSTOM_STAT_REPORT {
     input:
     // path(samples)
     path(multiqc_data)
-    val mapper
-    path(host_fasta)
+    val host_removal
+    path host_fasta
     val krakenuniq
     path krakenuniq_report
     path krakenuniq_kingdoms
@@ -16,20 +16,24 @@ process CUSTOM_STAT_REPORT {
     path kraken2_report
     path kraken2_kingdoms
     path kraken2_removal
-    val map_classified
+    val mapping
+    path db_fasta
+    path bowtie2_kingdoms
+    path bowtie2_removal
 
     output:
     path '*.tsv'
     path '*.pdf'
 
     script:
-    def custom_report_script = workflow.projectDir.resolve("bin/custom_stat_report.r")
-    def host_name = host_fasta.getBaseName().replaceFirst(/(\.fna|\.fa|\.fasta)?(\.gz)?$/, '')
+    def custom_report_script = workflow.projectDir.resolve("bin/final_stat_report.r")
+    def host_name = host_removal ? host_fasta.getBaseName().replaceFirst(/(\.fna|\.fa|\.fasta)?(\.gz)?$/, '') : 'NA'
+    def db_name = mapping ? db_fasta.getBaseName().replaceFirst(/(\.fna|\.fa|\.fasta)?(\.gz)?$/, '') : 'NA'
 
     """
     Rscript $custom_report_script \
             $multiqc_data \
-            $mapper \
+            $host_removal \
             $host_name \
             $krakenuniq \
             ${krakenuniq ? krakenuniq_report : 'NA'} \
@@ -39,7 +43,10 @@ process CUSTOM_STAT_REPORT {
             ${kraken2 ? kraken2_report : 'NA'} \
             ${kraken2 ? kraken2_kingdoms : 'NA'} \
             ${kraken2 ? kraken2_removal : 'NA'} \
-            $map_classified
+            $mapping \
+            $db_name \
+            ${mapping ? bowtie2_kingdoms : 'NA'} \
+            ${mapping ? bowtie2_removal : 'NA'}
     """
 
 }

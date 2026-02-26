@@ -1,4 +1,4 @@
-process SUMMARY_STATS_CANDIDATES {
+process MAP_SUMMARY_STATS {
     tag "$meta.id"
     label 'process_medium'
 
@@ -10,7 +10,7 @@ process SUMMARY_STATS_CANDIDATES {
     output:
     tuple val(meta), path("*_summary_statistics_by_accession.tsv"), emit: accession_table
     tuple val(meta), path("*_summary_statistics_by_taxid.tsv"), emit: taxid_table
-    tuple val(meta), path("*.pdf")
+    // tuple val(meta), path("*.pdf")
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
