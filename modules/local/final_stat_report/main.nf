@@ -1,7 +1,7 @@
 process FINAL_STAT_REPORT {
 
     tag "Statistics Report"
-    container 'docker://lbwang/rocker-genome:latest'
+    container 'docker://rocker/tidyverse:latest'
 
     input:
     // path(samples)

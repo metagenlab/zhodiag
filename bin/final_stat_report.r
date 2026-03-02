@@ -2,7 +2,8 @@ set.seed(123)
 library(ggplot2)
 library(tidyverse)
 library(scales)
-
+library(stringr)
+sessionInfo()
 # ---------------------------
 ## SCRIPT ARGUMENTS ##
 # ---------------------------
@@ -27,48 +28,53 @@ run_mapping <- tolower(args[12]) == "true"
 db_name <- args[13]
 bowtie2_kingdom <- if (run_mapping) args[14] else NULL
 bowtie2_removal <- if (run_mapping) args[15] else NULL
-
 # ---------------------------
 ## COLOURS ##
 # ---------------------------
 stat.colors <- c(
-    "InitialReads" = "#ffffff",
-    "fastp_PassedFilter" = "#f9f9f9",
-    "bowtie2_HostReads" = "#969696",
-    "bowtie2_nonHostReads" = "#08306b",
-    "krakenuniq_ClassifiedReads" = "#ce1256",
-    "krakenuniq_UnclassifiedReads" = "#b5a69a",
-    "krakenuniq_HumanReads" = "#969696",
-    "krakenuniq_nonHumanReads" = "#2171b5",
-    "krakenuniq_Bacteria" = "#238443",
-    "krakenuniq_Viruses" = "#df65b0",
-    "krakenuniq_Fungi" = "#982aa8",
-    "krakenuniq_removedReadsFromPlots" = "#d9d9d9",
-    "krakenuniq_beforeTaxa" = "#d95f0e",
-    "krakenuniq_afterTaxa" = "#ef3b2c",
-    "kraken2_ClassifiedReads" = "#ce017e",
-    "kraken2_UnclassifiedReads" = "#b5a69a",
-    "kraken2_HumanReads" = "#969696",
-    "kraken2_nonHumanReads" = "#6baed6",
-    "kraken2_Bacteria" = "#addd8e",
-    "kraken2_Viruses" = "#f768a1",
-    "kraken2_Fungi" = "#984ea3",
-    "kraken2_removedReadsFromPlots" = "#d9d9d9",
-    "kraken2_beforeTaxa" = "#f2853d",
-    "kraken2_afterTaxa" = "#fb6a4a",
-    "bowtie2_ClassifiedReads" = "#f53b7e", 
-    "bowtie2_UnclassifiedReads" = "#b5a69a",
-    "bowtie2_HumanClassifiedReads" = "#969696",
-    "bowtie2_nonHumanClassifiedReads" = "#1d91c0",
-    "bowtie2_Bacteria" = "#78eb9e",
-    "bowtie2_Viruses" = "#f582b0",
-    "bowtie2_Eukaryota" = "#7b3985",
-    "bowtie2_removedReadsFromPlots" = "#d9d9d9",
-    "bowtie2_beforeTaxa" = "#de6b1f",
-    "bowtie2_afterTaxa" = "#ed655a"
+  "InitialReads" = "#ffffff",
+  "fastp_PassedFilter" = "#f9f9f9",
+  "HostReads" = "#969696",
+  "nonHostReads" = "#08306b",
+  "krakenuniq_ClassifiedReads" = "#ce1256",
+  "krakenuniq_UnclassifiedReads" = "#b5a69a",
+  "krakenuniq_HumanReads" = "#969696",
+  "krakenuniq_nonHumanReads" = "#2171b5",
+  "krakenuniq_Bacteria" = "#addd8e",
+  "krakenuniq_Viruses" = "#f768a1",
+  "krakenuniq_Fungi" = "#982aa8",
+  "krakenuniq_removedReadsFromPlots" = "#d9d9d9",
+  "krakenuniq_beforeTaxa" = "#d95f0e",
+  "krakenuniq_afterTaxa" = "#ef3b2c",
+  "kraken2_ClassifiedReads" = "#ce1256",
+  "kraken2_UnclassifiedReads" = "#b5a69a",
+  "kraken2_HumanReads" = "#969696",
+  "kraken2_nonHumanReads" = "#2171b5",
+  "kraken2_Bacteria" = "#addd8e",
+  "kraken2_Viruses" = "#f768a1",
+  "kraken2_Fungi" = "#982aa8",
+  "kraken2_removedReadsFromPlots" = "#d9d9d9",
+  "kraken2_beforeTaxa" = "#d95f0e",
+  "kraken2_afterTaxa" = "#ef3b2c",
+  "bowtie2_ClassifiedReads" = "#ce1256", 
+  "bowtie2_UnclassifiedReads" = "#b5a69a",
+  "bowtie2_HumanClassifiedReads" = "#969696",
+  "bowtie2_nonHumanClassifiedReads" = "#2171b5",
+  "bowtie2_Bacteria" = "#addd8e",
+  "bowtie2_Viruses" = "#f768a1",
+  "bowtie2_Eukaryota" = "#982aa8",
+  "bowtie2_removedReadsFromPlots" = "#d9d9d9",
+  "bowtie2_beforeTaxa" = "#d95f0e",
+  "bowtie2_afterTaxa" = "#ef3b2c"
+)  
+
+group.cols <- c(
+  "krakenuniq" = "#984ea3",
+  "kraken2"      = "#377eb8",
+  "bowtie2"    = "#4daf4a",
+  "host"    = "#e41a1c",
+  "other" = "#FFFFFF"
 )
-
-
 # ---------------------------
 ## TRIM STATS ##
 # ---------------------------
@@ -96,13 +102,13 @@ if (host_removal) {
                   
     map_data = map_data %>%
                 mutate(Sample = sub(paste0("_", host), "", Sample),
-                        bowtie2_HostReads = PE.mapped.uniquely,
-                        bowtie2_nonHostReads = PE.mapped.discordantly.uniquely + 
+                        HostReads = PE.mapped.uniquely,
+                        nonHostReads = PE.mapped.discordantly.uniquely + 
                                                 PE.one.mate.mapped.uniquely + 
                                                 PE.one.mate.multimapped + 
                                                 PE.neither.mate.aligned
                 ) %>%
-                select(Sample, bowtie2_HostReads, bowtie2_nonHostReads)
+                select(Sample, HostReads, nonHostReads)
     stats = left_join(stats, map_data, by = "Sample")
 }
 
@@ -247,21 +253,45 @@ write.table(stats,
 ## PLOT STATS
 # ---------------------------
 stat.plot <- stats %>% pivot_longer(cols = -Sample)
-stat.plot$name <- factor(stat.plot$name, levels = colnames(stats))
+stat.plot$name <- factor(stat.plot$name, levels = colnames(stats)[-1])
+
+# add process categories
+stat.plot <- stat.plot %>%
+  mutate(group = case_when(
+    str_detect(name, "krakenuniq") ~ "krakenuniq",
+    str_detect(name, "kraken2") ~ "kraken2", 
+    str_detect(name, "bowtie2") ~ "bowtie2",
+    str_detect(name, "Host") ~ "host",
+    TRUE ~ "other"
+  ))
+# to create a backgroup colour:
+bg_df <- stat.plot %>%
+  group_by(Sample, group) %>%
+  summarise(
+    xmin = min(as.numeric(name)) - 0.35,
+    xmax = max(as.numeric(name)) + 0.35,
+    .groups = "drop"
+  )
+bg_df$group <- factor(bg_df$group, levels = names(group.cols))
+
+# plot
 p = ggplot(stat.plot, aes(x = name, y = log10(value), fill = name, label = value)) +
+  geom_rect(
+    data = bg_df,
+    aes(xmin = xmin, xmax = xmax, colour = group, fill = group), ymin = 0, ymax = Inf,
+    inherit.aes = FALSE, alpha = 0.1, size = 0.7) +
   geom_bar(stat = 'identity', colour = "#d9d9d9", size = 0.005) +
   geom_text(angle = 90, size = 2, hjust = -0.2, colour = '#000000') + 
   facet_wrap(facets = "Sample", ncol = 4) +
-  scale_fill_manual(values = stat.colors) +
+  scale_fill_manual(values = c(stat.colors, group.cols), breaks = names(stat.colors), name = "") +
+  scale_colour_manual(values = group.cols) +
   theme_classic() +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.45))) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.45)), limits = c(0,8), breaks = c(0,1,2,3,4,5,6,7,8)) +
   labs(x = '', y = 'Number of reads (log10)', fill = '') +
   theme(axis.text.x = element_blank(),
         legend.text  = element_text(size = 6),
         legend.key.size = unit(0.3, "cm"))
 
-# n_samples = length(colnames(stats))
-# plot_width = n_samples * 4
 pdf("stats_report.pdf", width = 14)
 print(p)
 dev.off()
