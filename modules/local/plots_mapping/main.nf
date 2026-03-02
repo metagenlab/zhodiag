@@ -14,10 +14,9 @@ process PLOTS_MAPPING {
     path taxid_tables
 
     output:
-    path 'bowtie2_combined_table_by_accession.tsv'
-    path 'bowtie2_combined_table_by_taxid.tsv'
     path 'bowtie2_summary_kingdoms.tsv',                  emit: kingdoms
     path 'bowtie2_removedReadsFromPlots.tsv',             emit: removedReadsFromPlots
+    path 'bowtie2_read_table_at_species_level_postCleaning.tsv', emit: clean_reads
     path '*.pdf'
     path '*.tsv'
     // path 'heatmap_nBasesCovered_by_taxid_genusLevel.pdf'

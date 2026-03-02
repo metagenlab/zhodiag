@@ -9,10 +9,9 @@ process PLOTS_KRAKENUNIQ {
     val contaminants
 
     output:
-    // path 'table_at*totalCounts.tsv',           emit: counts
-    // path 'table_at*distinctMinimizers.tsv',    emit: minimizers
     path 'krakenuniq_summary_kingdoms.tsv',                  emit: kingdoms
     path 'krakenuniq_removedReadsFromPlots.tsv',             emit: removedReadsFromPlots
+    path 'krakenuniq_read_table_at_species_level_postCleaning.tsv', emit: clean_reads
     path '*.tsv'
     path '*.pdf'
 

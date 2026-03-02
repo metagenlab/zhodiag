@@ -3,6 +3,9 @@ library(ggplot2)
 library(tidyverse)
 library(scales)
 
+# ---------------------------
+## SCRIPT ARGUMENTS ##
+# ---------------------------
 args <- commandArgs(trailingOnly = TRUE)
 # multiqc
 multiqc_data <- args[1]
@@ -25,7 +28,9 @@ db_name <- args[13]
 bowtie2_kingdom <- if (run_mapping) args[14] else NULL
 bowtie2_removal <- if (run_mapping) args[15] else NULL
 
-# colors
+# ---------------------------
+## COLOURS ##
+# ---------------------------
 stat.colors <- c(
     "InitialReads" = "#ffffff",
     "fastp_PassedFilter" = "#f9f9f9",
@@ -51,7 +56,7 @@ stat.colors <- c(
     "kraken2_removedReadsFromPlots" = "#d9d9d9",
     "kraken2_beforeTaxa" = "#f2853d",
     "kraken2_afterTaxa" = "#fb6a4a",
-    "bowtie2_ClassifiedReads" = "#7a0177", 
+    "bowtie2_ClassifiedReads" = "#f53b7e", 
     "bowtie2_UnclassifiedReads" = "#b5a69a",
     "bowtie2_HumanClassifiedReads" = "#969696",
     "bowtie2_nonHumanClassifiedReads" = "#1d91c0",
