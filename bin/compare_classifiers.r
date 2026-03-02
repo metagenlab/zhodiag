@@ -1,8 +1,4 @@
-set.seed(123)
-library(ggplot2)
 library(tidyverse)
-library(scales)
-library(stringr)
 sessionInfo()
 
 # ---------------------------
@@ -95,12 +91,12 @@ for (s in unique(full_df$Sample)) {
 
     # Compute total reads per species
     totals <- df.s %>%
-        group_by(taxid, species) %>%
+        group_by(species) %>%
         summarise(totReads_species = sum(Reads), .groups = "drop")
 
     # Join totals to df.s
     df.s <- df.s %>%
-        left_join(totals, by = c("taxid", "species"))
+        left_join(totals, by = c("species"))
 
     # Pivot to wide table
     df.w <- df.s %>%
