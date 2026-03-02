@@ -30,6 +30,9 @@ include { KRAKENUNIQ_PRELOADEDKRAKENUNIQ } from './modules/nf-core/krakenuniq/pr
 include { KRAKENUNIQ_COMBINE_REPORTS } from './modules/local/krakenuniq_combineReports/main'
 include { PLOTS_KRAKENUNIQ } from './modules/local/plots_krakenuniq/main'
 
+// compare classifiers
+include { COMPARE_CLASSIFIERS } from './modules/local/compare_classifiers/main'
+
 // run report
 include { FINAL_STAT_REPORT } from './modules/local/final_stat_report/main'
 
@@ -59,7 +62,6 @@ workflow {
         return tuple(meta, reads)
     }
 
-//    samples.view()
 
     // --------------------------------------------- //
     // --- FASTQC ---
@@ -109,11 +111,12 @@ workflow {
     } else {
         input_reads = trimmed.reads
     }
-
+    nclassifiers = 0
     // --------------------------------------------- //
     // --- Taxonomic classification by mapping ---
     // --------------------------------------------- //
     if (params.run_mapping) {
+        nclassifiers += 1
         map = BOWTIE2DB(input_reads,
                         params.reference_bowtie2_index,
                         params.reference_fasta,
@@ -160,6 +163,7 @@ workflow {
     // --------------------------------------------- //
     // run kraken2
     if (params.run_kraken2) {
+        nclassifiers += 1
         kraken = KRAKEN2_KRAKEN2(input_reads, 
                                     params.kraken2_db, 
                                     params.kraken2_confidence, 
@@ -185,6 +189,7 @@ workflow {
     // --- Taxonomic classification with KrakenUniq ---
     // --------------------------------------------- //
     if (params.run_krakenuniq) {
+        nclassifiers += 1
         unmapped_for_krakenuniq = input_reads.map { meta, reads ->
             tuple(
                 meta,
@@ -213,7 +218,23 @@ workflow {
     }
 
 
-      // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --- COMPARISON OF CLASSIFIERS ---
+    // --------------------------------------------- //
+    if (nclassifiers >= 2) {
+        krakenuniq_ch = params.run_krakenuniq  ? results_krakenuniq.clean_reads : []
+        kraken2_ch    = params.run_kraken2     ? results_kraken.clean_reads     : []
+        mapping_ch    = params.run_mapping     ? results_mapping.clean_reads    : []
+
+        COMPARE_CLASSIFIERS(params.run_krakenuniq,
+                            krakenuniq_ch,
+                            params.run_kraken2,
+                            kraken2_ch,
+                            params.run_mapping,
+                            mapping_ch)
+    }
+    
+    // --------------------------------------------- //
     // --- MultiQC ---
     // --------------------------------------------- //
     collect_reports_input = fastqc.html
