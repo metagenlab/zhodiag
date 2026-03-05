@@ -10,7 +10,6 @@ include { FASTP } from './modules/nf-core/fastp/main'
 
 // host removal
 include { BOWTIE2_ALIGN as BOWTIE2HOST } from './modules/nf-core/bowtie2/align/main'
-include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/align/main'
 
 // mapping
 include { BOWTIE2_ALIGN as BOWTIE2DB } from './modules/nf-core/bowtie2/align/main'
@@ -85,23 +84,6 @@ workflow {
         unmapped = host_map.fastq
         mapping_logs = host_map.log
     }
-    // if (params.mapper == 'minimap2') {
-    //     host_map = MINIMAP2HOST(trimmed.reads,
-    //                             params.host_minimap2_index,
-    //                             true, false, false, true, false)
-    //     unmapped = host_map.unmapped
-    //     mapping_logs = host_map.flagstat
-    // } else if (params.mapper == 'bowtie2') {
-    //     host_map = BOWTIE2HOST(trimmed.reads,
-    //                              params.host_bowtie2_index,
-    //                              params.host_fasta,
-    //                              true, true)
-    //     unmapped = host_map.fastq
-    //     mapping_logs = host_map.log
-    // } else {
-    //     error("Unsupported aligner. Options are 'bowtie2' and 'minimap2'.")
-    // }
-
 
     // --------------------------------------------- //
     // --- Input for Taxonomic classification ---
@@ -112,6 +94,7 @@ workflow {
         input_reads = trimmed.reads
     }
     nclassifiers = 0
+
     // --------------------------------------------- //
     // --- Taxonomic classification by mapping ---
     // --------------------------------------------- //
@@ -271,19 +254,6 @@ workflow {
 
     multiqc = MULTIQC(multiqc_input)
 
-    // if (params.map_classified) {
-    //     // if (params.candidate_mode == 'manual') {
-    //     //     collect_reports_input = collect_reports_input
-    //     //         .merge(manual_candidate_mapping_logs.map { it[1] } )
-    //     // } else if (params.candidate_mode == 'automatic') {
-    //     collect_reports_input = collect_reports_input
-    //         .merge(auto_candidate_mapping_logs.map { it[1] } )
-    //     collect_reports_input = collect_reports_input
-    //         .merge(auto_candidate_mapping_noHuman_logs.map { it[1] } )              
-    //     // }
-    // }
-
-
 
     // --------------------------------------------- //
     // --- Custom Stat Report ---
@@ -296,11 +266,6 @@ workflow {
     kraken2_kingdoms_ch = params.run_kraken2 ? results_kraken.kingdoms : []
     kraken2_removal_ch = params.run_kraken2 ? results_kraken.removedReadsFromPlots : []
 
-    // if (params.mapper == "bowtie2") {
-    //     host_name = params.host_bowtie2_index
-    // } else if (params.mapper == 'minimap2') {
-    //     host_name = params.host_minimap2_index
-    // }
     host_name = params.host_removal ? params.host_bowtie2_index : []
     db_name = params.run_mapping ? params.reference_bowtie2_index : []
 
