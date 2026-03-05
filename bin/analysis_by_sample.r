@@ -166,39 +166,39 @@ write.table(summary_by_taxid,
             col.names = TRUE, row.names = FALSE,
             sep = "\t", quote = FALSE)
 
-# PLOT NREADS VS COVERED POSITIONS
-pdf(paste0(output_prefix, "_nMappedReads_vs_nBasesCovered_byTaxid.pdf"), height = 10, width = 10)
-p = ggplot(summary_by_taxid, 
-            aes(x = log2(mappedReads), y = nBases_covered, colour = mean_cov, label = species)) +
-    geom_point(size = 2.5) +
-    geom_text_repel() +
-    scale_y_continuous(limits = c(0, NA)) +
-    scale_x_continuous(limits = c(0, NA)) +
-    theme_classic() +
-    labs(x = "log2(Mapped Reads)", y = "Bases covered", colour = "Mean Fraction\ncovered") +
-    theme(axis.title = element_text(size = 14),
-          axis.text = element_text(size = 14)) +
-    ggtitle(output_prefix) 
-print(p)
-dev.off()
+# # PLOT NREADS VS COVERED POSITIONS
+# pdf(paste0(output_prefix, "_nMappedReads_vs_nBasesCovered_byTaxid.pdf"), height = 10, width = 10)
+# p = ggplot(summary_by_taxid, 
+#             aes(x = log2(mappedReads), y = nBases_covered, colour = mean_cov, label = species)) +
+#     geom_point(size = 2.5) +
+#     geom_text_repel() +
+#     scale_y_continuous(limits = c(0, NA)) +
+#     scale_x_continuous(limits = c(0, NA)) +
+#     theme_classic() +
+#     labs(x = "log2(Mapped Reads)", y = "Bases covered", colour = "Mean Fraction\ncovered") +
+#     theme(axis.title = element_text(size = 14),
+#           axis.text = element_text(size = 14)) +
+#     ggtitle(output_prefix) 
+# print(p)
+# dev.off()
 
-# GROUP BY GENUS
-summary_by_taxid_by_genus = summary_by_taxid %>% group_by(genus) %>% 
-  summarise(mappedReads = sum(mappedReads),
-            nBases_covered = sum(nBases_covered),
-            genus = first(genus))
+# # GROUP BY GENUS
+# summary_by_taxid_by_genus = summary_by_taxid %>% group_by(genus) %>% 
+#   summarise(mappedReads = sum(mappedReads),
+#             nBases_covered = sum(nBases_covered),
+#             genus = first(genus))
 
-pdf(paste0(output_prefix, "_nMappedReads_vs_nBasesCovered_byTaxid_genusLevel.pdf"), height = 10, width = 10)
-p = ggplot(summary_by_taxid_by_genus, 
-            aes(x = log2(mappedReads), y = nBases_covered, label = genus)) +
-    geom_point(size = 2.5) +
-    geom_text_repel() +
-    scale_y_continuous(limits = c(0, NA)) +
-    scale_x_continuous(limits = c(0, NA)) +
-    theme_classic() +
-    labs(x = "log2(Mapped Reads)", y = "Bases covered") +
-    theme(axis.title = element_text(size = 14),
-          axis.text = element_text(size = 14)) +
-    ggtitle(output_prefix) 
-print(p)
-dev.off()
+# pdf(paste0(output_prefix, "_nMappedReads_vs_nBasesCovered_byTaxid_genusLevel.pdf"), height = 10, width = 10)
+# p = ggplot(summary_by_taxid_by_genus, 
+#             aes(x = log2(mappedReads), y = nBases_covered, label = genus)) +
+#     geom_point(size = 2.5) +
+#     geom_text_repel() +
+#     scale_y_continuous(limits = c(0, NA)) +
+#     scale_x_continuous(limits = c(0, NA)) +
+#     theme_classic() +
+#     labs(x = "log2(Mapped Reads)", y = "Bases covered") +
+#     theme(axis.title = element_text(size = 14),
+#           axis.text = element_text(size = 14)) +
+#     ggtitle(output_prefix) 
+# print(p)
+# dev.off()

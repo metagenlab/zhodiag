@@ -17,8 +17,6 @@ if (!is.null(contaminants)) {
   colnames(contams) <- c('contaminant', 'code')
   print("The following taxa were removed: ")
   contams
-  write.table(contams, "removed_contaminants.tsv",
-            quote = FALSE, col.names = TRUE, row.names = FALSE, sep = '\t')
 }
 
 # wide table of reads per sample and species
@@ -34,6 +32,13 @@ write.table(w.df, paste0("kraken2_read_table_at_species_level.tsv"),
       row.names = FALSE, col.names = TRUE, sep = '\t', quote = FALSE)
 
 # summary table of nReads by Domain
+expected_domains <- c(
+  "kraken2_Viruses",
+  "kraken2_Bacteria",
+  "kraken2_Human",
+  "kraken2_Fungi",
+  "kraken2_Unclassified"
+)
 sum.domains <- df %>%
   mutate(domain = case_when(
     rank == "R1" & taxonomy == "Viruses" ~ "kraken2_Viruses",
@@ -46,8 +51,8 @@ sum.domains <- df %>%
   filter(!is.na(domain)) %>%
   group_by(sample, domain) %>%
   summarise(nreads = sum(totalCounts), .groups = "drop") %>%
-  pivot_wider(names_from = domain, values_from = nreads) %>%
-  mutate(across(everything(), ~replace_na(., 0)))
+  complete(sample, domain = expected_domains, fill = list(reads = 0)) %>%
+  pivot_wider(names_from = domain, values_from = nreads, values_fill = 0)
 write.table(sum.domains, "kraken2_summary_kingdoms.tsv",
             quote = FALSE, col.names = TRUE, row.names = FALSE, sep = '\t')
 
@@ -74,9 +79,18 @@ if (!is.null(contaminants)) {
   gn.filter = contams %>% filter(code == 'genus') %>% pull(contaminant)
   tax.filter = contams %>% filter(code == 'taxid') %>% pull(contaminant)
 
+  # save the removed contaminants
+  a.removed <- a.filt1 %>%
+      filter(taxonomy %in% sp.filter |
+             Reduce('|', lapply(gn.filter, function(g) startsWith(taxonomy, g))) |
+             taxid %in% tax.filter)
+  write.table(a.removed, "kraken2_removedContaminants.tsv",
+      row.names = FALSE, col.names = TRUE, sep = '\t', quote = FALSE)
+
+  # remove the contaminants
   a.filt1 <- a.filt1 %>% 
       filter(!taxonomy %in% sp.filter,
-              !Reduce(`|`, lapply(gn.filter, function(g) startsWith(taxonomy, g))),
+              !Reduce('|', lapply(gn.filter, function(g) startsWith(taxonomy, g))),
               !taxid %in% tax.filter)
 }
 

@@ -1,9 +1,0 @@
-name: ete3_env
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
-dependencies:
-  - python=3.9
-  - ete3
-  - pandas

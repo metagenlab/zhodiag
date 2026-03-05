@@ -6,55 +6,35 @@ include { MULTIQC } from './modules/nf-core/multiqc/main'
 include { MULTIQC_COLLECT_REPORTS } from './modules/local/multiqc/main'
 include { FASTQC } from './modules/nf-core/fastqc/main'
 // trimming
-include { TRIMMOMATIC } from './modules/nf-core/trimmomatic/main'
-//include { BBMAP_BBDUK } from './modules/nf-core/bbmap/bbduk/main'
 include { FASTP } from './modules/nf-core/fastp/main'
 
 // host removal
-//include { BBMAP_INDEX } from './modules/nf-core/bbmap/index/main'
-// include { BOWTIE2_BUILD } from './modules/nf-core/bowtie2/build/main'
-//include { BBMAP_ALIGN } from './modules/nf-core/bbmap/align/main'
-include { BOWTIE2_ALIGN  as BOWTIE2HOST } from './modules/nf-core/bowtie2/align/main'
+include { BOWTIE2_ALIGN as BOWTIE2HOST } from './modules/nf-core/bowtie2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2HOST } from './modules/nf-core/minimap2/align/main'
 
 // mapping
-include { MINIMAP2_ALIGN as MINIMAP2_ALL } from './modules/nf-core/minimap2/align/main'
-include { SAMTOOLS_SORT as MINIMAP2_SORT} from './modules/nf-core/samtools/sort/main'                                                                                                                       
-include { SAMTOOLS_DEPTH as MINIMAP2_DEPTH} from './modules/nf-core/samtools/depth/main'
-include { MINIMAP2_ANNOTATE_PAF } from './modules/local/minimap2_pafPrepare/main'
-include { MINIMAP2_CONCAT_PAFS } from './modules/local/concat_pafs/main'
-include { MINIMAP2_TAXONOMY } from './modules/local/minimap2_taxonomy/main'
-include { PLOTS_MINIMAP2 } from './modules/local/plots_minimap2/main'
+include { BOWTIE2_ALIGN as BOWTIE2DB } from './modules/nf-core/bowtie2/align/main'
+include { FILTER_SAM2BAM } from './modules/local/filter_sam2bam/main'
+include { SAMTOOLS_DEPTH as MAP_DEPTH } from './modules/nf-core/samtools/depth/main'
+include { MAP_SUMMARY } from './modules/local/map_summary/main'
+include { MAP_SUMMARY_STATS } from './modules/local/map_summary_stats/main'
+include { PLOTS_MAPPING } from './modules/local/plots_mapping/main'
 
 //  kraken2
 include { KRAKEN2_KRAKEN2 } from './modules/nf-core/kraken2/kraken2/main'
 include { KRAKEN2_COMBINE_REPORTS } from './modules/local/kraken2_combineReports/main'
 include { PLOTS_KRAKEN2 } from './modules/local/plots_kraken2/main'
-include { KRAKEN2_TAXONOMY } from './modules/local/kraken2_taxonomy/main'
 
 // krakenuniq
 include { KRAKENUNIQ_PRELOADEDKRAKENUNIQ } from './modules/nf-core/krakenuniq/preloadedkrakenuniq/main'                                                                                     
 include { KRAKENUNIQ_COMBINE_REPORTS } from './modules/local/krakenuniq_combineReports/main'
 include { PLOTS_KRAKENUNIQ } from './modules/local/plots_krakenuniq/main'
 
-// manual mapping of candidates
-// include { EXTRACT_NONHUMAN_READS as MANUAL_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
-// include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_MANUAL } from './modules/nf-core/minimap2/align/main'
-// include { SAMTOOLS_SORT as CANDIDATES_SAMTOOLS_SORT_MANUAL } from './modules/nf-core/samtools/sort/main'                                                                                                                       
-// include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_MANUAL } from './modules/nf-core/samtools/depth/main'
-// automatic mapping of candidates
-include { EXTRACT_NONHUMAN_READS as AUTOMATIC_CANDIDATES } from './modules/local/extract_nonHuman_reads/main'
-include { MINIMAP2_ALIGN as MINIMAP_CANDIDATES_AUTO } from './modules/nf-core/minimap2/align/main'
-include { SAMTOOLS_DEPTH as CANDIDATES_SAMTOOLS_DEPTH_AUTO } from './modules/nf-core/samtools/depth/main'
-include { SAMTOOLS_VIEW as MAP_FILTER_AUTO } from './modules/local/samtools_view/main'
-include { SUMMARY_STATS_CANDIDATES as SUMMARY_STATS_CANDIDATES_AUTO } from './modules/local/summary_stats/main'
-include { SUMMARY_MAP_CANDIDATES as SUMMARY_MAP_CANDIDATES_AUTO } from './modules/local/summary_map/main'
-include { ANALYSIS_COMBINED as ANALYSIS_COMBINED_AUTO } from './modules/local/analysis_combined/main'
+// compare classifiers
+include { COMPARE_CLASSIFIERS } from './modules/local/compare_classifiers/main'
 
-include { BOWTIE2_ALIGN  as BOWTIE_CANDIDATES_AUTO } from './modules/nf-core/bowtie2/align/main'
-
-
-include { CUSTOM_STAT_REPORT } from './modules/local/custom_stat_report/main'
+// run report
+include { FINAL_STAT_REPORT } from './modules/local/final_stat_report/main'
 
     // --------------------------------------------- //
     // --------------------------------------------- //
@@ -82,7 +62,6 @@ workflow {
         return tuple(meta, reads)
     }
 
-//    samples.view()
 
     // --------------------------------------------- //
     // --- FASTQC ---
@@ -92,113 +71,126 @@ workflow {
     // --------------------------------------------- //
     // --- Adapter trimming ---
     // --------------------------------------------- //
-    if (params.trim_tool == "bbduk") {
-        trimmed = BBMAP_BBDUK(samples, params.adapters)
-        trim_logs = trimmed.stats
-    } else if (params.trim_tool == "fastp") {
-        trimmed = FASTP(samples, params.adapters, false, false, false)
-        trim_logs = trimmed.json
-    } else if (params.trim_tool == "trimmomatic") {
-        trimmed = TRIMMOMATIC(samples, params.adapters)
-        trim_logs = trimmed.out_log
-    } else {
-        error("Unsupported trim tool. Options are 'bbduk', 'fastp' or 'trimmomatic'.")
-    }
+    trimmed = FASTP(samples, params.adapters, false, false, false)
+    trim_logs = trimmed.json
 
     // --------------------------------------------- //
     // --- Host removal ---
     // --------------------------------------------- //
-    if (params.mapper == 'bbmap') {
-        host_map = BBMAP_ALIGN(trimmed.reads, params.host_bbmap_index)
-        unmapped = host_map.unmapped
-        mapping_logs = host_map.stats
-    } else if (params.mapper == 'minimap2') {
-        host_map = MINIMAP2HOST(trimmed.reads,
-                                params.host_minimap2_index,
-                                true, false, false, true, false)
-        unmapped = host_map.unmapped
-        mapping_logs = host_map.flagstat
-    } else if (params.mapper == 'bowtie2') {
+    if (params.host_removal) {
         host_map = BOWTIE2HOST(trimmed.reads,
                                  params.host_bowtie2_index,
                                  params.host_fasta,
-                                 true, false)
+                                 true, true)
         unmapped = host_map.fastq
         mapping_logs = host_map.log
-    } else {
-        error("Unsupported aligner. Options are 'bbmap', 'bowtie2' and 'minimap2'.")
     }
+    // if (params.mapper == 'minimap2') {
+    //     host_map = MINIMAP2HOST(trimmed.reads,
+    //                             params.host_minimap2_index,
+    //                             true, false, false, true, false)
+    //     unmapped = host_map.unmapped
+    //     mapping_logs = host_map.flagstat
+    // } else if (params.mapper == 'bowtie2') {
+    //     host_map = BOWTIE2HOST(trimmed.reads,
+    //                              params.host_bowtie2_index,
+    //                              params.host_fasta,
+    //                              true, true)
+    //     unmapped = host_map.fastq
+    //     mapping_logs = host_map.log
+    // } else {
+    //     error("Unsupported aligner. Options are 'bowtie2' and 'minimap2'.")
+    // }
+
 
     // --------------------------------------------- //
-    // ---------- MINIMAP2 on all kingdoms ---------
+    // --- Input for Taxonomic classification ---
+    // --------------------------------------------- //
+    if (params.host_removal) {
+        input_reads = unmapped
+    } else {
+        input_reads = trimmed.reads
+    }
+    nclassifiers = 0
+    // --------------------------------------------- //
+    // --- Taxonomic classification by mapping ---
     // --------------------------------------------- //
     if (params.run_mapping) {
-        map = MINIMAP2_ALL(unmapped,
-                            params.reference_fasta,
-                            true, false, false, false, true)
-        // log for multiqc
-        minimap_log = map.flagstat
-        // samtools sort, index, depth
-        map_sorted = MINIMAP2_SORT(map.bam)
-        MINIMAP2_DEPTH(map_sorted.sorted_bam)
-        // annotate paf table and concatenate
-        paf_ch = map.paf.map { tuple ->
-            def meta = tuple[0]
-            def paf_path = tuple[1]
-            return [meta.id, meta.group, paf_path]
+        nclassifiers += 1
+        map = BOWTIE2DB(input_reads,
+                        params.reference_bowtie2_index,
+                        params.reference_fasta,
+                        true, false)
+        map_log = map.log
+        // Filter out human hits; convert to slim bam
+        map_filter = FILTER_SAM2BAM(map.sam,
+                                    params.mapq_cutoff,
+                                    params.coverage_cutoff)
+        map_noHuman_log = map_filter.flagstat
+        // Calculate depth and map summary
+        map_depth = MAP_DEPTH(map_filter.filtered)
+        map_summary = MAP_SUMMARY(map_filter.filtered)
+        // join depth stats and map stats before analysis
+        def depth_ch = map_depth.depth.map { meta, file ->
+            [ meta.id, [meta, file] ]
         }
-        paf_ch.set { grouped_paf_ch }
-        annotated_paf = MINIMAP2_ANNOTATE_PAF(grouped_paf_ch)
-        annotated_paf.paf
-            .map { it[1] }
-            .collect()
-            .set { collected_annotated_paths }
-        concatenated_pafs = MINIMAP2_CONCAT_PAFS(collected_annotated_paths)
-        // add full taxonomy 
-        minimap2_report_taxonomy = MINIMAP2_TAXONOMY(concatenated_pafs.cat)
-        // plots
-        contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
-        PLOTS_MINIMAP2(minimap2_report_taxonomy.taxonomy, 
-                        params.mapq_cutoff, 
-                        params.coverage_cutoff, 
-                        contaminants_ch,
-                        params.taxonomy_level)
+        def map_ch = map_summary.mapSummary.map { meta, file ->
+            [ meta.id, [meta, file] ]
+        }
+        depth_ch.join(map_ch)
+            .map { id, a, b ->
+                def (meta1, depth_file) = a
+                def (meta2, map_file)  = b
+                tuple(meta1, depth_file, map_file)
+            }
+            .set { summary_input }
+        analysis_samples = MAP_SUMMARY_STATS(summary_input)
+        // join all samples
+        stats_accession_ch = analysis_samples.accession_table.map { it -> it[1] }
+        stats_taxid_ch = analysis_samples.taxid_table.map { it -> it[1] }
+        def metadata_file = file(params.input, checkExists: true)
+        Channel.fromPath(metadata_file).set { metadata_ch }
+        results_mapping = PLOTS_MAPPING(metadata_ch,
+                                            params.min_reads,
+                                            params.contaminants,
+                                            stats_accession_ch.collect(),
+                                            stats_taxid_ch.collect()
+                                            )
     }
 
     // --------------------------------------------- //
     // --- Taxonomic classification with Kraken2 ---
     // --------------------------------------------- //
-    // kraken2_db_name = params.kraken2_db.tokenize('/').last() //.replaceFirst(/_.*/, '').replaceAll(/[0-9]/, '')
-    // kraken2_db_name_ch = Channel.value(kraken2_db_name)
-
     // run kraken2
     if (params.run_kraken2) {
-        kraken = KRAKEN2_KRAKEN2(unmapped, 
+        nclassifiers += 1
+        kraken = KRAKEN2_KRAKEN2(input_reads, 
                                     params.kraken2_db, 
                                     params.kraken2_confidence, 
                                     true, 
                                     true)
+
         // collect log for multiqc
         kraken_logs = kraken.report
+
         // combine sample reports into one
         kreports_ch = kraken.report.map { it -> it[1] }
         def metadata_file = file(params.input, checkExists: true)
         Channel.fromPath(metadata_file).set { metadata_ch }
         kraken_reports_combined = KRAKEN2_COMBINE_REPORTS(kreports_ch.collect(), metadata_ch)
-        // kraken_report_taxonomy = KRAKEN2_TAXONOMY(kraken_reports_combined.combine_long)
-        // contaminants_ch = params.contaminants ? Channel.fromPath(params.contaminants) :  Channel.value("")
+
+        // plot results
         results_kraken = PLOTS_KRAKEN2(kraken_reports_combined.combine_long,
                         params.min_reads,
                         params.contaminants)
-        // KRAKEN2_TAXONOMY(results_kraken.counts, 
-        //                     results_kraken.minimizers)
     }
 
     // --------------------------------------------- //
     // --- Taxonomic classification with KrakenUniq ---
     // --------------------------------------------- //
     if (params.run_krakenuniq) {
-        unmapped_for_krakenuniq = unmapped.map { meta, reads ->
+        nclassifiers += 1
+        unmapped_for_krakenuniq = input_reads.map { meta, reads ->
             tuple(
                 meta,
                 reads,
@@ -210,7 +202,7 @@ workflow {
                                                     params.krakenuniq_db,
                                                     true, true, true)
         // collect log for multiqc
-        // need a module to modify report to be readable by multiqc....
+        // multiqc cannot use krakenuniq log: would need a module to modify report to be readable by multiqc....
         krakenuniq_logs = krakenuniq.report
 
         // combine sample reports into one
@@ -224,90 +216,24 @@ workflow {
                                                 params.min_reads,
                                                 params.contaminants)
     }
+
+
     // --------------------------------------------- //
-    // --- Mapping classified reads or selected candidates ---
+    // --- COMPARISON OF CLASSIFIERS ---
     // --------------------------------------------- //
-    if (params.map_classified) {
-        // if (params.candidate_mode == 'manual') {
-        //     // extract reads from taxid of interest from kraken !!!!! NEEDS UPDATING CODE !!!!
-        //     k2_extracted_reads = MANUAL_CANDIDATES(
-        //                                 kraken.classified_reads_fastq)
-        //     // minimap2 candidates
-        //     map_candidates = MINIMAP_CANDIDATES_MANUAL(k2_extracted_reads.extracted_kraken2_reads,
-        //                                     params.reference_fasta,
-        //                                     false,
-        //                                     false,
-        //                                     false,
-        //                                     false,
-        //                                     true)
-        //     manual_candidate_mapping_logs = map_candidates.flagstat
-        //     candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_MANUAL(map_candidates.bam)
-        //     CANDIDATES_SAMTOOLS_DEPTH_MANUAL(candidate_sorted_bam.sorted_bam)
-        // } else if (params.candidate_mode == 'automatic') {
+    if (nclassifiers >= 2) {
+        krakenuniq_ch = params.run_krakenuniq  ? results_krakenuniq.clean_reads : []
+        kraken2_ch    = params.run_kraken2     ? results_kraken.clean_reads     : []
+        mapping_ch    = params.run_mapping     ? results_mapping.clean_reads    : []
 
-
-        // extract all non-human reads from kraken2/uniq
-        if (params.which_classified == 'kraken2') {
-            k2_extracted_reads = AUTOMATIC_CANDIDATES(
-                                        kraken.classified_reads_fastq)
-        } else if (params.which_classified == 'krakenuniq') {
-            k2_extracted_reads = AUTOMATIC_CANDIDATES(
-                                        krakenuniq.classified_reads)
-        }
-        if (params.mapper == 'minimap2') {
-            // minimap2 candidates
-            map_candidates = MINIMAP_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
-                                            params.reference_fasta,
-                                            false,
-                                            false,
-                                            false,
-                                            false,
-                                            false)
-            auto_candidate_mapping_logs = map_candidates.flagstat
-        } else if (params.mapper == 'bowtie2') {
-            map_candidates = BOWTIE_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
-                                                    params.bowtie2_index,
-                                                    params.reference_fasta,
-                                                    false, true)
-            auto_candidate_mapping_logs = map_candidates.log
-        }
-
-
-
-        map_candidates_filter = MAP_FILTER_AUTO(map_candidates.sam,
-                                                        params.mapq_cutoff,
-                                                        params.coverage_cutoff)
-        auto_candidate_mapping_noHuman_logs = map_candidates_filter.flagstat
-        // candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.filtered)
-        candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(map_candidates_filter.filtered)
-        // SLIM_SAM2BAM_AUTO(candidate_sorted_bam.sorted)
-        map_summary = SUMMARY_MAP_CANDIDATES_AUTO(map_candidates_filter.filtered)
-        // join depth stats and map stats before analysis
-        def depth_ch = candidates_depth.depth.map { meta, file ->
-            [ meta.id, [meta, file] ]
-        }
-        def map_ch = map_summary.mapSummary.map { meta, file ->
-            [ meta.id, [meta, file] ]
-        }
-        depth_ch.join(map_ch)
-            .map { id, a, b ->
-                def (meta1, depth_file) = a
-                def (meta2, map_file)  = b
-                tuple(meta1, depth_file, map_file)
-            }
-            .set { summary_input }
-        analysis_samples = SUMMARY_STATS_CANDIDATES_AUTO(summary_input)
-        // join all samples
-        stats_accession_ch = analysis_samples.accession_table.map { it -> it[1] }
-        stats_taxid_ch = analysis_samples.taxid_table.map { it -> it[1] }
-        def metadata_file = file(params.input, checkExists: true)
-        Channel.fromPath(metadata_file).set { metadata_ch }
-        analysis_combined = ANALYSIS_COMBINED_AUTO(stats_accession_ch.collect(),
-                                                    stats_taxid_ch.collect(),
-                                                    metadata_ch)
-        // }
+        COMPARE_CLASSIFIERS(params.run_krakenuniq,
+                            krakenuniq_ch,
+                            params.run_kraken2,
+                            kraken2_ch,
+                            params.run_mapping,
+                            mapping_ch)
     }
-
+    
     // --------------------------------------------- //
     // --- MultiQC ---
     // --------------------------------------------- //
@@ -315,13 +241,20 @@ workflow {
         .map { it[1] }
         .merge(
             fastqc.zip.map { it[1] },
-            trim_logs.map { it[1] },
-            mapping_logs.map { it[1] }
+            trim_logs.map { it[1] }
         )
+
+    if (params.host_removal) {
+        collect_reports_input = collect_reports_input
+            .merge(mapping_logs.map { it[1] } )
+    }
 
     if (params.run_mapping) {
         collect_reports_input = collect_reports_input
-            .merge(minimap_log.map { it[1] } )
+            .merge(
+                map_log.map { it[1] },
+                map_noHuman_log.map { it [1] }
+                )
     }
 
     if (params.run_kraken2) {
@@ -334,22 +267,23 @@ workflow {
             .merge(krakenuniq_logs.map { it[1] } )
     }
 
-    if (params.map_classified) {
-        // if (params.candidate_mode == 'manual') {
-        //     collect_reports_input = collect_reports_input
-        //         .merge(manual_candidate_mapping_logs.map { it[1] } )
-        // } else if (params.candidate_mode == 'automatic') {
-        collect_reports_input = collect_reports_input
-            .merge(auto_candidate_mapping_logs.map { it[1] } )
-        collect_reports_input = collect_reports_input
-            .merge(auto_candidate_mapping_noHuman_logs.map { it[1] } )              
-        // }
-    }
-
-
     multiqc_input = MULTIQC_COLLECT_REPORTS(collect_reports_input.collect())
 
     multiqc = MULTIQC(multiqc_input)
+
+    // if (params.map_classified) {
+    //     // if (params.candidate_mode == 'manual') {
+    //     //     collect_reports_input = collect_reports_input
+    //     //         .merge(manual_candidate_mapping_logs.map { it[1] } )
+    //     // } else if (params.candidate_mode == 'automatic') {
+    //     collect_reports_input = collect_reports_input
+    //         .merge(auto_candidate_mapping_logs.map { it[1] } )
+    //     collect_reports_input = collect_reports_input
+    //         .merge(auto_candidate_mapping_noHuman_logs.map { it[1] } )              
+    //     // }
+    // }
+
+
 
     // --------------------------------------------- //
     // --- Custom Stat Report ---
@@ -362,17 +296,19 @@ workflow {
     kraken2_kingdoms_ch = params.run_kraken2 ? results_kraken.kingdoms : []
     kraken2_removal_ch = params.run_kraken2 ? results_kraken.removedReadsFromPlots : []
 
-    if (params.mapper == "bowtie2") {
-        host_name = params.host_bowtie2_index
-    } else if (params.mapper == 'minimap2') {
-        host_name = params.host_minimap2_index
-    } else if (params.mapper == 'bbmap') {
-        host_name = params.host_bbmap_index
-    }
+    // if (params.mapper == "bowtie2") {
+    //     host_name = params.host_bowtie2_index
+    // } else if (params.mapper == 'minimap2') {
+    //     host_name = params.host_minimap2_index
+    // }
+    host_name = params.host_removal ? params.host_bowtie2_index : []
+    db_name = params.run_mapping ? params.reference_bowtie2_index : []
 
-    CUSTOM_STAT_REPORT(multiqc.data,
-                        params.trim_tool,
-                        params.mapper,
+    bowtie2_kingdoms_ch = params.run_mapping ? results_mapping.kingdoms : []
+    bowtie2_removal_ch = params.run_mapping ? results_mapping.removedReadsFromPlots : []
+
+    FINAL_STAT_REPORT(multiqc.data,
+                        params.host_removal,
                         host_name,
                         params.run_krakenuniq,
                         krakenuniq_report_ch,
@@ -382,6 +318,93 @@ workflow {
                         kraken2_report_ch,
                         kraken2_kingdoms_ch,
                         kraken2_removal_ch,
-                        params.map_classified
+                        params.run_mapping,
+                        db_name,
+                        bowtie2_kingdoms_ch,
+                        bowtie2_removal_ch
                         )
 }
+  
+    // --------------------------------------------- //
+    // --- Mapping classified reads or selected candidates ---
+    // --------------------------------------------- //
+    // if (params.map_classified) {
+    //     // if (params.candidate_mode == 'manual') {
+    //     //     // extract reads from taxid of interest from kraken !!!!! NEEDS UPDATING CODE !!!!
+    //     //     k2_extracted_reads = MANUAL_CANDIDATES(
+    //     //                                 kraken.classified_reads_fastq)
+    //     //     // minimap2 candidates
+    //     //     map_candidates = MINIMAP_CANDIDATES_MANUAL(k2_extracted_reads.extracted_kraken2_reads,
+    //     //                                     params.reference_fasta,
+    //     //                                     false,
+    //     //                                     false,
+    //     //                                     false,
+    //     //                                     false,
+    //     //                                     true)
+    //     //     manual_candidate_mapping_logs = map_candidates.flagstat
+    //     //     candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_MANUAL(map_candidates.bam)
+    //     //     CANDIDATES_SAMTOOLS_DEPTH_MANUAL(candidate_sorted_bam.sorted_bam)
+    //     // } else if (params.candidate_mode == 'automatic') {
+
+
+    //     // extract all non-human reads from kraken2/uniq
+    //     if (params.which_classified == 'kraken2') {
+    //         k2_extracted_reads = EXTRACT_CLASSIFIED(
+    //                                     kraken.classified_reads_fastq)
+    //     } else if (params.which_classified == 'krakenuniq') {
+    //         k2_extracted_reads = EXTRACT_CLASSIFIED(
+    //                                     krakenuniq.classified_reads)
+    //     }
+    //     // map
+    //     if (params.mapper == 'minimap2') {
+    //         map_candidates = MINIMAP_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
+    //                                         params.reference_fasta,
+    //                                         false,
+    //                                         false,
+    //                                         false,
+    //                                         false,
+    //                                         false)
+    //         auto_candidate_mapping_logs = map_candidates.flagstat
+    //     } else if (params.mapper == 'bowtie2') {
+    //         map_candidates = BOWTIE_CANDIDATES_AUTO(k2_extracted_reads.extracted_kraken2_reads,
+    //                                                 params.bowtie2_index,
+    //                                                 params.reference_fasta,
+    //                                                 false, true)
+    //         auto_candidate_mapping_logs = map_candidates.log
+    //     }
+
+    //     // Filter (remove human), analysis
+    //     map_candidates_filter = MAP_FILTER_AUTO(map_candidates.sam,
+    //                                                     params.mapq_cutoff,
+    //                                                     params.coverage_cutoff)
+    //     auto_candidate_mapping_noHuman_logs = map_candidates_filter.flagstat
+    //     // candidate_sorted_bam = CANDIDATES_SAMTOOLS_SORT_AUTO(map_candidates_filter.filtered)
+    //     candidates_depth = CANDIDATES_SAMTOOLS_DEPTH_AUTO(map_candidates_filter.filtered)
+    //     // SLIM_SAM2BAM_AUTO(candidate_sorted_bam.sorted)
+    //     map_summary = SUMMARY_MAP_CANDIDATES_AUTO(map_candidates_filter.filtered)
+    //     // join depth stats and map stats before analysis
+    //     def depth_ch = candidates_depth.depth.map { meta, file ->
+    //         [ meta.id, [meta, file] ]
+    //     }
+    //     def map_ch = map_summary.mapSummary.map { meta, file ->
+    //         [ meta.id, [meta, file] ]
+    //     }
+    //     depth_ch.join(map_ch)
+    //         .map { id, a, b ->
+    //             def (meta1, depth_file) = a
+    //             def (meta2, map_file)  = b
+    //             tuple(meta1, depth_file, map_file)
+    //         }
+    //         .set { summary_input }
+    //     analysis_samples = SUMMARY_STATS_CANDIDATES_AUTO(summary_input)
+    //     // join all samples
+    //     stats_accession_ch = analysis_samples.accession_table.map { it -> it[1] }
+    //     stats_taxid_ch = analysis_samples.taxid_table.map { it -> it[1] }
+    //     def metadata_file = file(params.input, checkExists: true)
+    //     Channel.fromPath(metadata_file).set { metadata_ch }
+    //     analysis_combined = ANALYSIS_COMBINED_AUTO(stats_accession_ch.collect(),
+    //                                                 stats_taxid_ch.collect(),
+    //                                                 metadata_ch)
+        // }
+    // }
+

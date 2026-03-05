@@ -1,4 +1,4 @@
-process SUMMARY_MAP_CANDIDATES {
+process MAP_SUMMARY {
     tag "$meta.id"
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

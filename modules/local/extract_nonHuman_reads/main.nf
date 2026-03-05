@@ -1,4 +1,4 @@
-process EXTRACT_NONHUMAN_READS {
+process EXTRACT_CLASSIFIED {
 
     tag "$meta.id"
     label 'process_medium'
