@@ -3,7 +3,7 @@
 
 ## :telescope: Pipeline overview
 
-![Pipeline overview](misc/pipeline.png)
+![Pipeline overview](misc/pipeline_v2.1.0.png)
 
 
 ## :microscope: How to use:
