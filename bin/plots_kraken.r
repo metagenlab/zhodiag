@@ -200,9 +200,52 @@ for(gr in setdiff(unique(a$group), unique(a$group[grepl("^control", a$group)])))
   plot_height <- max(base_height, n_species * height_per_species)
   plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-  pdf(paste0(gr, "_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
+  pdf(paste0(gr, "_group_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
   p = ggplot(dtp, 
         aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
+    geom_tile() +
+    geom_text(colour='white') +
+    labs(x = '', y = '') +
+    facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  print(p)
+  dev.off()
+}
+
+# heatmap by sample
+for(gr in setdiff(unique(a$sample), unique(a$sample[grepl("^control", a$group)]))){
+  print(gr)
+  control_groups <- unique(a$sample[grepl("^control", a$group)])
+  dtpm <- a %>% filter(sample %in% c(gr, control_groups))
+
+  # filter out taxa only in control vs sample
+  dtp <- dtpm %>%
+    group_by(taxonomy) %>%
+    mutate(
+      control_reads = sum(totalCounts[group == "control"]),
+      other_reads   = sum(totalCounts[group != "control"])
+    ) %>%
+    ungroup() %>%
+    filter(!(control_reads > 0 & other_reads == 0)) %>%
+    select(-control_reads, -other_reads)
+  
+  # reorder by total reads per species across all samples
+  totals.gr <- dtp %>%
+    group_by(taxonomy) %>%
+    summarise(totReads_species = sum(totalCounts))
+  dtp <- dtp %>% left_join(totals.gr, by = "taxonomy")
+  dtp$taxonomy <- factor(dtp$taxonomy, levels = totals.gr$taxonomy[order(totals.gr$totReads_species)])
+  
+  # plot size
+  n_species <- length(unique(dtp$taxonomy))
+  n_samples <- length(unique(dtp$sample))
+  plot_height <- max(base_height, n_species * height_per_species)
+  plot_width  <- max(base_width,  n_samples * width_per_sample)
+  
+  pdf(paste0(gr, "_sample_heatmap_totalCounts.pdf"), height = plot_height, width = plot_width)
+  p = ggplot(dtp, 
+             aes(x = factor(sample), y = taxonomy, fill = totalCounts, label = totalCounts)) +
     geom_tile() +
     geom_text(colour='white') +
     labs(x = '', y = '') +

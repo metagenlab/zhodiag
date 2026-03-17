@@ -245,7 +245,7 @@ if(level == 'taxid') {
     plot_height <- max(base_height, n_species * height_per_species)
     plot_width  <- max(base_width,  n_samples * width_per_sample)
 
-    pdf(paste0(gr, "_heatmap_reads_fillByCoverage.pdf"), height = plot_height, width = plot_width)
+    pdf(paste0(gr, "_group_heatmap_reads_fillByCoverage.pdf"), height = plot_height, width = plot_width)
     p = ggplot(dtp, 
       aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
       geom_tile() +
@@ -257,7 +257,50 @@ if(level == 'taxid') {
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
     print(p)
     dev.off()
-  }
+
+  # HEATMAPS BY SAMPLE
+  for(gr in setdiff(unique(a$sample), unique(a$sample[grepl("^control", a$group)]))){
+    print(gr)
+    control_groups <- unique(a$sample[grepl("^control", a$group)])
+    dtpm <- a %>% filter(sample %in% c(gr, control_groups))
+    
+    # filter out taxa only in control vs sample
+    dtp <- dtpm %>%
+      group_by(species) %>%
+      mutate(
+        control_reads = sum(mappedReads[group == "control"]),
+        other_reads   = sum(mappedReads[group != "control"])
+      ) %>%
+      ungroup() %>%
+      filter(!(control_reads > 0 & other_reads == 0)) %>%
+      select(-control_reads, -other_reads)
+    
+    # reorder by total reads per species across all samples
+    totals.gr <- dtp %>%
+      group_by(species) %>%
+      summarise(totReads_species = sum(mappedReads))
+    dtp <- dtp %>% left_join(totals.gr, by = "species")
+    dtp$species <- factor(dtp$species, levels = totals.gr$species[order(totals.gr$totReads_species)])
+    
+    # plot size
+    n_species <- length(unique(dtp$species))
+    n_samples <- length(unique(dtp$sample))
+    plot_height <- max(base_height, n_species * height_per_species)
+    plot_width  <- max(base_width,  n_samples * width_per_sample)
+    
+    pdf(paste0(gr, "_sample_heatmap_reads_fillByCoverage.pdf"), height = plot_height, width = plot_width)
+    p = ggplot(dtp, 
+               aes(x = sample, y = species, fill = coverage, label = mappedReads)) +
+      geom_tile() +
+      geom_text(colour='black') +
+      scale_fill_manual(values = cov_colors) +
+      labs(x = '', y = '') +
+      facet_grid(.~factor(group), scales = 'free_x', space = 'free') +
+      theme_classic() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    print(p)
+    dev.off()
+}
 
   # READS VS COVERED POSITIONS FOR EACH SAMPLE
   for(s in unique(a$sample)){
