@@ -300,6 +300,7 @@ if(level == 'taxid') {
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
     print(p)
     dev.off()
+  }
 }
 
   # READS VS COVERED POSITIONS FOR EACH SAMPLE
