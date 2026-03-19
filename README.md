@@ -1,4 +1,4 @@
-# :milky_way: zhodiag: Ze shotgun metagenomics pipeline for diagnostics
+# :milky_way: zhodiag: ze shotgun metagenomics pipeline for diagnostics
 
 
 ## :telescope: Pipeline overview
