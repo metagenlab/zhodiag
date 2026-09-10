@@ -29,6 +29,11 @@ include { KRAKENUNIQ_PRELOADEDKRAKENUNIQ } from './modules/nf-core/krakenuniq/pr
 include { KRAKENUNIQ_COMBINE_REPORTS } from './modules/local/krakenuniq_combineReports/main'
 include { PLOTS_KRAKENUNIQ } from './modules/local/plots_krakenuniq/main'
 
+// de novo assembly
+include { EXTRACT_KRAKENUNIQ_UNCLASSIFIED } from './modules/local/extract_krakenuniq_uncl/main' 
+include { MAKE_SPADES_DATASET } from './modules/local/spades_yaml/main' 
+include { SPADES } from './modules/nf-core/spades/main' 
+
 // compare classifiers
 include { COMPARE_CLASSIFIERS } from './modules/local/compare_classifiers/main'
 
@@ -184,6 +189,14 @@ workflow {
                                                     'fastq',
                                                     params.krakenuniq_db,
                                                     true, true, true)
+
+        krakenuniq.unclassified_reads.view()
+        krakenuniq.report.view()
+        krakenuniq.unclassified_reads.view {
+            meta, reads ->
+            "KRAKENUNIQ UNCLASSIFIED: ${meta.id} -> ${reads}"
+        }
+
         // collect log for multiqc
         // multiqc cannot use krakenuniq log: would need a module to modify report to be readable by multiqc....
         krakenuniq_logs = krakenuniq.report
@@ -198,6 +211,38 @@ workflow {
         results_krakenuniq = PLOTS_KRAKENUNIQ(krakenuniq_reports_combined.combine_long,
                                                 params.min_reads,
                                                 params.contaminants)
+
+        original_reads_keyed = input_reads.map { meta, reads ->
+            tuple(meta.id, meta, reads)
+        }
+        assignments_keyed = krakenuniq.classified_assignment.map { meta, assignments ->
+            tuple(meta.id, assignments)
+        }
+
+
+        unclassified_input = original_reads_keyed
+            .join(assignments_keyed)
+            .map { id, meta, reads, assignments ->
+                tuple(meta, reads, assignments)
+            }
+
+        unclassified_reads = EXTRACT_KRAKENUNIQ_UNCLASSIFIED(
+            unclassified_input
+        )
+
+        spades_input_ch = unclassified_reads.reads.map {
+            meta, r1, r2 ->
+
+            tuple(
+                meta + [single_end: false],
+                [r1, r2],
+                [],
+                []
+            )
+        }
+
+        SPADES(spades_input_ch, [], [])
+
     }
 
 
