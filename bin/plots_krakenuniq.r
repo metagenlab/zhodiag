@@ -103,7 +103,7 @@ a <- a.filt1 %>%
     other_reads   = sum(reads[group != "control"])
   ) %>%
   ungroup() %>%
-  filter(!(control_reads > 0 & other_reads == 0)) %>%
+  #filter(!(control_reads > 0 & other_reads == 0)) %>%
   select(-control_reads, -other_reads)
 # write.table(a, paste0("long_table_at_species_level.tsv"),
 #         row.names = FALSE, col.names = TRUE, sep = '\t', quote = FALSE)
